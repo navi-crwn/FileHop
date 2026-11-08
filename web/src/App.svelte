@@ -561,7 +561,7 @@
         </div>
       </section>
 
-      <section class="sec" aria-labelledby="fmt-h">
+      <section class="sec" id="features" aria-labelledby="fmt-h">
         <h2 id="fmt-h">{i18n.t('formats.title')}</h2>
         <div class="fmts">
           <article class="fmt"><h3><Icon name="image" size={16} />{i18n.t('formats.images')}</h3><p>{i18n.t('formats.images_v')}</p></article>

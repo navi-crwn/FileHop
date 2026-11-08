@@ -119,7 +119,7 @@ internal/hop         HOP App Protocol v1, the same as NoteHop's
 - **Nothing is fetched at run time.** The whole engine is in the bundle (about 236 KB gzip for the worker chunk, 45 KB for the page).
 - **For the family:** `/hop/health`, `/hop/manifest`, `/hop/stats`, `/hop/users/{sub}` and `/hop/events` answer signed calls from the Imperium control panel and the hub.
 
-Type: Inter for text, Instrument Serif italic for the accent phrase, JetBrains Mono for file names and hashes, all vendored in `web/public/hop-fonts/`. Languages: `en, zh-CN, de, id, ja, pt-BR, es, fr, ru` in `web/src/lib/i18n/`; `npm run lint:i18n` keeps them in step.
+Type: Inter for text, Instrument Serif italic for the accent phrase, JetBrains Mono for file names and hashes, all vendored in `web/public/hop-fonts/` (byte-identical to the family set in `hel.ink/hop-assets/v3`, kept local so the page loads nothing from another site). Languages: `en, zh-CN, de, id, ja, pt-BR, es, fr, ru` in `web/src/lib/i18n/`; `npm run lint:i18n` keeps them in step.
 
 ## Security, license and history
 
