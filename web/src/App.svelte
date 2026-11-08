@@ -85,6 +85,10 @@
     });
   });
 
+  // Japanese and Chinese put no space after their punctuation, so the two halves of
+  // the hero title meet directly there; every other language has a space between them.
+  const heroGap = $derived(/[、，。]$/.test(i18n.t('hero.h1_pre')) ? '' : ' ');
+
   let theme = $state<'dark' | 'light'>(readTheme());
 
   function readTheme(): 'dark' | 'light' {
@@ -472,7 +476,7 @@
       <section class="hero">
         <div class="hero-copy">
           <span class="eyebrow"><i></i>{i18n.t('hero.eyebrow')}</span>
-          <h1>{i18n.t('hero.h1_pre')} <em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
+          <h1>{i18n.t('hero.h1_pre')}{heroGap}<em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
           <p class="lead">{i18n.t('hero.lead')}</p>
           <div class="cta">
             <button class="tbtn primary" type="button" onclick={pickFiles}>
