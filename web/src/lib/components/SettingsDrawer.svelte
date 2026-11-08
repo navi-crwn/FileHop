@@ -24,10 +24,17 @@
   }: Props = $props();
 
   const isolated = $derived(typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated);
+
+  // a dialog takes focus when it opens, so the next Tab and Escape land in it
+  let root: HTMLDivElement | undefined;
+  $effect(() => {
+    root?.focus();
+  });
   const auto = $derived(autoWorkers || hardwareSlots());
 </script>
 
-<div class="drawer" role="dialog" aria-modal="true" aria-labelledby="settings-h" tabindex="-1">  <div class="dhead">
+<div class="drawer" role="dialog" aria-modal="true" aria-labelledby="settings-h" tabindex="-1" bind:this={root}>
+  <div class="dhead">
     <h2 id="settings-h">{i18n.t('settings.title')}</h2>
     <button class="tbtn icon" type="button" onclick={onClose} aria-label={i18n.t('licenses.close')}>
       <Icon name="close" size={17} />

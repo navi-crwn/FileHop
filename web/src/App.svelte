@@ -50,6 +50,7 @@
   let version = $state(0);
   let toastTimer: number | undefined;
   let fileInput: HTMLInputElement;
+  let acctEl = $state<HTMLDetailsElement | undefined>();
 
   const pool = new Pool();
   const queue = new Queue(pool, { onChange: () => bump() });
@@ -362,6 +363,25 @@
     bump();
   }
 
+  /* --------------------------------------------------------- account menu */
+
+  /* The menu is a <details>, which only closes on its own summary. On a phone the
+     header is sticky, so an open menu would cover the page until the avatar is
+     tapped again: Escape, a tap outside and scrolling close it as well. */
+  function closeAccountMenu() {
+    if (acctEl?.open) acctEl.open = false;
+  }
+
+  function onPointerDown(e: PointerEvent) {
+    if (acctEl?.open && !acctEl.contains(e.target as Node)) acctEl.open = false;
+  }
+
+  /* While the settings drawer or the licenses dialog is open the page behind does not
+     scroll, so a swipe on the panel does not move the page under it. */
+  $effect(() => {
+    document.body.classList.toggle('modal-open', settingsOpen || licensesOpen);
+  });
+
   /* ------------------------------------------------------------- keyboard */
 
   function onKeydown(e: KeyboardEvent) {
@@ -379,6 +399,7 @@
       settingsOpen = false;
       licensesOpen = false;
       dragging = false;
+      closeAccountMenu();
     }
   }
 </script>
@@ -390,6 +411,8 @@
   ondragleave={onDragLeave}
   onpaste={onPaste}
   onkeydown={onKeydown}
+  onpointerdown={onPointerDown}
+  onscroll={closeAccountMenu}
 />
 
 <a class="skip" href="#main">{i18n.t('nav.skip')}</a>
@@ -428,7 +451,7 @@
     </button>
 
     {#if account.ready && account.signedIn}
-      <details class="acct">
+      <details class="acct" bind:this={acctEl}>
         <summary class="tbtn" aria-label={i18n.t('account.menu')} title={account.email || account.name}>
           <span class="avatar" aria-hidden="true">{initials(account.name, account.email)}</span>
           <span class="acct-name">{account.name || account.email}</span>

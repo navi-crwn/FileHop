@@ -143,6 +143,7 @@ em.acc {
 
 /* ---------- shell ---------- */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
+body.modal-open { overflow: hidden; }
 
 .topbar {
   position: sticky;
@@ -548,8 +549,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var
 input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--amber-soft); outline-offset: 2px; }
 
 /* ---------- dialog ---------- */
-.dlg { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; }
-.dlg-in { width: min(620px, 100%); max-height: 82vh; overflow: auto; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
+.dlg { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; pointer-events: none; }
+.dlg-in { pointer-events: auto; width: min(620px, 100%); max-height: 82vh; overflow: auto; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
 .dlg-in h2 { font-size: 18px; margin-bottom: 8px; }
 .dlg-in ul { margin: 12px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
 .dlg-in li { margin-bottom: 6px; }
