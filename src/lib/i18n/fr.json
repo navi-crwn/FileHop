@@ -144,5 +144,8 @@
   "time.now": "à l'instant",
   "err.archive_unsafe_path": "L'archive contient un chemin qui pointe en dehors d'elle-même (../). Refusé.",
   "err.archive_bad_zip": "Ce fichier n'est pas une archive ZIP ou GZIP lisible.",
-  "err.svg_needs_main_thread": "Ce SVG doit être rendu dans la page, ce qui n'est pas disponible. Rechargez et réessayez."
+  "err.svg_needs_main_thread": "Ce SVG doit être rendu dans la page, ce qui n'est pas disponible. Rechargez et réessayez.",
+  "toast.added": "{n} fichiers ajoutés",
+  "toast.limit": "La file contient 50 fichiers à la fois. {added} sur {total} ajoutés ; convertissez ou videz ce lot d'abord.",
+  "licenses.no_agpl": "La lecture des PDF utilise pdf.js, pas MuPDF. Aucun moteur AGPL n'est présent dans cette version."
 }

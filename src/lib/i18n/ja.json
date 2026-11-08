@@ -144,5 +144,8 @@
   "time.now": "たった今",
   "err.archive_unsafe_path": "圧縮ファイルに自分自身の外を指すパス（../）が含まれていました。拒否しました。",
   "err.archive_bad_zip": "そのファイルは読める ZIP または GZIP ではありません。",
-  "err.svg_needs_main_thread": "この SVG はページ内で描画する必要がありますが、現在それができません。再読み込みしてお試しください。"
+  "err.svg_needs_main_thread": "この SVG はページ内で描画する必要がありますが、現在それができません。再読み込みしてお試しください。",
+  "toast.added": "{n} 件のファイルを追加しました",
+  "toast.limit": "キューは一度に 50 件までです。{total} 件中 {added} 件を追加しました。先にこのバッチを変換するか空にしてください。",
+  "licenses.no_agpl": "PDF の読み取りは MuPDF ではなく pdf.js です。このビルドに AGPL のエンジンは含まれていません。"
 }

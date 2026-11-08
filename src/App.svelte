@@ -133,11 +133,15 @@
 
   async function addFiles(files: File[]) {
     if (!files.length) return;
-    const jobsAdded = await queue.add(files);
+    const added = await queue.add(files);
     bump();
-    if (jobsAdded.length < files.length) {
+    if (!added.length) {
+      showToast(i18n.t('toast.limit', { added: 0, total: files.length }));
+    } else if (added.length < files.length) {
       // the 50-file cap is a product rule, not a browser limit: say it plainly
-      showToast(`${jobsAdded.length} / ${files.length}`);
+      showToast(i18n.t('toast.limit', { added: added.length, total: files.length }));
+    } else {
+      showToast(i18n.t('toast.added', { n: added.length }));
     }
   }
 
@@ -252,7 +256,6 @@
     if (files.length) {
       e.preventDefault();
       void addFiles(files);
-      showToast(i18n.t('job.queued'));
     }
   }
 
@@ -616,7 +619,7 @@
         <li><b>yaml</b> 2 — ISC</li>
         <li><b>Inter, Instrument Serif, JetBrains Mono</b> — SIL OFL 1.1</li>
       </ul>
-      <p class="small faint" style="margin-top:12px">PDF reading uses pdf.js, not MuPDF. No AGPL engine is present in this build.</p>
+      <p class="small faint" style="margin-top:12px">{i18n.t('licenses.no_agpl')}</p>
     </div>
   </div>
 {/if}

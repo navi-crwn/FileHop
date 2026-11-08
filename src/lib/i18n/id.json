@@ -144,5 +144,8 @@
   "time.now": "baru saja",
   "err.archive_unsafe_path": "Arsip memuat path yang menunjuk ke luar dirinya (../). Ditolak.",
   "err.archive_bad_zip": "File itu bukan arsip ZIP atau GZIP yang bisa dibaca.",
-  "err.svg_needs_main_thread": "SVG ini harus dirender di halaman, dan itu sedang tidak tersedia. Muat ulang lalu coba lagi."
+  "err.svg_needs_main_thread": "SVG ini harus dirender di halaman, dan itu sedang tidak tersedia. Muat ulang lalu coba lagi.",
+  "toast.added": "{n} file ditambahkan",
+  "toast.limit": "Antrean menampung 50 file sekaligus. {added} dari {total} ditambahkan; konversi atau bersihkan batch ini dulu.",
+  "licenses.no_agpl": "Pembacaan PDF memakai pdf.js, bukan MuPDF. Tidak ada engine AGPL di build ini."
 }

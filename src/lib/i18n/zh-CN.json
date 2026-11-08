@@ -144,5 +144,8 @@
   "time.now": "刚刚",
   "err.archive_unsafe_path": "压缩包内含有指向自身之外的路径（../），已拒绝。",
   "err.archive_bad_zip": "该文件不是可读取的 ZIP 或 GZIP 压缩包。",
-  "err.svg_needs_main_thread": "此 SVG 需要在页面中渲染，而当前不可用。请刷新后重试。"
+  "err.svg_needs_main_thread": "此 SVG 需要在页面中渲染，而当前不可用。请刷新后重试。",
+  "toast.added": "已添加 {n} 个文件",
+  "toast.limit": "队列一次最多 50 个文件。已添加 {added}/{total} 个；请先转换或清空这一批。",
+  "licenses.no_agpl": "PDF 读取使用 pdf.js 而非 MuPDF。此构建中不含任何 AGPL 引擎。"
 }

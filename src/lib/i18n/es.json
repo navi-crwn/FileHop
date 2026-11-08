@@ -144,5 +144,8 @@
   "time.now": "ahora mismo",
   "err.archive_unsafe_path": "El comprimido contiene una ruta que apunta fuera de sí mismo (../). Rechazado.",
   "err.archive_bad_zip": "Ese archivo no es un ZIP o GZIP legible.",
-  "err.svg_needs_main_thread": "Este SVG debe renderizarse en la página, que no está disponible ahora. Recarga e inténtalo de nuevo."
+  "err.svg_needs_main_thread": "Este SVG debe renderizarse en la página, que no está disponible ahora. Recarga e inténtalo de nuevo.",
+  "toast.added": "{n} archivos añadidos",
+  "toast.limit": "La cola admite 50 archivos a la vez. Se añadieron {added} de {total}; convierte o vacía este lote primero.",
+  "licenses.no_agpl": "La lectura de PDF usa pdf.js, no MuPDF. En esta compilación no hay ningún motor AGPL."
 }

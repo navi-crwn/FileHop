@@ -144,5 +144,8 @@
   "time.now": "gerade eben",
   "err.archive_unsafe_path": "Das Archiv enthält einen Pfad, der aus ihm herauszeigt (../). Wurde abgelehnt.",
   "err.archive_bad_zip": "Diese Datei ist kein lesbares ZIP- oder GZIP-Archiv.",
-  "err.svg_needs_main_thread": "Dieses SVG muss in der Seite gerendert werden, was gerade nicht verfügbar ist. Neu laden und erneut versuchen."
+  "err.svg_needs_main_thread": "Dieses SVG muss in der Seite gerendert werden, was gerade nicht verfügbar ist. Neu laden und erneut versuchen.",
+  "toast.added": "{n} Dateien hinzugefügt",
+  "toast.limit": "Die Warteschlange fasst 50 Dateien. {added} von {total} wurden hinzugefügt; konvertiere oder leere diesen Stapel zuerst.",
+  "licenses.no_agpl": "PDF wird mit pdf.js gelesen, nicht mit MuPDF. In diesem Build steckt keine AGPL-Engine."
 }

@@ -144,5 +144,8 @@
   "time.now": "just now",
   "err.archive_unsafe_path": "The archive contains a path that points outside itself (../). It was refused.",
   "err.archive_bad_zip": "That file is not a readable ZIP or GZIP archive.",
-  "err.svg_needs_main_thread": "This SVG has to be rendered in the page, which is not available right now. Reload and try again."
+  "err.svg_needs_main_thread": "This SVG has to be rendered in the page, which is not available right now. Reload and try again.",
+  "toast.added": "{n} files added",
+  "toast.limit": "The queue holds 50 files at a time. {added} of {total} were added; convert or clear this batch first.",
+  "licenses.no_agpl": "PDF reading uses pdf.js, not MuPDF. No AGPL engine is present in this build."
 }

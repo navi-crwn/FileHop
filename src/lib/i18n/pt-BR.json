@@ -144,5 +144,8 @@
   "time.now": "agora mesmo",
   "err.archive_unsafe_path": "O compactado contém um caminho que aponta para fora dele (../). Recusado.",
   "err.archive_bad_zip": "Esse arquivo não é um ZIP ou GZIP legível.",
-  "err.svg_needs_main_thread": "Este SVG precisa ser renderizado na página, o que não está disponível agora. Recarregue e tente de novo."
+  "err.svg_needs_main_thread": "Este SVG precisa ser renderizado na página, o que não está disponível agora. Recarregue e tente de novo.",
+  "toast.added": "{n} arquivos adicionados",
+  "toast.limit": "A fila comporta 50 arquivos por vez. {added} de {total} foram adicionados; converta ou limpe este lote primeiro.",
+  "licenses.no_agpl": "A leitura de PDF usa pdf.js, não MuPDF. Não há nenhum motor AGPL nesta versão."
 }
