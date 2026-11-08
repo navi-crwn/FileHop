@@ -1,6 +1,14 @@
 import type { ActionId, Detection, JobResult } from './types';
 import type { WorkerJob, WorkerOut } from './convert.worker';
 
+/** Can a worker draw? OffscreenCanvas is the only canvas a worker has. */
+const WORKER_CANVAS = typeof OffscreenCanvas !== 'undefined';
+
+/** Actions that rasterise through a canvas (images, PDF pages to pictures). */
+export function drawsOnCanvas(action: ActionId): boolean {
+  return action.startsWith('image:') || action === 'pdf:png' || action === 'pdf:jpeg';
+}
+
 /* A worker pool sized by the machine, not by ambition: one core is left for the
    UI, mobile gets fewer slots, and a battery-saver switch drops it to one. */
 
@@ -150,8 +158,10 @@ export class Pool {
     payload: { id: string; file: File; group: File[]; det: Detection; action: ActionId; opts: Record<string, number | string> },
     onProgress: (p: number, note?: string) => void
   ): { promise: Promise<JobResult>; cancel: () => void } {
-    // SVG decoding needs the page's <img>; everything else goes to a worker.
-    const needsMain = payload.det.mime === 'image/svg+xml';
+    // SVG decoding needs the page's <img>; everything else goes to a worker,
+    // unless it draws on a canvas and this browser has no OffscreenCanvas
+    // (Safari before 16.4, WebKit ports): a worker has no <canvas> to fall back on.
+    const needsMain = payload.det.mime === 'image/svg+xml' || (!WORKER_CANVAS && drawsOnCanvas(payload.action));
     if (needsMain) return this.runOnMainThread(payload, onProgress);
 
     const jobId = `j${this.nextId++}`;
@@ -200,7 +210,7 @@ export class Pool {
     this.drain();
   }
 
-  /** The same job contract, executed in the page. Used for SVG only. */
+  /** The same job contract, executed in the page: SVG, and canvas work where workers cannot draw. */
   private runOnMainThread(
     payload: { id: string; file: File; group: File[]; det: Detection; action: ActionId; opts: Record<string, number | string> },
     onProgress: (p: number, note?: string) => void
