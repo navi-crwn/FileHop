@@ -125,6 +125,23 @@ internal/hop         HOP App Protocol v1, the same as NoteHop's
 
 Об уязвимостях сообщайте конфиденциально: [SECURITY.md](SECURITY.md). FileHop распространяется по лицензии MIT ([LICENSE](LICENSE)). Используемые библиотеки: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · шрифты SIL OFL 1.1. Движков под GPL или AGPL нет. Что и когда менялось: [CHANGELOG.md](CHANGELOG.md).
 
+## Собственный хостинг
+
+<!-- self-hosting:start -->
+Всё, что нужно FileHop, лежит в публичных репозиториях: не нужны ни приватный репозиторий, ни токен, ни учётная запись на hel.ink. Подробности — в руководстве по семейству: [docs/self-hosting.md](https://github.com/navi-crwn/HEL.ink/blob/main/docs/self-hosting.md) (на английском).
+
+| Компонент | Для FileHop | Зачем |
+| --- | --- | --- |
+| [HEL.ink](https://github.com/navi-crwn/HEL.ink) (хаб, HOP ID) | Необязательно: добавляет «Войти через HOP ID» | Учётные записи и вход для всех приложений |
+| [Imperium](https://github.com/navi-crwn/Imperium) | Необязательно | Панель администратора для всего семейства; нужен хаб |
+| Шрифты и плитки семейства | Ничего устанавливать не нужно: загружаются с `hel.ink/hop-assets` | Без hel.ink: системные шрифты, без плавающих плиток |
+
+- **Порядок установки**: FileHop отдельно через `./install.sh`. Для входа через HOP ID сначала [хаб](https://github.com/navi-crwn/HEL.ink): `./install.sh --hub new` установит его рядом.
+- **Минимальные настройки**: `FILEHOP_BASE_URL`; с хабом: `FILEHOP_SSO_URL`, `FILEHOP_SSO_CLIENT=filehop`, `FILEHOP_SSO_SECRET`.
+- **Отдельно или в семействе**: FileHop работает отдельно вообще без учётных записей и уже является полноценным конвертером. С хабом можно входить через HOP ID.
+- **Без Imperium**: ничего не теряется: FileHop не хранит файлы, а Imperium лишь показывает его состояние и цифры.
+<!-- self-hosting:end -->
+
 ## Семейство HOP
 
 FileHop входит в семейство HOP — набор приложений с открытым кодом, которые уважают приватность и которые можно развернуть у себя.
@@ -139,5 +156,5 @@ FileHop входит в семейство HOP — набор приложени
 | **PixelHop** | [pixel.hel.ink](https://pixel.hel.ink) · `p.hel.ink/…` | [navi-crwn/PixelHop](https://github.com/navi-crwn/PixelHop) | Image hosting with albums and direct links. |
 | **NoteHop** | [note.hel.ink](https://note.hel.ink) · `n.hel.ink/…` | [navi-crwn/NoteHop](https://github.com/navi-crwn/NoteHop) | Encrypted notes you share with a link. |
 | **FileHop** | [file.hel.ink](https://file.hel.ink) | [navi-crwn/FileHop](https://github.com/navi-crwn/FileHop) | Convert files in your browser; nothing is uploaded. |
-| **Imperium** | private (owner only) | private | The HOP control panel. |
+| **Imperium** | not public-facing: optional, for admins | [navi-crwn/Imperium](https://github.com/navi-crwn/Imperium) | The HOP control panel. |
 <!-- hop-family:end -->

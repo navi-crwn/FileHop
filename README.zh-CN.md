@@ -125,6 +125,23 @@ internal/hop         HOP App Protocol v1, the same as NoteHop's
 
 请私下报告安全漏洞：[SECURITY.md](SECURITY.md)。FileHop 采用 MIT 许可证（[LICENSE](LICENSE)）。所用的库：`pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · 字体 SIL OFL 1.1。不包含任何 GPL 或 AGPL 引擎。什么时候改了什么：[CHANGELOG.md](CHANGELOG.md)。
 
+## 自行托管
+
+<!-- self-hosting:start -->
+FileHop 所需的一切都在公开仓库中：不需要私有仓库、令牌或 hel.ink 账户。详细说明见家族指南：[docs/self-hosting.md](https://github.com/navi-crwn/HEL.ink/blob/main/docs/self-hosting.md)（英文）。
+
+| 组件 | 对 FileHop 而言 | 作用 |
+| --- | --- | --- |
+| [HEL.ink](https://github.com/navi-crwn/HEL.ink) (中心，HOP ID) | 可选：增加“使用 HOP ID 登录” | 所有应用的账户与登录 |
+| [Imperium](https://github.com/navi-crwn/Imperium) | 可选 | 整个家族的管理面板；需要中心 |
+| 家族字体与浮动图块 | 无需安装：从 `hel.ink/hop-assets` 加载 | 无法访问 hel.ink 时：使用系统字体，没有浮动图块 |
+
+- **安装顺序**：用 `./install.sh` 单独安装 FileHop。如需 HOP ID 登录，先装[中心](https://github.com/navi-crwn/HEL.ink)：`./install.sh --hub new` 会在旁边装一个。
+- **最少设置**：`FILEHOP_BASE_URL`; 连接中心时: `FILEHOP_SSO_URL`, `FILEHOP_SSO_CLIENT=filehop`, `FILEHOP_SSO_SECRET`。
+- **单独运行或加入家族**：FileHop 可完全不带账户单独运行，本身就是完整的转换器。连接中心后，用户可以用 HOP ID 登录。
+- **没有 Imperium 时**：没有任何缺失：FileHop 不存储文件，Imperium 只显示它的健康状态和数字。
+<!-- self-hosting:end -->
+
 ## HOP 家族
 
 FileHop 是 HOP 家族的一员，这是一组尊重隐私、可以自行部署的开源应用。
@@ -139,5 +156,5 @@ FileHop 是 HOP 家族的一员，这是一组尊重隐私、可以自行部署�
 | **PixelHop** | [pixel.hel.ink](https://pixel.hel.ink) · `p.hel.ink/…` | [navi-crwn/PixelHop](https://github.com/navi-crwn/PixelHop) | Image hosting with albums and direct links. |
 | **NoteHop** | [note.hel.ink](https://note.hel.ink) · `n.hel.ink/…` | [navi-crwn/NoteHop](https://github.com/navi-crwn/NoteHop) | Encrypted notes you share with a link. |
 | **FileHop** | [file.hel.ink](https://file.hel.ink) | [navi-crwn/FileHop](https://github.com/navi-crwn/FileHop) | Convert files in your browser; nothing is uploaded. |
-| **Imperium** | private (owner only) | private | The HOP control panel. |
+| **Imperium** | not public-facing: optional, for admins | [navi-crwn/Imperium](https://github.com/navi-crwn/Imperium) | The HOP control panel. |
 <!-- hop-family:end -->
