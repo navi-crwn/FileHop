@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "name": "FileHop — any file, any format, on your device",
+  "short_name": "FileHop",
+  "description": "Convert images, PDFs, tables, text and archives in your browser. Nothing is uploaded.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08090c",
+  "theme_color": "#f59e0b",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "/mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

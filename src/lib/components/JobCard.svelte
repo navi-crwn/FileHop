@@ -1,0 +1,246 @@
+<script lang="ts">
+  import Icon from './Icon.svelte';
+  import { i18n } from '../i18n/index.svelte';
+  import { targetsFor, actionDef, isHash } from '../core/actions';
+  import type { Job } from '../core/types';
+  import { fmtSize } from '../util/format';
+  import { looksLikePages } from '../core/pages';
+
+  interface Props {
+    job: Job;
+    /** how many PDFs are in the queue: Merge only exists with two or more */
+    pdfCount: number;
+    /** this PDF is folded into another card's merge, so it has no result of its own */
+    absorbed?: boolean;
+    onAction: (id: Job['action']) => void;
+    onOpt: (key: string, value: number | string) => void;
+    onRun: () => void;
+    onCancel: () => void;
+    onRemove: () => void;
+    onDownload: () => void;
+  }
+
+  let { job, pdfCount, absorbed = false, onAction, onOpt, onRun, onCancel, onRemove, onDownload }: Props = $props();
+  let copied = $state(false);
+
+  const targets = $derived(
+    targetsFor(job.det.category, job.det.ext).filter(id => (id === 'pdf:merge' ? pdfCount > 1 : true))
+  );
+  const def = $derived(actionDef(job.action));
+  const icon = $derived(
+    job.det.category === 'pdf' ? 'pdf'
+    : job.det.category === 'image' ? 'image'
+    : job.det.category === 'data' ? 'data'
+    : job.det.category === 'text' ? 'text'
+    : job.det.category === 'archive' ? 'archive'
+    : job.det.category === 'media' ? 'media'
+    : job.det.category === 'font' ? 'font'
+    : 'file'
+  );
+
+  // A picture we already decoded is a better icon than a generic glyph.
+  let previewUrl = $state<string | null>(null);
+  $effect(() => {
+    if (job.det.category !== 'image' || job.size > 40 * 1024 * 1024) return;
+    if (!/^(image\/(png|jpeg|webp|gif|avif|bmp))$/.test(job.det.mime)) return;
+    const url = URL.createObjectURL(job.file);
+    previewUrl = url;
+    return () => {
+      URL.revokeObjectURL(url);
+      previewUrl = null;
+    };
+  });
+
+  const errorKey = $derived(    job.error ? job.error.split(':')[0].replace(/[^a-z_]/gi, '') : ''
+  );
+  const errText = $derived.by(() => {
+    if (!job.error) return '';
+      const known = ['cannot_decode', 'avif_not_supported', 'encoder_missing', 'bad_page_selection',
+        'archive_too_big', 'archive_ratio', 'archive_unsafe_path', 'archive_bad_zip',
+        'json_parse', 'csv_parse', 'yaml_parse', 'unsupported_action', 'worker_crash',
+        'already_markdown', 'merge_needs_two', 'svg_needs_main_thread', 'out_of_memory'];
+    if (known.includes(errorKey)) {
+      const key = errorKey === 'unsupported_action' ? 'err.unsupported' : `err.${errorKey}`;
+      return i18n.t(key);
+    }
+    return job.error;
+  });
+
+  const saving = $derived.by(() => {
+    if (!job.result || isHash(job.action)) return null;
+    // A size delta only means something when the result is the same artefact in a
+    // smaller container. CSV→JSON is not "236% bigger", an SVG is instructions,
+    // and PDF→PNG is a set of rendered pages rather than a lighter PDF.
+    const comparable = (job.action.startsWith('image:') && job.det.mime !== 'image/svg+xml') ||
+      job.action === 'image:pdf' ||
+      job.action === 'archive:zip' || job.action === 'archive:gz';
+    if (!comparable) return null;
+    const d = 1 - job.result.blob.size / Math.max(1, job.size);
+    if (Math.abs(d) < 0.005) return i18n.t('job.same_size');
+    return d > 0 ? i18n.t('job.saved', { pct: Math.round(d * 100) }) : i18n.t('job.bigger', { pct: Math.round(-d * 100) });
+  });
+
+  async function copyHash() {
+    if (!job.result?.hash) return;
+    try {
+      await navigator.clipboard.writeText(job.result.hash);
+      copied = true;
+      setTimeout(() => (copied = false), 1600);
+    } catch {
+      /* clipboard blocked: select the text instead */
+    }
+  }
+
+  function optValue(id: string): number | string {
+    return job.opts[id] ?? '';
+  }
+
+  /** the page-range box is the one free-text option; check it before it runs */
+  const pagesOk = $derived.by(() => {
+    const spec = job.opts.pages;
+    if (typeof spec !== 'string') return true;
+    return looksLikePages(spec);
+  });
+</script>
+
+<article class="card {job.status}">
+  <div class="ico" aria-hidden="true">
+    {#if previewUrl}
+      <img src={previewUrl} alt="" />
+    {:else}
+      <Icon name={icon} size={20} />
+    {/if}
+  </div>
+
+  <div class="meta">
+    <div class="name">
+      <span class="fname" title={job.name}>{job.name}</span>
+      <span class="badge">{job.det.label}</span>
+      {#if job.det.mismatch}
+        <span class="badge warn" title={i18n.t('job.mismatch_title')}>{i18n.t('job.mismatch')}</span>
+      {/if}
+      {#if absorbed}
+        <span class="badge">{i18n.t('job.absorbed')}</span>
+      {:else if job.status === 'done'}
+        <span class="badge ok">{i18n.t('job.done')}</span>
+      {:else if job.status === 'error'}
+        <span class="badge bad">{i18n.t('job.error')}</span>
+      {:else if job.status === 'canceled'}
+        <span class="badge">{i18n.t('job.canceled')}</span>
+      {/if}
+    </div>
+
+    <div class="sub">
+      <span>{fmtSize(job.size)}</span>
+      <span class="dot"></span>
+      <span class="mono">{job.det.mime}</span>
+      {#if job.result?.note}
+        <span class="dot"></span>
+        <span>{job.result.note}</span>
+      {/if}
+    </div>
+
+    {#if job.status !== 'done' && !absorbed}
+      <div class="targets" role="group" aria-label={i18n.t('job.target')}>
+        {#each targets as t (t)}
+          {@const td = actionDef(t)}
+          {#if td}
+            <button
+              type="button"
+              class="chip"
+              class:on={job.action === t}
+              aria-pressed={job.action === t}
+              onclick={() => onAction(t)}
+            >{td.label}</button>
+          {/if}
+        {/each}
+      </div>
+
+      {#if def?.options?.length}
+        <div class="opts">
+          {#each def.options as o (o.id)}
+            {#if o.type === 'range'}
+              <label class="opt">
+                <span>{i18n.t(o.labelKey)}</span>
+                <input
+                  type="range"
+                  min={o.min}
+                  max={o.max}
+                  step={o.step}
+                  value={optValue(o.id)}
+                  oninput={(e) => onOpt(o.id, Number((e.currentTarget as HTMLInputElement).value))}
+                />
+                <span class="val">{optValue(o.id)}</span>
+              </label>
+            {:else if o.type === 'number'}
+              <label class="opt">
+                <span>{i18n.t(o.labelKey)}</span>
+                <input
+                  type="number"
+                  value={optValue(o.id)}
+                  oninput={(e) => onOpt(o.id, Number((e.currentTarget as HTMLInputElement).value))}
+                />
+              </label>
+            {:else}
+              <label class="opt">
+                <span>{i18n.t(o.labelKey)}</span>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="1-3,7"
+                  aria-invalid={!pagesOk}
+                  value={optValue(o.id)}
+                  oninput={(e) => onOpt(o.id, (e.currentTarget as HTMLInputElement).value)}
+                />
+              </label>
+              {#if !pagesOk}
+                <span class="small" style="color:var(--red)">{i18n.t('opt.pages_bad')}</span>
+              {/if}
+            {/if}
+          {/each}
+        </div>
+      {/if}
+    {/if}
+
+    {#if job.status === 'running'}
+      <div class="bar"><i style="width:{Math.round(job.progress * 100)}%"></i></div>
+    {:else if job.status === 'done' && job.result}
+      <div class="result">
+        <span class="badge ok">{fmtSize(job.result.size)}</span>
+        {#if saving}<span class="muted">{saving}</span>{/if}
+        {#if job.result.pages}<span class="muted">{job.result.pages} pages</span>{/if}
+        {#if job.result.hash}
+          <code class="hash">{job.result.hash}</code>
+        {/if}
+        {#if job.result.listing?.length}
+          <span class="muted">{job.result.listing.length} entries</span>
+        {/if}
+      </div>
+    {:else if job.status === 'error'}
+      <p class="err"><Icon name="alert" size={15} /><span>{errText}</span></p>
+    {/if}
+  </div>
+
+  <div class="side">
+    {#if absorbed}
+      <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
+    {:else if job.status === 'queued'}
+      <button class="mini primary" type="button" onclick={onRun}><Icon name="play" size={14} />{i18n.t('job.run')}</button>
+    {:else if job.status === 'running'}
+      <button class="mini" type="button" onclick={onCancel}><Icon name="stop" size={14} />{i18n.t('job.cancel')}</button>
+    {:else if job.status === 'done'}
+      <button class="mini primary" type="button" onclick={onDownload}><Icon name="download" size={14} />{i18n.t('job.download')}</button>
+      {#if job.result?.hash}
+        <button class="mini" type="button" onclick={copyHash}>{copied ? i18n.t('job.copied') : i18n.t('job.copy_hash')}</button>
+      {/if}
+      <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
+    {:else}
+      <button class="mini" type="button" onclick={onRun}><Icon name="refresh" size={14} />{i18n.t('job.retry')}</button>
+      <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} /></button>
+    {/if}
+  </div>
+</article>
+
+<style>
+  .card .side :global(svg) { flex: none; }
+</style>
