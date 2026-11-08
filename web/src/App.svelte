@@ -392,7 +392,7 @@
     <span class="spacer"></span>
 
     <button class="tbtn primary" type="button" onclick={pickFiles}>
-      <Icon name="plus" size={17} />{i18n.t('nav.add')}
+      <Icon name="plus" size={17} /><span class="tlabel">{i18n.t('nav.add')}</span>
     </button>
 
     <label class="sr" for="top-lang">{i18n.t('nav.language')}</label>
@@ -411,7 +411,7 @@
       <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
     </button>
 
-    <button class="tbtn icon" type="button" onclick={() => (settingsOpen = true)} aria-label={i18n.t('nav.settings')} title={i18n.t('nav.settings')}>
+    <button class="tbtn icon tsettings" type="button" onclick={() => (settingsOpen = true)} aria-label={i18n.t('nav.settings')} title={i18n.t('nav.settings')}>
       <Icon name="gear" size={17} />
     </button>
 
