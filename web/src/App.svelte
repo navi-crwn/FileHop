@@ -17,12 +17,21 @@
   /* The other HOP apps, as the family manifest (hel.ink/hop-assets/apps.json) lists them.
      Written out rather than fetched: the page loads nothing from another origin. */
   const FAMILY = [
-    { name: 'HOP ID', url: 'https://hel.ink', color: '#6366f1' },
-    { name: 'LinkHop', url: 'https://link.hel.ink', color: '#6366f1' },
-    { name: 'BioHop', url: 'https://bio.hel.ink', color: '#a855f7' },
-    { name: 'PixelHop', url: 'https://pixel.hel.ink', color: '#22d3ee' },
-    { name: 'NoteHop', url: 'https://note.hel.ink', color: '#10b981' }
+    { slug: 'hub', name: 'HOP ID', url: 'https://hel.ink', color: '#6366f1' },
+    { slug: 'linkhop', name: 'LinkHop', url: 'https://link.hel.ink', color: '#6366f1' },
+    { slug: 'biohop', name: 'BioHop', url: 'https://bio.hel.ink', color: '#a855f7' },
+    { slug: 'pixelhop', name: 'PixelHop', url: 'https://pixel.hel.ink', color: '#22d3ee' },
+    { slug: 'notehop', name: 'NoteHop', url: 'https://note.hel.ink', color: '#10b981' }
   ];
+
+  /* Signed in through the hub, another app opens through the hub's launcher (/apps/{slug}),
+     which signs the person in there too; the bare address would land them signed out in an
+     app they have not used yet. Signed out, the public address is the right one. */
+  function familyHref(app: (typeof FAMILY)[number]): string {
+    if (!account.signedIn || !account.hubUrl) return app.url;
+    const hub = account.hubUrl.replace(/\/+$/, '');
+    return app.slug === 'hub' ? `${hub}/dashboard` : `${hub}/apps/${app.slug}`;
+  }
 
   /* ------------------------------------------------------------------ state */
 
@@ -603,7 +612,7 @@
         <nav class="ft-family" aria-label={i18n.t('footer.family')}>
           <a class="ft-family-h" href="https://hel.ink" rel="noopener">{i18n.t('footer.family')}</a>
           {#each FAMILY as app (app.url)}
-            <a href={app.url} rel="noopener"><i style="background:{app.color}" aria-hidden="true"></i>{app.name}</a>
+            <a href={familyHref(app)} rel="noopener"><i style="background:{app.color}" aria-hidden="true"></i>{app.name}</a>
           {/each}
         </nav>
       </footer>
