@@ -36,8 +36,9 @@ import (
 
 var (
 	addr    = env("STUB_ADDR", "127.0.0.1:8097")
-	self    = "http://" + strings.Replace(addr, "127.0.0.1", "localhost", 1)
+	self    = env("STUB_URL", "http://"+strings.Replace(addr, "127.0.0.1", "localhost", 1))
 	app     = strings.TrimRight(env("FILEHOP_URL", "http://localhost:8095"), "/")
+	inner   = strings.TrimRight(env("FILEHOP_INTERNAL_URL", app), "/") // server-to-server, when the browser goes through a tunnel
 	client  = env("FILEHOP_SSO_CLIENT", "filehop")
 	secret  = os.Getenv("FILEHOP_SSO_SECRET")
 	counter int
@@ -153,7 +154,7 @@ func main() {
 }
 
 func call(as, method, path string, body []byte) string {
-	req, _ := http.NewRequest(method, app+path, bytes.NewReader(body))
+	req, _ := http.NewRequest(method, inner+path, bytes.NewReader(body))
 	for k, v := range hop.Headers(as, secret, "stub", method, path, body) {
 		req.Header[k] = v
 	}

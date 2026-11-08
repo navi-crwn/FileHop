@@ -30,11 +30,14 @@ const env = {
   FILEHOP_SSO_SECRET: secret,
   FILEHOP_SSO_URL: 'http://localhost:8097',
   FILEHOP_BASE_URL: 'http://localhost:8095',
-  FILEHOP_ADDR: '127.0.0.1:8095',
+  // listen elsewhere when the browser reaches these through a tunnel (ssh -L 8095:… -L 8097:…)
+  FILEHOP_ADDR: process.env.LISTEN_APP ?? '127.0.0.1:8095',
   FILEHOP_DB: '.run/filehop.db',
   FILEHOP_URL: 'http://localhost:8095',
-  STUB_ADDR: '127.0.0.1:8097'
+  STUB_ADDR: process.env.LISTEN_STUB ?? '127.0.0.1:8097',
+  STUB_URL: 'http://localhost:8097'
 };
+env.FILEHOP_INTERNAL_URL = 'http://' + env.FILEHOP_ADDR;
 const kids = [spawn(`.run/filehop${exe}`, [], { env, stdio: 'inherit' }), spawn(`.run/hubstub${exe}`, [], { env, stdio: 'inherit' })];
 const stop = () => { for (const k of kids) k.kill(); process.exit(0); };
 process.on('SIGINT', stop);

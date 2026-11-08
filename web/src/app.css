@@ -568,4 +568,8 @@ footer.ft { margin-top: 90px; padding: 34px 0 44px; border-top: 1px solid var(--
 .acct-menu p { margin: 0 0 6px; overflow-wrap: anywhere; }
 .acct-menu a { padding: 6px 8px; border-radius: 8px; color: inherit; text-decoration: none; }
 .acct-menu a:hover, .acct-menu a:focus-visible { background: var(--soft, rgb(127 127 127 / 0.12)); }
-@media (max-width: 600px) { .acct-name { display: none; } }
+@media (max-width: 600px) {
+  .acct-name { display: none; }
+  /* the control can wrap to the left half of a phone: keep the menu on screen */
+  .acct-menu { position: fixed; left: 16px; right: 16px; top: auto; margin-top: 6px; }
+}
