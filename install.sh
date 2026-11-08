@@ -252,7 +252,7 @@ if [ "$HUB" = new ]; then
   if [ "$DRY" = 0 ]; then
     # FileHop signs in with its own secret and callback from the hub's app registry: add its row there.
     HUB_SECRET="$(rand_hex 32)"
-    (cd "$HUB_DIR" && HOP_APP_SECRET="$HUB_SECRET" HOP_APP_URL="$URL" php artisan tinker --execute='App\Models\HopApp::updateOrCreate(["slug" => "filehop"], ["name" => "FileHop", "url" => getenv("HOP_APP_URL"), "callback_path" => "/auth/sso/callback", "start_path" => "/auth/sso", "status" => "active", "secret" => getenv("HOP_APP_SECRET"), "icon" => "file", "color" => "amber", "sort_order" => 50]);' >/dev/null 2>&1) && ok "Registered FileHop in the hub's app registry" || die "Could not register FileHop at the hub"
+    (cd "$HUB_DIR" && HOP_APP_SECRET="$HUB_SECRET" HOP_APP_URL="$URL" php artisan tinker --execute='App\Models\HopApp::updateOrCreate(["slug" => "filehop"], ["name" => "FileHop", "url" => getenv("HOP_APP_URL"), "callback_path" => "/auth/sso/callback", "start_path" => "/auth/sso", "status" => "active", "secret" => getenv("HOP_APP_SECRET"), "capabilities" => ["admin_api", "events", "zero_knowledge"], "icon" => "file", "color" => "amber", "sort_order" => 50]);' >/dev/null 2>&1) && ok "Registered FileHop in the hub's app registry" || die "Could not register FileHop at the hub"
   fi
   hdr "Back to FileHop"
 fi
