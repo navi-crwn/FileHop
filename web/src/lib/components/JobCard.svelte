@@ -173,6 +173,7 @@
                 <span>{i18n.t(o.labelKey)}</span>
                 <input
                   type="range"
+                  aria-label={i18n.t(o.labelKey)}
                   min={o.min}
                   max={o.max}
                   step={o.step}

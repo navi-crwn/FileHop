@@ -414,7 +414,7 @@ main { flex: 1; width: 100%; }
 
 .opts { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
 .opt { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-.opt input[type="range"] { width: 110px; accent-color: var(--amber); }
+.opt input[type="range"] { width: 150px; }
 .opt input[type="number"], .opt input[type="text"] {
   width: 92px; height: 28px; padding: 0 8px;
   border-radius: 8px; border: 1px solid var(--line-2);
@@ -468,6 +468,7 @@ main { flex: 1; width: 100%; }
 
 .privacy-card { padding: 24px; border-radius: var(--radius); border: 1px solid color-mix(in oklab, var(--green) 28%, var(--line)); background: linear-gradient(180deg, color-mix(in oklab, var(--green) 7%, var(--panel)), var(--panel)); }
 .privacy-card h2 { font-size: 22px; margin-bottom: 8px; }
+.privacy-card .tbtn, .drawer .tbtn:not(.icon) { height: auto; min-height: 38px; padding: 8px 14px; white-space: normal; text-align: start; }
 .privacy-card p { margin: 0 0 14px; color: var(--muted); max-width: 46em; }
 .counter { display: inline-flex; align-items: center; gap: 8px; font: 600 13px var(--mono); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel); }
 .counter b { color: var(--green); }
@@ -506,8 +507,45 @@ footer.ft { margin-top: 90px; padding: 34px 0 44px; border-top: 1px solid var(--
 .switch.on { background: color-mix(in oklab, var(--amber) 30%, var(--panel)); border-color: var(--amber); }
 .switch.on::after { transform: translateX(18px); background: var(--amber-soft); }
 .slider-row { display: grid; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.slider-row input[type="range"] { width: 100%; accent-color: var(--amber); }
+.slider-row input[type="range"] { width: 100%; }
 .slider-row .lbl { display: flex; justify-content: space-between; font-size: 13.5px; }
+
+/* ---------- sliders ---------- */
+/* A finger needs more than the 16 px a native range gives: the control is 44 px tall,
+   the track stays thin and the thumb is 24 px. The ring on focus sits on the thumb. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  accent-color: var(--amber);
+  cursor: pointer;
+  touch-action: pan-y;
+}
+input[type="range"]:disabled { cursor: default; opacity: .45; }
+input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 99px; background: var(--line-2); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px; height: 24px; margin-top: -10px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--panel);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+}
+input[type="range"]::-moz-range-track { height: 4px; border-radius: 99px; background: var(--line-2); }
+input[type="range"]::-moz-range-thumb {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--panel);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+}
+input[type="range"]:focus-visible { outline: none; }
+input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--amber-soft); outline-offset: 2px; }
+input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--amber-soft); outline-offset: 2px; }
 
 /* ---------- dialog ---------- */
 .dlg { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; }
@@ -549,7 +587,9 @@ footer.ft { margin-top: 90px; padding: 34px 0 44px; border-top: 1px solid var(--
 /* phones: one row, as the family chrome has it (primary action, language, theme, account).
    The add button keeps its text for screen readers; settings stay one tap away in the hero. */
 @media (max-width: 600px) {
-  .topbar { flex-wrap: nowrap; }
+  .topbar { flex-wrap: nowrap; padding: 8px 12px; }
+  .opt { flex: 1 1 100%; }
+  .opt input[type="range"] { flex: 1; width: auto; min-width: 0; }
   .topbar .tbtn.primary { width: 38px; padding: 0; justify-content: center; flex: none; }
   .topbar .tbtn.primary .tlabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .topbar .tsettings { display: none; }
