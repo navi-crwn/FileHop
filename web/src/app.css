@@ -467,7 +467,7 @@ main { flex: 1; width: 100%; }
 .fmt.soon { border-style: dashed; }
 .fmt.soon h3 { color: var(--muted); }
 
-.privacy-card { padding: 24px; border-radius: var(--radius); border: 1px solid color-mix(in oklab, var(--green) 28%, var(--line)); background: linear-gradient(180deg, color-mix(in oklab, var(--green) 7%, var(--panel)), var(--panel)); }
+.privacy-card { scroll-margin-top: 84px; padding: 24px; border-radius: var(--radius); border: 1px solid color-mix(in oklab, var(--green) 28%, var(--line)); background: linear-gradient(180deg, color-mix(in oklab, var(--green) 7%, var(--panel)), var(--panel)); }
 .privacy-card h2 { font-size: 22px; margin-bottom: 8px; }
 .privacy-card .tbtn, .drawer .tbtn:not(.icon) { height: auto; min-height: 38px; padding: 8px 14px; white-space: normal; text-align: start; }
 .privacy-card p { margin: 0 0 14px; color: var(--muted); max-width: 46em; }

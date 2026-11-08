@@ -610,7 +610,7 @@
         </div>
       </section>
 
-      <section class="sec">
+      <section class="sec" id="privacy">
         <div class="privacy-card">
           <h2>{i18n.t('privacy.title')}</h2>
           <p>{i18n.t('privacy.body')}</p>
@@ -629,6 +629,7 @@
             <span class="word"><b>File</b><span>Hop</span></span>
           </span>
           <a href="#privacy">{i18n.t('footer.privacy')}</a>
+          <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
           <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
           <button class="tbtn" type="button" style="height:30px;padding:0 10px;font-size:12.5px" onclick={() => (licensesOpen = true)}>
             {i18n.t('footer.licenses')}
