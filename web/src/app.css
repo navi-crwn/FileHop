@@ -158,7 +158,7 @@ em.acc {
 }
 
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 750; letter-spacing: -.02em; }
-.brand svg { width: 26px; height: 26px; display: block; }
+.brand img { width: 26px; height: 26px; display: block; }
 .brand .word b { color: var(--text); }
 .brand .word span { color: var(--amber-soft); }
 .topbar .spacer { flex: 1; }
@@ -546,6 +546,16 @@ footer.ft { margin-top: 90px; padding: 34px 0 44px; border-top: 1px solid var(--
   .brand .word { display: none; }
 }
 
+/* phones: one row, as the family chrome has it (primary action, language, theme, account).
+   The add button keeps its text for screen readers; settings stay one tap away in the hero. */
+@media (max-width: 600px) {
+  .topbar { flex-wrap: nowrap; }
+  .topbar .tbtn.primary { width: 38px; padding: 0; justify-content: center; flex: none; }
+  .topbar .tbtn.primary .tlabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .topbar .tsettings { display: none; }
+  .topbar .select { min-width: 0; max-width: 128px; text-overflow: ellipsis; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
   .zone .halo { display: none; }
@@ -584,5 +594,5 @@ footer.ft { margin-top: 90px; padding: 34px 0 44px; border-top: 1px solid var(--
 @media (pointer: coarse) {
   .tbtn, .select, .chip, .mini, .ft-family a, .ft-in a, .acct-menu a { min-height: 44px; }
   .ft-in a { display: inline-flex; align-items: center; }
-  .tbtn.icon { width: 44px; }
+  .tbtn.icon, .topbar .tbtn.primary { width: 44px; }
 }
