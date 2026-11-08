@@ -125,6 +125,23 @@ internal/hop         HOP App Protocol v1, the same as NoteHop's
 
 脆弱性は非公開で報告してください：[SECURITY.md](SECURITY.md)。FileHop は MIT ライセンスです（[LICENSE](LICENSE)）。使用ライブラリ：`pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · フォント SIL OFL 1.1。GPL や AGPL のエンジンは含まれていません。いつ何が変わったか：[CHANGELOG.md](CHANGELOG.md)。
 
+## セルフホスティング
+
+<!-- self-hosting:start -->
+FileHop に必要なものはすべて公開リポジトリにあります。非公開リポジトリ、トークン、hel.ink のアカウントは不要です。詳しくはファミリーガイド [docs/self-hosting.md](https://github.com/navi-crwn/HEL.ink/blob/main/docs/self-hosting.md)（英語）を参照してください。
+
+| 構成要素 | FileHop にとって | 役割 |
+| --- | --- | --- |
+| [HEL.ink](https://github.com/navi-crwn/HEL.ink) (ハブ、HOP ID) | 任意：「HOP ID でサインイン」を追加 | すべてのアプリのアカウントとサインイン |
+| [Imperium](https://github.com/navi-crwn/Imperium) | 任意 | ファミリー全体の管理パネル。ハブが必要 |
+| ファミリーのフォントとタイル | インストール不要：`hel.ink/hop-assets` から読み込み | hel.ink がなければシステムフォント、浮遊タイルなし |
+
+- **インストール順**：FileHop は `./install.sh` だけで動きます。HOP ID でのサインインには先に[ハブ](https://github.com/navi-crwn/HEL.ink)を。`./install.sh --hub new` が隣にインストールします。
+- **最小限の設定**：`FILEHOP_BASE_URL`; ハブ利用時: `FILEHOP_SSO_URL`, `FILEHOP_SSO_CLIENT=filehop`, `FILEHOP_SSO_SECRET`。
+- **単体かファミリーか**：FileHop はアカウントなしで単体で動き、それだけで完全な変換ツールです。ハブがあれば HOP ID でサインインできます。
+- **Imperium なしの場合**：何も失われません。FileHop はファイルを保存せず、Imperium は稼働状況と数値を表示するだけです。
+<!-- self-hosting:end -->
+
 ## HOP ファミリー
 
 FileHop は、プライバシーを尊重し、自分でホストできるオープンソースアプリ群「HOP ファミリー」の一員です。
@@ -139,5 +156,5 @@ FileHop は、プライバシーを尊重し、自分でホストできるオー
 | **PixelHop** | [pixel.hel.ink](https://pixel.hel.ink) · `p.hel.ink/…` | [navi-crwn/PixelHop](https://github.com/navi-crwn/PixelHop) | Image hosting with albums and direct links. |
 | **NoteHop** | [note.hel.ink](https://note.hel.ink) · `n.hel.ink/…` | [navi-crwn/NoteHop](https://github.com/navi-crwn/NoteHop) | Encrypted notes you share with a link. |
 | **FileHop** | [file.hel.ink](https://file.hel.ink) | [navi-crwn/FileHop](https://github.com/navi-crwn/FileHop) | Convert files in your browser; nothing is uploaded. |
-| **Imperium** | private (owner only) | private | The HOP control panel. |
+| **Imperium** | not public-facing: optional, for admins | [navi-crwn/Imperium](https://github.com/navi-crwn/Imperium) | The HOP control panel. |
 <!-- hop-family:end -->

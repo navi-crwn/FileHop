@@ -125,6 +125,23 @@ Tipografi: Inter untuk teks, Instrument Serif miring untuk frasa aksen, JetBrain
 
 Laporkan kerentanan secara pribadi: [SECURITY.md](SECURITY.md). FileHop berlisensi MIT ([LICENSE](LICENSE)). Pustaka yang dipakai: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · font SIL OFL 1.1. Tidak ada mesin GPL atau AGPL di dalamnya. Apa yang berubah dan kapan: [CHANGELOG.md](CHANGELOG.md).
 
+## Hosting sendiri
+
+<!-- self-hosting:start -->
+Semua yang dibutuhkan FileHop ada di repositori publik: tanpa repositori privat, tanpa token, dan tanpa akun hel.ink. Rinciannya ada di panduan keluarga: [docs/self-hosting.md](https://github.com/navi-crwn/HEL.ink/blob/main/docs/self-hosting.md) (bahasa Inggris).
+
+| Komponen | Untuk FileHop | Fungsinya |
+| --- | --- | --- |
+| [HEL.ink](https://github.com/navi-crwn/HEL.ink) (hub, HOP ID) | Opsional: menambahkan “Masuk dengan HOP ID” | Akun dan proses masuk untuk semua aplikasi |
+| [Imperium](https://github.com/navi-crwn/Imperium) | Opsional | Panel admin untuk seluruh keluarga; butuh hub |
+| Font dan ubin keluarga | Tidak perlu dipasang: dimuat dari `hel.ink/hop-assets` | Tanpa hel.ink: font sistem, tanpa ubin melayang |
+
+- **Urutan pemasangan**: FileHop sendiri dengan `./install.sh`. Untuk masuk dengan HOP ID, pasang [hub](https://github.com/navi-crwn/HEL.ink) dulu: `./install.sh --hub new` memasangnya di sebelahnya.
+- **Pengaturan minimum**: `FILEHOP_BASE_URL`; dengan hub: `FILEHOP_SSO_URL`, `FILEHOP_SSO_CLIENT=filehop`, `FILEHOP_SSO_SECRET`.
+- **Sendiri atau dalam keluarga**: FileHop berjalan sendiri tanpa akun sama sekali, dan itu sudah konverter yang lengkap. Dengan hub, orang bisa masuk dengan HOP ID.
+- **Tanpa Imperium**: tidak ada yang hilang: FileHop tidak menyimpan berkas, dan Imperium hanya menampilkan kesehatan serta angkanya.
+<!-- self-hosting:end -->
+
 ## Keluarga HOP
 
 FileHop adalah bagian dari keluarga HOP, kumpulan aplikasi open source yang menghormati privasi dan bisa di-host sendiri.
@@ -139,5 +156,5 @@ FileHop adalah bagian dari keluarga HOP, kumpulan aplikasi open source yang meng
 | **PixelHop** | [pixel.hel.ink](https://pixel.hel.ink) · `p.hel.ink/…` | [navi-crwn/PixelHop](https://github.com/navi-crwn/PixelHop) | Image hosting with albums and direct links. |
 | **NoteHop** | [note.hel.ink](https://note.hel.ink) · `n.hel.ink/…` | [navi-crwn/NoteHop](https://github.com/navi-crwn/NoteHop) | Encrypted notes you share with a link. |
 | **FileHop** | [file.hel.ink](https://file.hel.ink) | [navi-crwn/FileHop](https://github.com/navi-crwn/FileHop) | Convert files in your browser; nothing is uploaded. |
-| **Imperium** | private (owner only) | private | The HOP control panel. |
+| **Imperium** | not public-facing: optional, for admins | [navi-crwn/Imperium](https://github.com/navi-crwn/Imperium) | The HOP control panel. |
 <!-- hop-family:end -->
