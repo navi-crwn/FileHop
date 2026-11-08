@@ -4,7 +4,7 @@ Any file, any format, on your device.
 
 FileHop converts images, PDFs, tables, text and archives **in the browser**. Nothing is uploaded: files are opened with the File API, decoded and encoded in the tab, and handed back through a blob URL. There is no upload button because there is no upload.
 
-This is the standalone web app: the engine and the UI, with no HOP ID, no server state and no dependency on the rest of the family. It is built so that it can be dropped into `file.hel.ink` later without rewriting anything (see [WIRING.md](WIRING.md)).
+The repository holds the browser app (`web/`, Svelte 5 + TypeScript) and a small Go server (`cmd/filehop`, `internal/`) that embeds it, the same pattern as NoteHop and PixelHop. The server hands out the app with the cross-origin isolation headers, signs people in with HOP ID, and answers the family's signed `/hop/*` protocol. It never sees a file. A guest has the whole converter; an account only adds the account menu today. See [WIRING.md](WIRING.md) and [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ---
 
@@ -29,21 +29,28 @@ This is the standalone web app: the engine and the UI, with no HOP ID, no server
 
 ```bash
 npm install
-npm run dev          # http://localhost:5179
+npm run dev          # http://localhost:5179, the browser app alone (Vite)
 
-npm run build        # dist/
-npm start            # http://localhost:4180, dist/ with the production headers
+npm run build        # web/dist/
+npm run local        # http://localhost:8095: the Go server + a stand-in hub on :8097
+npm start            # http://localhost:4180: web/dist/ behind a tiny Node server, no accounts
 ```
 
-`npm start` serves the built app with the headers FileHop will ship behind nginx: `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`, a CSP with no CDN and no inline script, and immutable caching for hashed assets. There is no framework in that server; it is `tools/serve.mjs` and it reads `dist/`.
+`npm run local` builds `cmd/filehop` and `tools/hubstub` (Go 1.27+ on PATH, in `~/.local/go`, or `GO=/path/to/go`) and runs them with a throwaway secret in `.run/dev.env`. The stub plays hub.hel.ink (sign-in page, chained logout, account events) and Imperium (signed `/hop/*` reads), with the real wire formats, so sign-in can be tried without the hub.
+
+Both servers send the headers FileHop ships with: `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`, a CSP with no CDN and no inline script, and immutable caching for hashed assets.
+
+The Go server alone: `npm run build && go build ./cmd/filehop && ./filehop` (settings in `deploy/filehop.env.example`).
 
 ## Test it
 
 ```bash
 npm test             # 17 unit checks: detection, targets, page ranges, CSV typing, archive guards
 npm run lint:i18n    # 9 locales: same keys, same {placeholders}, no Arabic
-npm run fixtures     # writes testdata/ (real PNG, JPEG, 3-page PDF, CSV, JSON, YAML, MD, ZIP)
-node tools/make-hostile.mjs   # writes testdata/hostile-* (zip-slip, zip bomb, PDF with /OpenAction, SVG with <script>)
+npm run check        # svelte-check
+go test ./...        # server: headers, routes, sign-in, tickets, account events, /hop/* signatures
+npm run fixtures     # writes testdata/ (real PNG, JPEG, 3-page PDF, CSV, JSON, YAML, MD, ZIP, hostile-*)
+npm run matrix -- http://localhost:8095   # converts 22 cases in Chromium, WebKit and Firefox (see the script header)
 ```
 
 `testdata/` is not part of the app. It is there so a person can drag something real onto the page in one minute.
@@ -72,7 +79,9 @@ Two things this round found and fixed, worth recording because they are easy to 
 - **YAML was being read as plain text.** The old check required a structural hint that a two-line list does not have. Detection now trusts the `.yaml`/`.yml` name and also accepts a body whose first lines are `key: value`, so `people.yaml` lands on the data path.
 - **HTML → Markdown died with `document is not defined`.** The converter runs in a worker, where there is no DOM, and `DOMParser`/turndown both need one. Conversion now uses a small tag-level rule set in `run/text.ts`, which also means one fewer dependency and a smaller worker chunk.
 
-**Not tested:** Firefox and Safari (no machine here), iOS and Android layouts on real devices, screen readers, a 200-file batch, and files above ~100 MB. Treat those as open items, not as done. AVIF output is untested as a success path: the browser used here cannot encode AVIF, so the only AVIF behaviour proven is that the target is hidden and the engine refuses rather than mislabelling a PNG.
+**Three engines, 2026-11-08** (`tools/browser-matrix.mjs`, production build behind the Go server): Chromium 158, WebKit 27.2 (Playwright's WebKit on Windows, not Apple Safari) and the official Firefox 159 build each passed all 22 cases (one or more files per category, merge, hostile files, hash): `crossOriginIsolated === true`, zero external requests, no console errors, no CSP violations. WebKit without `OffscreenCanvas` failed every raster conversion before this round; those jobs now run on the page.
+
+**Not tested:** Safari on macOS/iOS (no Apple machine), iOS and Android layouts on real devices, screen readers, a 200-file batch, and files above ~100 MB. Treat those as open items, not as done. AVIF output is untested as a success path: the browser used here cannot encode AVIF, so the only AVIF behaviour proven is that the target is hidden and the engine refuses rather than mislabelling a PNG.
 
 ---
 

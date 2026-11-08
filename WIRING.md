@@ -2,7 +2,19 @@
 
 This app is standalone on purpose. It already has the shape the family needs, so wiring it in is additive: nothing in `src/lib/core/` or `src/App.svelte` has to be rewritten.
 
-What is deliberately **not** here yet: HOP ID login, server-side presets and statistics, `/hop/*` for Imperium, "send to PixelHop/LinkHop/NoteHop", and the hub registry row. Those are phase 4 in `2026-11-05_RENCANA-KONVERTER.md`.
+## Status, 2026-11-08
+
+| Step | State |
+|---|---|
+| App moved to `web/`, Go server embeds `web/dist` | done (`cmd/filehop`, `internal/app`, `web/embed.go`) |
+| Headers (COOP/COEP/CORP, CSP) from the Go handler | done, identical to section 3 except `connect-src 'self'` (no fetch to the hub is needed) |
+| `/healthz`, `/hop/health`, `manifest`, `stats`, `users/{sub}`, `events` | done, signed with HOP App Protocol v1 |
+| HOP ID sign-in, chained logout, account events | done; tested against `tools/hubstub`, not yet against the real hub |
+| nginx vhost, systemd unit, env, installer | done in `deploy/`; see `docs/DEPLOY.md` |
+| Three engines, `crossOriginIsolated` | Chromium, WebKit (Playwright), Firefox: 22/22 each; real Safari not yet |
+| Hub registry row, `hop-auth` trusted hosts, Imperium entry | to do, in their own repos, after the owner approves |
+| Prefs and stats (`/api/v1/prefs`, `/api/v1/stats`) | not started |
+| "Send to" buttons, `/send` (P2P) | not started; `/send` already gets the app shell |
 
 ---
 
@@ -66,11 +78,11 @@ style-src 'self' 'unsafe-inline';
 font-src 'self';
 img-src 'self' blob: data:;
 media-src 'self' blob:;
-connect-src 'self' https://hub.hel.ink;
+connect-src 'self';
 object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
 ```
 
-`connect-src` grows by one entry per sibling app that gets a "send to" button. Do not add `https://hel.ink` to `connect-src`: fonts and icons are stylesheets and images, not fetches.
+`connect-src` grows by one entry per sibling app that gets a "send to" button (today it is `'self'` only). Do not add `https://hel.ink` to `connect-src`: fonts and icons are stylesheets and images, not fetches.
 
 **Do not** put COEP on the marketing pages (`/privacy`, `/about`, `/licenses`). Isolation belongs to the app route only.
 
