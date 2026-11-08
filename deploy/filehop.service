@@ -1,0 +1,45 @@
+# systemd unit for FileHop. Installed by deploy/install.sh to
+# /etc/systemd/system/filehop.service. Settings live in /etc/filehop/filehop.env.
+[Unit]
+Description=FileHop browser file converter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=filehop
+Group=filehop
+EnvironmentFile=/etc/filehop/filehop.env
+ExecStart=/usr/local/bin/filehop
+Restart=on-failure
+RestartSec=3
+# /var/lib/filehop holds the SQLite database (accounts, sessions; never files).
+StateDirectory=filehop
+StateDirectoryMode=0750
+WorkingDirectory=/var/lib/filehop
+UMask=0027
+
+# Hardening: FileHop only needs its state directory and the network.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
