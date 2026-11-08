@@ -26,7 +26,22 @@ async function openDoc(file: File) {
   const data = new Uint8Array(await file.arrayBuffer());
   // pdf.js 6 has no eval path at all (the isEvalSupported switch is gone from the
   // API because the code it guarded was removed), so a PDF cannot run script here.
-  const task = lib.getDocument({ data, useSystemFonts: true });
+  //
+  // Pages are drawn on an OffscreenCanvas inside the conversion worker. There
+  // pdf.js cannot register a FontFace for the page, so glyphs fell back to a
+  // font without them and every letter came out as an empty box. With
+  // disableFontFace pdf.js draws each glyph as a path from the font program
+  // itself, which works in a worker and on the main thread alike. A font that
+  // is named but not embedded is then read from the bundled standard fonts
+  // (a system font cannot be drawn as paths, hence useSystemFonts: false).
+  const task = lib.getDocument({
+    data,
+    disableFontFace: true,
+    useSystemFonts: false,
+    standardFontDataUrl: '/vendor/pdfjs/standard_fonts/',
+    cMapUrl: '/vendor/pdfjs/cmaps/',
+    cMapPacked: true
+  });
   const doc = await task.promise;
   return { doc, task };
 }

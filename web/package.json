@@ -5,7 +5,9 @@
   "type": "module",
   "description": "FileHop — any file, any format, on your device.",
   "scripts": {
+    "predev": "node scripts/copy-pdfjs-assets.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/copy-pdfjs-assets.mjs",
     "build": "vite build",
     "preview": "vite preview --port 4179 --strictPort",
     "check": "svelte-check --tsconfig ./tsconfig.json"

@@ -652,6 +652,7 @@
       <p class="small muted">{i18n.t('licenses.body')}</p>
       <ul>
         <li><b>pdf.js</b> 6.5 — Apache-2.0, Mozilla</li>
+        <li><b>Foxit standard PDF fonts</b> (via pdf.js) — BSD-3-Clause, PDFium</li>
         <li><b>pdf-lib</b> 1.17 — MIT</li>
         <li><b>fflate</b> 0.8 — MIT</li>
         <li><b>hash-wasm</b> 4 — MIT</li>
