@@ -75,11 +75,6 @@ const EXT_OF: Record<string, string> = {
   'font/woff2': 'woff2', 'font/woff': 'woff', 'font/ttf': 'ttf', 'font/otf': 'otf'
 };
 
-const CAT_LABEL: Record<Category, string> = {
-  image: 'Image', pdf: 'PDF', data: 'Data', archive: 'Archive',
-  text: 'Text', media: 'Media', font: 'Font', unknown: 'File'
-};
-
 export function extOfName(name: string): string {
   const m = /\.([a-z0-9]+)$/i.exec(name);
   return m ? m[1].toLowerCase() : '';
@@ -95,10 +90,6 @@ export function mimeForExt(ext: string): string | undefined {
 
 export function extForMime(mime: string): string {
   return EXT_OF[mime] ?? 'bin';
-}
-
-export function categoryLabel(cat: Category): string {
-  return CAT_LABEL[cat];
 }
 
 function hex(b: Uint8Array, n: number): string {

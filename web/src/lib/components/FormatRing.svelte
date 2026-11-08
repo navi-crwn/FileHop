@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { i18n } from '../i18n/index.svelte';
+  import { i18n, actionLabel } from '../i18n/index.svelte';
   import { targetsFor, actionDef } from '../core/actions';
   import type { Job } from '../core/types';
 
@@ -60,6 +60,6 @@
       ondragover={(e) => { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; }}
       ondrop={(e) => takeDrop(e, id)}
       onclick={() => onPick(id, [])}
-    >{d?.label ?? id}</button>
+    >{d ? actionLabel(d) : id}</button>
   {/each}
 </div>

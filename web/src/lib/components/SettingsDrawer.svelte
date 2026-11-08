@@ -79,9 +79,9 @@
     {i18n.t('settings.engines')}
   </h3>
   <dl>
-    <dt>Images</dt><dd>{i18n.t('settings.engine_image')}</dd>
+    <dt>{i18n.t('group.image')}</dt><dd>{i18n.t('settings.engine_image')}</dd>
     <dt>PDF</dt><dd>{i18n.t('settings.engine_pdf', { pv: '6', lv: '1.17' })}</dd>
-    <dt>Hash</dt><dd>{i18n.t('settings.engine_hash')}</dd>
+    <dt>{i18n.t('formats.hash')}</dt><dd>{i18n.t('settings.engine_hash')}</dd>
     <dt>ZIP</dt><dd>{i18n.t('settings.engine_zip')}</dd>
   </dl>
   <p class="small faint" style="margin:-8px 0 18px">{i18n.t('settings.no_wasm')}</p>

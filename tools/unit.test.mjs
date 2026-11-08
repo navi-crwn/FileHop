@@ -83,6 +83,13 @@ test('a misleading JSON body is still JSON', async () => {
   assert.equal(d.mime, 'application/json');
 });
 
+test('every action label key is in the English dictionary', () => {
+  const en = JSON.parse(readFileSync(new URL('../web/src/lib/i18n/en.json', import.meta.url), 'utf8'));
+  for (const a of actions.ACTIONS) {
+    if (a.labelKey) assert.ok(a.labelKey in en, `${a.id}: ${a.labelKey}`);
+  }
+});
+
 test('every category has at least one target', () => {
   for (const cat of ['image', 'pdf', 'data', 'text', 'archive', 'font', 'media', 'unknown']) {
     assert.ok(actions.targetsFor(cat, '').length > 0, `no target for ${cat}`);

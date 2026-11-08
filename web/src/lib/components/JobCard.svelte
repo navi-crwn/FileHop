@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { i18n } from '../i18n/index.svelte';
+  import { i18n, actionLabel } from '../i18n/index.svelte';
   import { targetsFor, actionDef, isHash } from '../core/actions';
   import type { Job } from '../core/types';
   import { fmtSize } from '../util/format';
@@ -160,7 +160,7 @@
               class:on={job.action === t}
               aria-pressed={job.action === t}
               onclick={() => onAction(t)}
-            >{td.label}</button>
+            >{actionLabel(td)}</button>
           {/if}
         {/each}
       </div>

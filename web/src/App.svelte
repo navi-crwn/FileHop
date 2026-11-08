@@ -4,10 +4,10 @@
   import JobCard from './lib/components/JobCard.svelte';
   import FormatRing from './lib/components/FormatRing.svelte';
   import SettingsDrawer from './lib/components/SettingsDrawer.svelte';
-  import { i18n, guessLocale, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
+  import { i18n, guessLocale, actionLabel, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
   import { Queue } from './lib/store/queue.svelte';
   import { Pool, hardwareSlots } from './lib/core/pool';
-  import { categoryLabel, detectFile } from './lib/core/detect';
+  import { detectFile } from './lib/core/detect';
   import { targetsFor, actionDef, isAbsorbed, mergeMembers } from './lib/core/actions';
   import type { ActionId, Category, Job } from './lib/core/types';
   import { download, safeFileName } from './lib/util/format';
@@ -76,9 +76,12 @@
 
   /* ------------------------------------------------------- language + theme */
 
-  // loading a dictionary is async; the state object swaps it in and every t() repaints
+  // loading a dictionary is async; the state object swaps it in and every t() repaints.
+  // The tab title follows too, so a bookmark made in Japanese does not read English.
   $effect(() => {
-    void i18n.load(locale);
+    void i18n.load(locale).then(() => {
+      document.title = i18n.t('app.title');
+    });
   });
 
   let theme = $state<'dark' | 'light'>(readTheme());
@@ -513,7 +516,7 @@
           {#each groups as g (g.cat)}
             <div class="group">
               <div class="group-head">
-                <h3>{categoryLabel(g.cat)} · {g.items.length}</h3>
+                <h3>{i18n.t('group.' + g.cat)} · {g.items.length}</h3>
                 {#if g.items.length > 1}
                   <div class="chips">
                     {#each groupTargets(g.cat, g.items[0]?.det.ext ?? '') as t (t)}
@@ -523,8 +526,8 @@
                           type="button"
                           class="chip"
                           onclick={() => { queue.setActionForCategory(g.cat, t); bump(); }}
-                          title={i18n.t('group.all_to') + ' ' + d.label}
-                        >{d.label}</button>
+                          title={i18n.t('group.all_to') + ' ' + actionLabel(d)}
+                        >{actionLabel(d)}</button>
                       {/if}
                     {/each}
                   </div>
