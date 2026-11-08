@@ -32,6 +32,7 @@
   "queue.batch_note": "{n} sur {total} terminés",
   "job.queued": "Prêt",
   "job.absorbed": "Inclus dans la fusion",
+  "job.merge_of": "Fusionne {n} fichiers",
   "job.running": "En cours",
   "job.done": "Terminé",
   "job.error": "Échec",

@@ -32,6 +32,7 @@
   "queue.batch_note": "{total} 件中 {n} 件完了",
   "job.queued": "準備完了",
   "job.absorbed": "結合に含まれています",
+  "job.merge_of": "{n} 件のファイルを結合",
   "job.running": "処理中",
   "job.done": "完了",
   "job.error": "失敗",

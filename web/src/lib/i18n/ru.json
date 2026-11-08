@@ -32,6 +32,7 @@
   "queue.batch_note": "{n} из {total} готово",
   "job.queued": "Готово к запуску",
   "job.absorbed": "Включён в объединение",
+  "job.merge_of": "Объединяет файлов: {n}",
   "job.running": "Работает",
   "job.done": "Готово",
   "job.error": "Ошибка",

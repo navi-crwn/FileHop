@@ -32,6 +32,7 @@
   "queue.batch_note": "{n} de {total} hechos",
   "job.queued": "Listo",
   "job.absorbed": "Incluido en la unión",
+  "job.merge_of": "Une {n} archivos",
   "job.running": "Trabajando",
   "job.done": "Hecho",
   "job.error": "Falló",

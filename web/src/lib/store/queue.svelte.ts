@@ -1,6 +1,6 @@
 import { Pool } from '../core/pool';
 import { detectFile, baseName } from '../core/detect';
-import { actionDef, defaultActionFor, defaultOpts, isHash, mergeCarrier } from '../core/actions';
+import { actionDef, defaultActionFor, defaultOpts, isHash, mergeCarrier, mergeMembers } from '../core/actions';
 import type { ActionId, Job, JobResult } from '../core/types';
 
 /* The queue is the app's only state. `jobs` is a $state array of $state jobs,
@@ -95,20 +95,23 @@ export class Queue {
   /** the files that belong to the same conversion group (needed by PDF merge) */
   groupFor(job: Job): File[] {
     if (job.action !== 'pdf:merge') return [job.file];
-    const pdfs = this.jobs.filter(j => j.det.category === 'pdf' && j.status !== 'canceled');
     // the file the user pressed on carries the merge, so it comes first
-    return [job.file, ...pdfs.filter(j => j.id !== job.id).map(j => j.file)];
+    return [job.file, ...this.mergeGroup().filter(j => j.id !== job.id).map(j => j.file)];
   }
 
-  /** PDFs that Merge will consume, in queue order */
+  /** PDFs that Merge will consume, in queue order: those set to Merge, nothing else */
   mergeGroup(): Job[] {
-    return this.jobs.filter(j => j.det.category === 'pdf' && j.status !== 'canceled');
+    return mergeMembers(this.jobs);
   }
 
   setAction(job: Job, action: ActionId): void {
     job.action = action;
     job.opts = { ...defaultOpts(action) };
     this.resetIfFinished(job);
+    // Merge is one result for the whole group: a PDF joining it after a finished merge starts the group over.
+    if (action === 'pdf:merge') {
+      for (const j of this.mergeGroup()) this.resetIfFinished(j);
+    }
     this.deps.onChange();
   }
 
@@ -141,7 +144,7 @@ export class Queue {
   }
 
   private resetIfFinished(job: Job): void {
-    if (job.status === 'done' || job.status === 'error' || job.status === 'canceled') {
+    if (job.status === 'done' || job.status === 'error' || job.status === 'canceled' || job.status === 'merged') {
       job.status = 'queued';
       job.result = undefined;
       job.error = undefined;
@@ -158,7 +161,7 @@ export class Queue {
   }
 
   clearFinished(): void {
-    this.jobs = this.jobs.filter(j => j.status !== 'done' && j.status !== 'error' && j.status !== 'canceled');
+    this.jobs = this.jobs.filter(j => j.status !== 'done' && j.status !== 'error' && j.status !== 'canceled' && j.status !== 'merged');
     this.deps.onChange();
   }
 
@@ -226,6 +229,16 @@ export class Queue {
       job.status = 'done';
       job.progress = 1;
       job.endedAt = performance.now();
+      if (job.action === 'pdf:merge') {
+        // the other PDFs of the group are inside this result: they are finished too, with nothing of their own
+        for (const j of this.mergeGroup()) {
+          if (j.id !== job.id && j.status === 'queued') {
+            j.status = 'merged';
+            j.progress = 1;
+            j.endedAt = job.endedAt;
+          }
+        }
+      }
       this.deps.onDone?.(job);
     } catch (e) {
       const err = e as Error & { canceled?: boolean };

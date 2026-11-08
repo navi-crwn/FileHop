@@ -8,7 +8,7 @@
   import { Queue } from './lib/store/queue.svelte';
   import { Pool, hardwareSlots } from './lib/core/pool';
   import { categoryLabel, detectFile } from './lib/core/detect';
-  import { targetsFor, actionDef, isAbsorbed } from './lib/core/actions';
+  import { targetsFor, actionDef, isAbsorbed, mergeMembers } from './lib/core/actions';
   import type { ActionId, Category, Job } from './lib/core/types';
   import { download, safeFileName } from './lib/util/format';
   import { zipSync } from 'fflate';
@@ -536,6 +536,7 @@
                   {job}
                   pdfCount={g.items.length}
                   absorbed={isAbsorbed(job, queue.jobs)}
+                  mergeNames={job.action === 'pdf:merge' && !isAbsorbed(job, queue.jobs) ? mergeMembers(queue.jobs).map(j => j.name) : []}
                   onAction={(id) => handleAction(job, id)}
                   onOpt={(k, v) => handleOpt(job, k, v)}
                   onRun={() => runOne(job)}

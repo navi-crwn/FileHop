@@ -56,10 +56,17 @@ const DATA_TARGETS: ActionId[] = ['data:json', 'data:csv', 'data:tsv', 'data:yam
 const TEXT_TARGETS: ActionId[] = ['text:md', 'text:html', 'text:txt'];
 const HASH_TARGETS: ActionId[] = ['hash:sha256', 'hash:blake3', 'hash:md5'];
 
+/** The PDFs that take part in the merge: only those whose target is Merge, in queue
+    order. A PDF set to Split or Rotate, or one already finished with another target,
+    is not part of it. */
+export function mergeMembers(jobs: Job[]): Job[] {
+  return jobs.filter(j => j.action === 'pdf:merge' && j.status !== 'canceled');
+}
+
 /** One merge per group: the first PDF that asked for it carries the result,
     the rest are absorbed so the same document is not built twice. */
 export function mergeCarrier(jobs: Job[]): Job | undefined {
-  return jobs.find(j => j.action === 'pdf:merge' && j.status !== 'canceled');
+  return mergeMembers(jobs)[0];
 }
 
 /** Targets offered for a category, in the order the radial ring and the card show them.

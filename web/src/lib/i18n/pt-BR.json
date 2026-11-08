@@ -32,6 +32,7 @@
   "queue.batch_note": "{n} de {total} prontos",
   "job.queued": "Pronto",
   "job.absorbed": "Incluído na junção",
+  "job.merge_of": "Junta {n} arquivos",
   "job.running": "Trabalhando",
   "job.done": "Concluído",
   "job.error": "Falhou",

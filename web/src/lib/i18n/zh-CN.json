@@ -32,6 +32,7 @@
   "queue.batch_note": "{total} 个中已完成 {n} 个",
   "job.queued": "就绪",
   "job.absorbed": "已并入合并结果",
+  "job.merge_of": "合并 {n} 个文件",
   "job.running": "处理中",
   "job.done": "完成",
   "job.error": "失败",

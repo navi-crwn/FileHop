@@ -32,6 +32,7 @@
   "queue.batch_note": "{n} von {total} fertig",
   "job.queued": "Bereit",
   "job.absorbed": "Im Zusammenführen enthalten",
+  "job.merge_of": "Führt {n} Dateien zusammen",
   "job.running": "Läuft",
   "job.done": "Fertig",
   "job.error": "Fehlgeschlagen",

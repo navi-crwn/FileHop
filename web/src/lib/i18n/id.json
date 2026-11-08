@@ -32,6 +32,7 @@
   "queue.batch_note": "{n} dari {total} selesai",
   "job.queued": "Siap",
   "job.absorbed": "Digabung ke hasil merge",
+  "job.merge_of": "Menggabungkan {n} berkas",
   "job.running": "Bekerja",
   "job.done": "Selesai",
   "job.error": "Gagal",

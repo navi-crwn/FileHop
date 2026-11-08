@@ -32,6 +32,7 @@
   "queue.batch_note": "{n} of {total} done",
   "job.queued": "Ready",
   "job.absorbed": "Folded into the merge",
+  "job.merge_of": "Merges {n} files",
   "job.running": "Working",
   "job.done": "Done",
   "job.error": "Failed",

@@ -12,6 +12,8 @@
     pdfCount: number;
     /** this PDF is folded into another card's merge, so it has no result of its own */
     absorbed?: boolean;
+    /** when this card carries the merge: the names of the PDFs it will join, this one first */
+    mergeNames?: string[];
     onAction: (id: Job['action']) => void;
     onOpt: (key: string, value: number | string) => void;
     onRun: () => void;
@@ -20,7 +22,7 @@
     onDownload: () => void;
   }
 
-  let { job, pdfCount, absorbed = false, onAction, onOpt, onRun, onCancel, onRemove, onDownload }: Props = $props();
+  let { job, pdfCount, absorbed = false, mergeNames = [], onAction, onOpt, onRun, onCancel, onRemove, onDownload }: Props = $props();
   let copied = $state(false);
 
   const targets = $derived(
@@ -119,7 +121,7 @@
       {#if job.det.mismatch}
         <span class="badge warn" title={i18n.t('job.mismatch_title')}>{i18n.t('job.mismatch')}</span>
       {/if}
-      {#if absorbed}
+      {#if absorbed || job.status === 'merged'}
         <span class="badge">{i18n.t('job.absorbed')}</span>
       {:else if job.status === 'done'}
         <span class="badge ok">{i18n.t('job.done')}</span>
@@ -140,7 +142,14 @@
       {/if}
     </div>
 
-    {#if job.status !== 'done' && !absorbed}
+    {#if mergeNames.length > 1 && job.status !== 'done'}
+      <p class="merge-list" title={mergeNames.join(', ')}>
+        <strong>{i18n.t('job.merge_of', { n: mergeNames.length })}:</strong>
+        {mergeNames.join(' · ')}
+      </p>
+    {/if}
+
+    {#if job.status !== 'done' && job.status !== 'merged' && !absorbed}
       <div class="targets" role="group" aria-label={i18n.t('job.target')}>
         {#each targets as t (t)}
           {@const td = actionDef(t)}
@@ -222,7 +231,7 @@
   </div>
 
   <div class="side">
-    {#if absorbed}
+    {#if absorbed || job.status === 'merged'}
       <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
     {:else if job.status === 'queued'}
       <button class="mini primary" type="button" onclick={onRun}><Icon name="play" size={14} />{i18n.t('job.run')}</button>
@@ -243,4 +252,17 @@
 
 <style>
   .card .side :global(svg) { flex: none; }
+  .merge-list {
+    margin: 2px 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--muted);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    word-break: break-word;
+  }
+  .merge-list strong { color: var(--text); font-weight: 600; }
 </style>
