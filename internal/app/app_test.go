@@ -154,7 +154,7 @@ func TestHopNeedsSSOAndSignature(t *testing.T) {
 		t.Errorf("health: %v", v)
 	}
 	m := decode(t, signed(t, srv, "imperium", "GET", "/hop/manifest", nil))["data"].(map[string]any)
-	if caps := m["capabilities"].([]any); len(caps) == 0 || caps[0] != "events" {
+	if caps := m["capabilities"].([]any); len(caps) != 3 || caps[0] != "admin_api" || caps[1] != "events" {
 		t.Errorf("manifest capabilities: %v", m["capabilities"])
 	}
 }

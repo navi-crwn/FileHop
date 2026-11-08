@@ -99,7 +99,7 @@ func (a *App) hopHealth(w http.ResponseWriter, r *http.Request, _ []byte) {
 func (a *App) hopManifest(w http.ResponseWriter, r *http.Request, _ []byte) {
 	hopOK(w, map[string]any{
 		"app": "filehop", "name": "FileHop", "icon": "file", "base_url": a.cfg.BaseURL,
-		"capabilities":  []string{"events", "zero_knowledge"},
+		"capabilities":  []string{"admin_api", "events", "zero_knowledge"},
 		"content_types": []any{},
 		"actions":       map[string]any{"user": []string{"revoke_sessions"}},
 	})
