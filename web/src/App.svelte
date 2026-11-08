@@ -85,9 +85,10 @@
     });
   });
 
-  // Japanese and Chinese put no space after their punctuation, so the two halves of
-  // the hero title meet directly there; every other language has a space between them.
-  const heroGap = $derived(/[、，。]$/.test(i18n.t('hero.h1_pre')) ? '' : ' ');
+  // Japanese and Chinese put no space after their punctuation, and their text wraps
+  // between any two characters, which left a lone character hanging after the comma.
+  // There the accent phrase starts on its own line; every other language has a space.
+  const heroBreak = $derived(/[、，。]$/.test(i18n.t('hero.h1_pre')));
 
   let theme = $state<'dark' | 'light'>(readTheme());
 
@@ -476,7 +477,7 @@
       <section class="hero">
         <div class="hero-copy">
           <span class="eyebrow"><i></i>{i18n.t('hero.eyebrow')}</span>
-          <h1>{i18n.t('hero.h1_pre')}{heroGap}<em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
+          <h1>{i18n.t('hero.h1_pre')}{#if heroBreak}<br />{:else}{' '}{/if}<em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
           <p class="lead">{i18n.t('hero.lead')}</p>
           <div class="cta">
             <button class="tbtn primary" type="button" onclick={pickFiles}>
