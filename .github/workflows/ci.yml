@@ -1,0 +1,52 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint:i18n
+      - run: npm run check
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+          retention-days: 1
+  go:
+    needs: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: go build -trimpath -o filehop ./cmd/filehop && ./filehop -version
+      - name: Test the commit message check
+        run: bash tests/test_check_commit_messages.sh
+  commit-messages:
+    # Only the commits of the pull request, never the older history.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: No attribution trailer or agent name in the new commits
+        run: scripts/check-commit-messages.sh ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}

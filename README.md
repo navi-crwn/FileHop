@@ -1,14 +1,39 @@
-# FileHop
+<p align="center">🌐 <b>English</b> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.de.md">Deutsch</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.ja.md">日本語</a> · <a href="README.pt-BR.md">Português (Brasil)</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ru.md">Русский</a></p>
 
-Any file, any format, on your device.
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/hero-dark.webp"><img src="docs/readme/hero-light.webp" alt="The FileHop home page: the headline 'Convert anything, and let nothing leave this device' next to the drop zone" width="100%"></picture></p>
 
-FileHop converts images, PDFs, tables, text and archives **in the browser**. Nothing is uploaded: files are opened with the File API, decoded and encoded in the tab, and handed back through a blob URL. There is no upload button because there is no upload.
+<p align="center"><b>Any file, any format, on your device.</b><br>FileHop converts images, PDFs, tables, text and archives in your browser. Nothing is uploaded.</p>
 
-The repository holds the browser app (`web/`, Svelte 5 + TypeScript) and a small Go server (`cmd/filehop`, `internal/`) that embeds it, the same pattern as NoteHop and PixelHop. The server hands out the app with the cross-origin isolation headers, signs people in with HOP ID, and answers the family's signed `/hop/*` protocol. It never sees a file. A guest has the whole converter; an account only adds the account menu today. See [WIRING.md](WIRING.md) and [docs/DEPLOY.md](docs/DEPLOY.md).
+<p align="center">
+  <a href="https://file.hel.ink"><b>Try it online</b></a> ·
+  <a href="#run-your-own">Run your own</a> ·
+  <a href="#what-it-converts">What it converts</a> ·
+  <a href="#faq">FAQ</a> ·
+  <a href="docs/DEPLOY.md">Deploying</a> ·
+  <a href="docs/TESTING.md">Testing</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
 
----
+<p align="center"><sub>One Go binary · conversion runs in the browser tab · 9 languages · no ads, no trackers · free and open source (MIT)</sub></p>
 
-## What works today
+> [!IMPORTANT]
+> FileHop has no upload button because there is no upload. Files are opened with the browser's File API, converted inside the tab with your own CPU, and handed back as a download. The server sends the app and, if you sign in, keeps your HOP ID session. It never receives a file.
+
+FileHop is a file converter you can run yourself. Drop files on the page, pick a format on each card (or one for the whole group), press Convert, download. It is for people who:
+
+- need a PNG as WebP, a scan as PDF, or a PDF split into pages, and do not want to hand the file to a website,
+- turn CSV into JSON or YAML (and back) without a spreadsheet,
+- want to see what is inside a ZIP, or check a file's SHA-256, on a machine where they cannot install software.
+
+Install it with one command. The script checks your computer, asks a few questions, and can connect FileHop to a HOP ID account hub:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/navi-crwn/FileHop/main/install.sh | bash
+```
+
+From a clone: `./install.sh`. Update with `./update.sh` and remove with `./uninstall.sh`. Add `--yes` to accept every default; `--help` lists the options.
+
+## What it converts
 
 | Category | In | Out |
 |---|---|---|
@@ -19,106 +44,100 @@ The repository holds the browser app (`web/`, Svelte 5 + TypeScript) and a small
 | Archives | ZIP, TAR, GZIP | ZIP (repacked), GZIP, listing (JSON) |
 | Anything | any file | SHA-256, BLAKE3, MD5 |
 
-\* AVIF output is offered only where the browser's own encoder can write it. Canvas silently returns a PNG when it cannot, so the app probes the MIME and hides the target instead of handing you a mislabelled file.
+\* AVIF output is offered only where the browser's own encoder can write it. Canvas silently returns a PNG when it cannot, so FileHop checks the result and hides the target instead of handing you a mislabelled file.
 
-**Deliberately not here yet:** DOCX and LaTeX round-trips (needs pandoc, GPL), RAR and 7z (no WASM reader vendored yet), video and audio (needs the WebCodecs/Mediabunny work from phase 2). The UI says so in the formats section rather than pretending.
+**Not here yet:** DOCX and LaTeX (needs pandoc, GPL), RAR and 7z, video and audio. The app says so in its formats section rather than pretending.
 
----
+Tested on 2026-11-08 in Chromium 158, Firefox 159 and the WebKit engine (22 conversions each, all passed). Safari on a Mac or iPhone has not been tested yet. Details: [docs/TESTING.md](docs/TESTING.md).
 
-## Run it
+## What the server sees
+
+- The app's own files (HTML, scripts, fonts). Every request is same-origin; the page loads nothing from any other site.
+- If you sign in with HOP ID: your HOP ID number, name and email, and a session cookie. Signing out, or being signed out by the hub, deletes the session.
+- Never a file, a file name, or a conversion result.
+
+The page runs cross-origin isolated (`Cross-Origin-Embedder-Policy: require-corp`) with a strict Content Security Policy: no inline scripts, no `eval`, no third-party hosts.
+
+## Run your own
+
+**With the installer** (above): it builds the browser app with Node 20.19+ and the server with Go 1.27+, or uses Docker, and writes `.env`, `start.sh` and a systemd unit for you.
+
+**By hand:**
 
 ```bash
-npm install
+npm ci && npm run build        # the browser app → web/dist
+go build -o filehop ./cmd/filehop
+FILEHOP_ADDR=127.0.0.1:8095 ./filehop
+```
+
+Settings are environment variables, listed in [`deploy/filehop.env.example`](deploy/filehop.env.example). Without `FILEHOP_SSO_URL` FileHop runs with no accounts at all, which is a complete converter. With it, people can sign in with HOP ID from your hub (HEL.ink). [docs/DEPLOY.md](docs/DEPLOY.md) covers nginx, systemd and the hub.
+
+**For development:**
+
+```bash
 npm run dev          # http://localhost:5179, the browser app alone (Vite)
-
-npm run build        # web/dist/
-npm run local        # http://localhost:8095: the Go server + a stand-in hub on :8097
-npm start            # http://localhost:4180: web/dist/ behind a tiny Node server, no accounts
+npm run local        # http://localhost:8095, the Go server + a stand-in hub on :8097
 ```
 
-`npm run local` builds `cmd/filehop` and `tools/hubstub` (Go 1.27+ on PATH, in `~/.local/go`, or `GO=/path/to/go`) and runs them with a throwaway secret in `.run/dev.env`. The stub plays hub.hel.ink (sign-in page, chained logout, account events) and Imperium (signed `/hop/*` reads), with the real wire formats, so sign-in can be tried without the hub.
+`npm run local` runs the real server next to `tools/hubstub`, a small stand-in for the HOP ID hub and the Imperium control panel with the same wire formats, so sign-in, sign-out and account events can be tried on one machine.
 
-Both servers send the headers FileHop ships with: `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`, a CSP with no CDN and no inline script, and immutable caching for hashed assets.
+## FAQ
 
-The Go server alone: `npm run build && go build ./cmd/filehop && ./filehop` (settings in `deploy/filehop.env.example`).
+**Is my file sent anywhere?** No. Open the Network tab in your browser's developer tools while a conversion runs: it stays empty.
 
-## Test it
+**Do I need an account?** No. Everything works without one. A HOP ID only adds the account menu today; synced presets come later.
 
-```bash
-npm test             # 17 unit checks: detection, targets, page ranges, CSV typing, archive guards
-npm run lint:i18n    # 9 locales: same keys, same {placeholders}, no Arabic
-npm run check        # svelte-check
-go test ./...        # server: headers, routes, sign-in, tickets, account events, /hop/* signatures
-npm run fixtures     # writes testdata/ (real PNG, JPEG, 3-page PDF, CSV, JSON, YAML, MD, ZIP, hostile-*)
-npm run matrix -- http://localhost:8095   # converts 22 cases in Chromium, WebKit and Firefox (see the script header)
-```
+**How big can a file be?** As big as your browser's memory allows. FileHop estimates the memory a job needs before it starts and tells you when a file is too large for this device. Batches are capped at 50 files.
 
-`testdata/` is not part of the app. It is there so a person can drag something real onto the page in one minute.
+**Why is AVIF missing on my computer?** Your browser cannot write AVIF. FileHop only offers formats it can actually produce.
 
-What was checked by hand in Chromium 152 (Electron, Windows) against the production build:
+**Are the conversions safe for untrusted files?** FileHop treats every file as hostile: archives are measured before they are unpacked (zip bombs and `../` paths are refused), SVG is drawn through an image element that never runs scripts, and PDFs are read with pdf.js, which does not run a document's JavaScript.
 
-- PNG 240×160 → WebP (105 KB → 1.2 KB), JPEG, PNG, PDF
-- JPEG 320×220 → WebP (7 KB → 3 KB), PNG, resized JPEG, PDF
-- SVG with `<script>` → WebP, script did not run
-- PDF 3 pages → split (3 files), rotate, pick pages `2-3`, pages → PNG, pages → JPEG, info
-- two PDFs + Merge → one 6-page PDF; the second card is marked "Folded into the merge" instead of building the same file twice
-- CSV → JSON/TSV/YAML, JSON → CSV, TSV → CSV, values typed (`3` stays a number, `007` stays text)
-- Markdown → HTML, HTML → Markdown, HTML → text
-- ZIP → listing, ZIP → repacked ZIP, download one file, download all as ZIP
-- SHA-256/MD5 checked against `Get-FileHash`; identical
-- drag a file over the page → radial ring → release on a format → queue gets the files with that target
-- cancel mid-flight → card reads "Stopped" and stops
-- switching all 9 languages and both themes without a reload
-- hostile files: zip-slip refused, zip bomb refused from the declared size, PDF with `/OpenAction` read without executing, SVG script not run
-- `performance.getEntriesByType('resource')`: 18 requests, all same-origin, zero external
-- Lighthouse against the built app: accessibility 100, best practices 100, SEO 100, no failing audits
-- `svelte-check`: 0 errors, 0 warnings
-
-Two things this round found and fixed, worth recording because they are easy to reintroduce:
-
-- **YAML was being read as plain text.** The old check required a structural hint that a two-line list does not have. Detection now trusts the `.yaml`/`.yml` name and also accepts a body whose first lines are `key: value`, so `people.yaml` lands on the data path.
-- **HTML → Markdown died with `document is not defined`.** The converter runs in a worker, where there is no DOM, and `DOMParser`/turndown both need one. Conversion now uses a small tag-level rule set in `run/text.ts`, which also means one fewer dependency and a smaller worker chunk.
-
-**Three engines, 2026-11-08** (`tools/browser-matrix.mjs`, production build behind the Go server): Chromium 158, WebKit 27.2 (Playwright's WebKit on Windows, not Apple Safari) and the official Firefox 159 build each passed all 22 cases (one or more files per category, merge, hostile files, hash): `crossOriginIsolated === true`, zero external requests, no console errors, no CSP violations. WebKit without `OffscreenCanvas` failed every raster conversion before this round; those jobs now run on the page.
-
-**Not tested:** Safari on macOS/iOS (no Apple machine), iOS and Android layouts on real devices, screen readers, a 200-file batch, and files above ~100 MB. Treat those as open items, not as done. AVIF output is untested as a success path: the browser used here cannot encode AVIF, so the only AVIF behaviour proven is that the target is hidden and the engine refuses rather than mislabelling a PNG.
-
----
-
-## How it works
+## Under the hood
 
 ```
-App.svelte (queue UI)
-   └── Queue (src/lib/store/queue.svelte.ts)      $state array of $state jobs
-         └── Pool (src/lib/core/pool.ts)          one Worker per slot, sized by the machine
-               └── convert.worker.ts             runJob() → engines
-                     ├── run/image.ts             canvas + createImageBitmap + pdf-lib
-                     ├── run/pdf.ts               pdf.js (read) + pdf-lib (write)
-                     ├── run/data.ts              papaparse / yaml, one table model
-                     ├── run/text.ts              marked / turndown / DOMParser
-                     ├── run/archive.ts           fflate + a ustar reader
-                     └── run/hash.ts              hash-wasm, 8 MB chunks
+web/src/App.svelte (queue UI)
+   └── Queue (web/src/lib/store/queue.svelte.ts)   $state array of $state jobs
+         └── Pool (web/src/lib/core/pool.ts)       one Worker per slot, sized by the machine
+               └── convert.worker.ts              runJob() → engines
+                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib
+                     ├── run/pdf.ts                pdf.js (read) + pdf-lib (write)
+                     ├── run/data.ts               papaparse / yaml, one table model
+                     ├── run/text.ts               marked, and a DOM-free HTML → Markdown rule set
+                     ├── run/archive.ts            fflate + a ustar reader
+                     └── run/hash.ts               hash-wasm, 8 MB chunks
+
+cmd/filehop          the server: web/dist embedded, headers, HOP ID sign-in, /hop/*
+internal/app         routes, sign-in, the HOP App Protocol handlers
+internal/db          SQLite: accounts, sessions, handled event ids (no files)
+internal/hop         HOP App Protocol v1, the same as NoteHop's
 ```
 
-A few decisions worth knowing:
+- **Type comes from the bytes.** Magic bytes first, the extension second. A JPEG renamed `.txt` still opens, and the card says "Name ≠ content".
+- **One job, one worker.** The pool leaves a core for the page, drops to 2 workers on phones and low-memory devices, and can be pinned to 1 in the settings.
+- **Canvas work moves to the page when it must.** SVG needs an `<img>`, and browsers without `OffscreenCanvas` (Safari before 16.4) cannot draw in a worker, so those jobs take one main-thread slot.
+- **Nothing is fetched at run time.** The whole engine is in the bundle (about 236 KB gzip for the worker chunk, 45 KB for the page).
+- **For the family:** `/hop/health`, `/hop/manifest`, `/hop/stats`, `/hop/users/{sub}` and `/hop/events` answer signed calls from the Imperium control panel and the hub.
 
-- **Type comes from the bytes.** `detect.ts` matches magic bytes first and only falls back to the extension. A JPEG renamed `.txt` opens, and the card shows "Name ≠ content" so the discrepancy is not silent.
-- **One job, one worker.** Progress ticks repaint one card, not the list. The pool leaves a core for the UI, drops to 2 slots on mobile or low-memory devices, and the settings drawer can pin it to 1.
-- **SVG runs on the page.** A worker has no `<img>`, and `createImageBitmap` will not render an SVG document. So SVG jobs take a main-thread slot, one at a time, while everything else stays off the main thread.
-- **Nothing is downloaded at runtime.** No engine is fetched on demand: the whole engine is in the bundle (`~640 KB` for the worker chunk) and the shell is `42 KB` gzip. That is the opposite of the lazy-WASM plan in the roadmap, and it is the right call at this size — one request, no cold-start, no cache bookkeeping. When the heavy engines (pandoc, DuckDB, ffmpeg) arrive, those are the ones that should load lazily.
-- **Archives are checked before they are inflated.** `zip.ts` reads the central directory, sums the declared uncompressed sizes, and refuses on size, per-entry size, entry count or ratio. `unzipSync` allocates everything at once, so measuring afterwards would already be too late.
-- **Untrusted input is treated as hostile.** PDFs open with `isEvalSupported: false`; SVG goes through `<img>`, which never runs scripts; HTML goes through `DOMParser`, which never executes; zip-slip and absolute paths are refused.
+Type: Inter for text, Instrument Serif italic for the accent phrase, JetBrains Mono for file names and hashes, all vendored in `web/public/hop-fonts/`. Languages: `en, zh-CN, de, id, ja, pt-BR, es, fr, ru` in `web/src/lib/i18n/`; `npm run lint:i18n` keeps them in step.
 
-## Languages
+## Security, license and history
 
-`en, zh-CN, de, id, ja, pt-BR, es, fr, ru` in `src/lib/i18n/`. No Arabic, per the family rule. `npm run lint:i18n` fails on a missing key, an extra key, an empty value, or a `{placeholder}` that does not match English.
+Report vulnerabilities privately: [SECURITY.md](SECURITY.md). FileHop is MIT-licensed ([LICENSE](LICENSE)). Its libraries: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · fonts SIL OFL 1.1. No GPL or AGPL engine is included. What changed and when: [CHANGELOG.md](CHANGELOG.md).
 
-## Type in this app
+## The Hop family
 
-Inter for text, Instrument Serif italic for the accent phrase in the hero, JetBrains Mono for file names and hashes. The font files are vendored in `public/hop-fonts/` from `hop-assets/v1` so the app runs with no network at all; when FileHop moves to `file.hel.ink` these switch to the family's shared URL.
+FileHop is part of the HOP family of privacy-respecting, self-hostable open-source apps.
 
-## Licences
-
-`pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · fonts SIL OFL 1.1.
-
-No AGPL engine is present. PDF reading uses pdf.js, not MuPDF; PDF writing uses pdf-lib, not Ghostscript. The full list is in the app under "Licenses".
+<!-- hop-family:start -->
+<!-- Generated from HEL.ink resources/hop-assets/apps.source.json; edit there, then run scripts/hop_assets.py build. -->
+| App | Address | Repository | What it does |
+| --- | --- | --- | --- |
+| **HOP ID** | [hel.ink](https://hel.ink) · accounts at `hub.hel.ink` | [navi-crwn/HEL.ink](https://github.com/navi-crwn/HEL.ink) | One account for every HOP app. |
+| **LinkHop** | [link.hel.ink](https://link.hel.ink) · `hel.ink/l/…` | [navi-crwn/LinkHop](https://github.com/navi-crwn/LinkHop) | Short links, QR codes and click analytics. |
+| **BioHop** | [bio.hel.ink](https://bio.hel.ink) · `hel.ink/b/…` | [navi-crwn/BioHop](https://github.com/navi-crwn/BioHop) | One link-in-bio page for everything you do. |
+| **PixelHop** | [pixel.hel.ink](https://pixel.hel.ink) · `p.hel.ink/…` | [navi-crwn/PixelHop](https://github.com/navi-crwn/PixelHop) | Image hosting with albums and direct links. |
+| **NoteHop** | [note.hel.ink](https://note.hel.ink) · `n.hel.ink/…` | [navi-crwn/NoteHop](https://github.com/navi-crwn/NoteHop) | Encrypted notes you share with a link. |
+| **FileHop** | [file.hel.ink](https://file.hel.ink) | [navi-crwn/FileHop](https://github.com/navi-crwn/FileHop) | Convert files in your browser; nothing is uploaded. |
+| **Imperium** | private (owner only) | private | The HOP control panel. |
+<!-- hop-family:end -->
