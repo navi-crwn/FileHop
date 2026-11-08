@@ -147,5 +147,14 @@
   "err.svg_needs_main_thread": "Ce SVG doit être rendu dans la page, ce qui n'est pas disponible. Rechargez et réessayez.",
   "toast.added": "{n} fichiers ajoutés",
   "toast.limit": "La file contient 50 fichiers à la fois. {added} sur {total} ajoutés ; convertissez ou videz ce lot d'abord.",
-  "licenses.no_agpl": "La lecture des PDF utilise pdf.js, pas MuPDF. Aucun moteur AGPL n'est présent dans cette version."
+  "licenses.no_agpl": "La lecture des PDF utilise pdf.js, pas MuPDF. Aucun moteur AGPL n'est présent dans cette version.",
+  "account.menu": "Compte",
+  "account.signed_in_as": "Connecté en tant que",
+  "account.hop_id": "Compte HOP ID",
+  "account.sign_out": "Se déconnecter",
+  "account.sign_in": "Se connecter",
+  "auth.err_expired": "La connexion a pris trop de temps ou a commencé dans un autre navigateur. Réessayez.",
+  "auth.err_invalid": "Ce lien de connexion n’est plus valide. Réessayez.",
+  "auth.err_suspended": "Ce HOP ID est suspendu.",
+  "auth.err_failed": "La connexion a échoué de notre côté. Réessayez dans un instant."
 }

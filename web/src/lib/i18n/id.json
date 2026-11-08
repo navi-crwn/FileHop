@@ -147,5 +147,14 @@
   "err.svg_needs_main_thread": "SVG ini harus dirender di halaman, dan itu sedang tidak tersedia. Muat ulang lalu coba lagi.",
   "toast.added": "{n} file ditambahkan",
   "toast.limit": "Antrean menampung 50 file sekaligus. {added} dari {total} ditambahkan; konversi atau bersihkan batch ini dulu.",
-  "licenses.no_agpl": "Pembacaan PDF memakai pdf.js, bukan MuPDF. Tidak ada engine AGPL di build ini."
+  "licenses.no_agpl": "Pembacaan PDF memakai pdf.js, bukan MuPDF. Tidak ada engine AGPL di build ini.",
+  "account.menu": "Akun",
+  "account.signed_in_as": "Masuk sebagai",
+  "account.hop_id": "Akun HOP ID",
+  "account.sign_out": "Keluar",
+  "account.sign_in": "Masuk",
+  "auth.err_expired": "Proses masuk terlalu lama atau dimulai di browser lain. Silakan coba lagi.",
+  "auth.err_invalid": "Tautan masuk ini sudah tidak berlaku. Silakan coba lagi.",
+  "auth.err_suspended": "HOP ID ini sedang ditangguhkan.",
+  "auth.err_failed": "Gagal masuk karena masalah di pihak kami. Coba lagi sebentar lagi."
 }

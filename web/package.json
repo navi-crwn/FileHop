@@ -1,0 +1,30 @@
+{
+  "name": "filehop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "FileHop — any file, any format, on your device.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4179 --strictPort",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "hash-wasm": "^4.12.0",
+    "marked": "^18.1.3",
+    "papaparse": "^5.7.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.5.438",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/papaparse": "^5.5.0",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.4.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.6"
+  }
+}

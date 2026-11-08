@@ -16,7 +16,7 @@ const ts = require('typescript');
 const dir = mkdtempSync(join(tmpdir(), 'fh-unit-'));
 
 function transpile(rel) {
-  const src = readFileSync(new URL(`../src/lib/core/${rel}`, import.meta.url), 'utf8');
+  const src = readFileSync(new URL(`../web/src/lib/core/${rel}`, import.meta.url), 'utf8');
   const js = ts.transpileModule(src, {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 }
   }).outputText;

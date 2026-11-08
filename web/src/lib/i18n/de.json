@@ -147,5 +147,14 @@
   "err.svg_needs_main_thread": "Dieses SVG muss in der Seite gerendert werden, was gerade nicht verfügbar ist. Neu laden und erneut versuchen.",
   "toast.added": "{n} Dateien hinzugefügt",
   "toast.limit": "Die Warteschlange fasst 50 Dateien. {added} von {total} wurden hinzugefügt; konvertiere oder leere diesen Stapel zuerst.",
-  "licenses.no_agpl": "PDF wird mit pdf.js gelesen, nicht mit MuPDF. In diesem Build steckt keine AGPL-Engine."
+  "licenses.no_agpl": "PDF wird mit pdf.js gelesen, nicht mit MuPDF. In diesem Build steckt keine AGPL-Engine.",
+  "account.menu": "Konto",
+  "account.signed_in_as": "Angemeldet als",
+  "account.hop_id": "HOP-ID-Konto",
+  "account.sign_out": "Abmelden",
+  "account.sign_in": "Anmelden",
+  "auth.err_expired": "Die Anmeldung hat zu lange gedauert oder wurde in einem anderen Browser begonnen. Bitte versuche es erneut.",
+  "auth.err_invalid": "Dieser Anmeldelink ist nicht mehr gültig. Bitte versuche es erneut.",
+  "auth.err_suspended": "Diese HOP ID ist gesperrt.",
+  "auth.err_failed": "Die Anmeldung ist bei uns fehlgeschlagen. Bitte versuche es gleich noch einmal."
 }

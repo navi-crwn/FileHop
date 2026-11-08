@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Icon from './lib/components/Icon.svelte';
   import JobCard from './lib/components/JobCard.svelte';
   import FormatRing from './lib/components/FormatRing.svelte';
@@ -11,6 +12,7 @@
   import type { ActionId, Category, Job } from './lib/core/types';
   import { download, safeFileName } from './lib/util/format';
   import { zipSync } from 'fflate';
+  import { account, loadAccount, initials, takeAuthError } from './lib/account.svelte';
 
   /* ------------------------------------------------------------------ state */
 
@@ -105,6 +107,13 @@
   $effect(() => {
     pool.reconfigure({ maxWorkers, batterySaver });
     savePrefs();
+  });
+
+  // who is signed in (HOP ID); a guest keeps the whole app
+  onMount(() => {
+    void loadAccount();
+    const code = takeAuthError();
+    if (code) showToast(i18n.t('auth.err_' + code));
   });
 
   // count the network requests this tab makes, so the claim is checkable
@@ -395,6 +404,22 @@
     <button class="tbtn icon" type="button" onclick={() => (settingsOpen = true)} aria-label={i18n.t('nav.settings')} title={i18n.t('nav.settings')}>
       <Icon name="gear" size={17} />
     </button>
+
+    {#if account.ready && account.signedIn}
+      <details class="acct">
+        <summary class="tbtn" aria-label={i18n.t('account.menu')} title={account.email || account.name}>
+          <span class="avatar" aria-hidden="true">{initials(account.name, account.email)}</span>
+          <span class="acct-name">{account.name || account.email}</span>
+        </summary>
+        <div class="acct-menu">
+          <p class="small muted">{i18n.t('account.signed_in_as')}<br /><strong>{account.email || account.name}</strong></p>
+          {#if account.hubUrl}<a href={account.hubUrl}>{i18n.t('account.hop_id')}</a>{/if}
+          <a href={account.logoutUrl || '/auth/sso/logout'}>{i18n.t('account.sign_out')}</a>
+        </div>
+      </details>
+    {:else if account.ready && account.sso}
+      <a class="tbtn" href="/auth/sso?next=%2F">{i18n.t('account.sign_in')}</a>
+    {/if}
   </header>
 
   <main id="main">

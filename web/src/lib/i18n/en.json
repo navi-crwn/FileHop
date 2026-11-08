@@ -147,5 +147,14 @@
   "err.svg_needs_main_thread": "This SVG has to be rendered in the page, which is not available right now. Reload and try again.",
   "toast.added": "{n} files added",
   "toast.limit": "The queue holds 50 files at a time. {added} of {total} were added; convert or clear this batch first.",
-  "licenses.no_agpl": "PDF reading uses pdf.js, not MuPDF. No AGPL engine is present in this build."
+  "licenses.no_agpl": "PDF reading uses pdf.js, not MuPDF. No AGPL engine is present in this build.",
+  "account.menu": "Account",
+  "account.signed_in_as": "Signed in as",
+  "account.hop_id": "HOP ID account",
+  "account.sign_out": "Sign out",
+  "account.sign_in": "Sign in",
+  "auth.err_expired": "The sign-in took too long or started in another browser. Please try again.",
+  "auth.err_invalid": "This sign-in link is not valid any more. Please try again.",
+  "auth.err_suspended": "This HOP ID is suspended.",
+  "auth.err_failed": "Signing in failed on our side. Please try again in a moment."
 }

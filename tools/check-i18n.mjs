@@ -3,7 +3,7 @@
 // can gate a merge on it. Run with: node tools/check-i18n.mjs
 import { readFileSync, readdirSync } from 'node:fs';
 
-const dir = new URL('../src/lib/i18n/', import.meta.url);
+const dir = new URL('../web/src/lib/i18n/', import.meta.url);
 const files = readdirSync(dir).filter(f => f.endsWith('.json'));
 const base = JSON.parse(readFileSync(new URL('en.json', dir), 'utf8'));
 const baseKeys = Object.keys(base);

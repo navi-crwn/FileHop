@@ -12,11 +12,11 @@ import { createReadStream, existsSync, statSync, readFileSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 import { createBrotliCompress, createGzip } from 'node:zlib';
 
-const root = resolve(process.cwd(), 'dist');
+const root = resolve(process.cwd(), process.env.DIST ?? 'web/dist');
 const port = Number(process.env.PORT ?? 4180);
 
 if (!existsSync(join(root, 'index.html'))) {
-  console.error('dist/ is missing. Run `npm run build` first.');
+  console.error('web/dist/ is missing. Run `npm run build` first.');
   process.exit(1);
 }
 

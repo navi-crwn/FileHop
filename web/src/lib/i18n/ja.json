@@ -147,5 +147,14 @@
   "err.svg_needs_main_thread": "この SVG はページ内で描画する必要がありますが、現在それができません。再読み込みしてお試しください。",
   "toast.added": "{n} 件のファイルを追加しました",
   "toast.limit": "キューは一度に 50 件までです。{total} 件中 {added} 件を追加しました。先にこのバッチを変換するか空にしてください。",
-  "licenses.no_agpl": "PDF の読み取りは MuPDF ではなく pdf.js です。このビルドに AGPL のエンジンは含まれていません。"
+  "licenses.no_agpl": "PDF の読み取りは MuPDF ではなく pdf.js です。このビルドに AGPL のエンジンは含まれていません。",
+  "account.menu": "アカウント",
+  "account.signed_in_as": "ログイン中のアカウント",
+  "account.hop_id": "HOP ID アカウント",
+  "account.sign_out": "ログアウト",
+  "account.sign_in": "ログイン",
+  "auth.err_expired": "ログインに時間がかかりすぎたか、別のブラウザで開始されました。もう一度お試しください。",
+  "auth.err_invalid": "このログインリンクはもう有効ではありません。もう一度お試しください。",
+  "auth.err_suspended": "この HOP ID は停止されています。",
+  "auth.err_failed": "こちら側でログインに失敗しました。しばらくしてからもう一度お試しください。"
 }

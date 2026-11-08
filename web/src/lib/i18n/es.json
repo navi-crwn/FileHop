@@ -147,5 +147,14 @@
   "err.svg_needs_main_thread": "Este SVG debe renderizarse en la página, que no está disponible ahora. Recarga e inténtalo de nuevo.",
   "toast.added": "{n} archivos añadidos",
   "toast.limit": "La cola admite 50 archivos a la vez. Se añadieron {added} de {total}; convierte o vacía este lote primero.",
-  "licenses.no_agpl": "La lectura de PDF usa pdf.js, no MuPDF. En esta compilación no hay ningún motor AGPL."
+  "licenses.no_agpl": "La lectura de PDF usa pdf.js, no MuPDF. En esta compilación no hay ningún motor AGPL.",
+  "account.menu": "Cuenta",
+  "account.signed_in_as": "Sesión iniciada como",
+  "account.hop_id": "Cuenta HOP ID",
+  "account.sign_out": "Cerrar sesión",
+  "account.sign_in": "Iniciar sesión",
+  "auth.err_expired": "El inicio de sesión tardó demasiado o empezó en otro navegador. Inténtalo de nuevo.",
+  "auth.err_invalid": "Este enlace de inicio de sesión ya no es válido. Inténtalo de nuevo.",
+  "auth.err_suspended": "Este HOP ID está suspendido.",
+  "auth.err_failed": "El inicio de sesión falló por nuestra parte. Inténtalo de nuevo en un momento."
 }
