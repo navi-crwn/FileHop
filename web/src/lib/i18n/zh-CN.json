@@ -89,7 +89,7 @@
   "presets.delete": "删除",
   "presets.saved": "已保存",
   "privacy.title": "这个页面发送了什么",
-  "privacy.body": "什么都没有。文件通过 File API 打开，在本标签页内解码与编码，再通过 blob URL 交还。没有服务器端转换，没有队列，没有账号。",
+  "privacy.body": "什么都不发送。文件通过 File API 打开，在此标签页中解码和编码，再通过 blob URL 交还给你。没有服务器端转换，没有队列，也不需要账户。如果你用 HOP ID 登录，服务器只保存你的会话，从不保存文件。",
   "privacy.network": "本标签页打开以来的网络请求数：{n}",
   "privacy.network_note": "字体、图标和代码都来自同一来源。",
   "privacy.clear": "全部丢弃并释放内存",

@@ -89,7 +89,7 @@
   "presets.delete": "Supprimer",
   "presets.saved": "Enregistré",
   "privacy.title": "Ce que cette page envoie",
-  "privacy.body": "Rien. Les fichiers sont ouverts par la File API, décodés et encodés dans cet onglet, puis rendus via une URL blob. Aucune conversion sur serveur, aucune file d'attente là-bas, aucun compte.",
+  "privacy.body": "Rien. Les fichiers sont ouverts avec la File API, décodés et encodés dans cet onglet, puis rendus via une URL blob. Il n’y a ni conversion côté serveur ni file d’attente, et aucun compte n’est nécessaire. Si vous vous connectez avec HOP ID, le serveur ne garde que votre session, jamais un fichier.",
   "privacy.network": "Requêtes réseau depuis l'ouverture de cet onglet : {n}",
   "privacy.network_note": "Les polices, les icônes et le code viennent de cette même origine.",
   "privacy.clear": "Tout jeter et libérer la mémoire",

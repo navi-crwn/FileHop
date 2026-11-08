@@ -89,7 +89,7 @@
   "presets.delete": "Eliminar",
   "presets.saved": "Guardado",
   "privacy.title": "Qué envía esta página",
-  "privacy.body": "Nada. Los archivos se abren con la File API, se decodifican y codifican en esta pestaña, y se devuelven como un blob. No hay conversión en servidor, ni cola allá, ni cuenta.",
+  "privacy.body": "Nada. Los archivos se abren con la File API, se decodifican y codifican en esta pestaña y se devuelven mediante una URL blob. No hay conversión en el servidor ni cola, y no hace falta una cuenta. Si inicias sesión con HOP ID, el servidor solo guarda tu sesión, nunca un archivo.",
   "privacy.network": "Peticiones de red desde que se abrió esta pestaña: {n}",
   "privacy.network_note": "Las fuentes, los iconos y el código vienen de este mismo origen.",
   "privacy.clear": "Tirar todo y liberar memoria",

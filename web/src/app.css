@@ -573,3 +573,16 @@ footer.ft { margin-top: 90px; padding: 34px 0 44px; border-top: 1px solid var(--
   /* the control can wrap to the left half of a phone: keep the menu on screen */
   .acct-menu { position: fixed; left: 16px; right: 16px; top: auto; margin-top: 6px; }
 }
+
+/* HOP family links: every app lists the others in its footer */
+.ft-family { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ft-family a { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; }
+.ft-family a i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ft-family .ft-family-h { color: var(--text); font-weight: 600; }
+
+/* touch screens: every control at least 44 px tall */
+@media (pointer: coarse) {
+  .tbtn, .select, .chip, .mini, .ft-family a, .ft-in a, .acct-menu a { min-height: 44px; }
+  .ft-in a { display: inline-flex; align-items: center; }
+  .tbtn.icon { width: 44px; }
+}

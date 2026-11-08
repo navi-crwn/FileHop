@@ -89,7 +89,7 @@
   "presets.delete": "Hapus",
   "presets.saved": "Tersimpan",
   "privacy.title": "Apa yang dikirim halaman ini",
-  "privacy.body": "Tidak ada. File dibuka dengan File API, didekode dan dikodekan di tab ini, lalu dikembalikan lewat blob URL. Tidak ada konversi di server, tidak ada antrean, tidak ada akun.",
+  "privacy.body": "Tidak ada. File dibuka dengan File API, didekode dan dikodekan di tab ini, lalu dikembalikan lewat blob URL. Tidak ada konversi di server, tidak ada antrean, dan tidak perlu akun. Jika Anda masuk dengan HOP ID, server hanya menyimpan sesi Anda, tidak pernah file.",
   "privacy.network": "Permintaan jaringan sejak tab ini dibuka: {n}",
   "privacy.network_note": "Font, ikon, dan kode datang dari origin yang sama.",
   "privacy.clear": "Buang semuanya dan bebaskan memori",

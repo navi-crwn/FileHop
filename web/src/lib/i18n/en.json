@@ -89,7 +89,7 @@
   "presets.delete": "Delete",
   "presets.saved": "Saved",
   "privacy.title": "What this page sends",
-  "privacy.body": "Nothing. Files are opened with the File API, decoded and encoded in this tab, and handed back through a blob URL. There is no server-side conversion, no queue, no account.",
+  "privacy.body": "Nothing. Files are opened with the File API, decoded and encoded in this tab, and handed back through a blob URL. There is no server-side conversion and no queue, and no account is needed. If you sign in with HOP ID, the server keeps only your session, never a file.",
   "privacy.network": "Network requests since this tab opened: {n}",
   "privacy.network_note": "Fonts, icons and code come from this same origin.",
   "privacy.clear": "Drop everything and free memory",

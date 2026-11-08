@@ -14,6 +14,16 @@
   import { zipSync } from 'fflate';
   import { account, loadAccount, initials, takeAuthError } from './lib/account.svelte';
 
+  /* The other HOP apps, as the family manifest (hel.ink/hop-assets/apps.json) lists them.
+     Written out rather than fetched: the page loads nothing from another origin. */
+  const FAMILY = [
+    { name: 'HOP ID', url: 'https://hel.ink', color: '#6366f1' },
+    { name: 'LinkHop', url: 'https://link.hel.ink', color: '#6366f1' },
+    { name: 'BioHop', url: 'https://bio.hel.ink', color: '#a855f7' },
+    { name: 'PixelHop', url: 'https://pixel.hel.ink', color: '#22d3ee' },
+    { name: 'NoteHop', url: 'https://note.hel.ink', color: '#10b981' }
+  ];
+
   /* ------------------------------------------------------------------ state */
 
   let locale = $state(guessLocale());
@@ -582,14 +592,20 @@
             <img src="/mark.svg" alt="" width="22" height="22" />
             <span class="word"><b>File</b><span>Hop</span></span>
           </span>
-          <a href="https://hel.ink" rel="noopener">{i18n.t('footer.family')}</a>
           <a href="#privacy">{i18n.t('footer.privacy')}</a>
+          <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
           <button class="tbtn" type="button" style="height:30px;padding:0 10px;font-size:12.5px" onclick={() => (licensesOpen = true)}>
             {i18n.t('footer.licenses')}
           </button>
           <span class="grow"></span>
           <span class="note">{i18n.t('footer.note')}</span>
         </div>
+        <nav class="ft-family" aria-label={i18n.t('footer.family')}>
+          <a class="ft-family-h" href="https://hel.ink" rel="noopener">{i18n.t('footer.family')}</a>
+          {#each FAMILY as app (app.url)}
+            <a href={app.url} rel="noopener"><i style="background:{app.color}" aria-hidden="true"></i>{app.name}</a>
+          {/each}
+        </nav>
       </footer>
     </div>
   </main>
