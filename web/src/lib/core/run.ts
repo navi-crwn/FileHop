@@ -10,7 +10,7 @@ import { runHash } from './run/hash';
 
 export interface RunCtx {
   file: File;
-  /** sibling files of the same group, the current file first */
+  /** the files of the same group in queue order, the current file among them */
   group: File[];
   det: Detection;
   action: ActionId;

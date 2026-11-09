@@ -1,4 +1,5 @@
 import en from './en.json';
+import type { ActionDef } from '../core/types';
 
 /* Nine languages, no Arabic, per the family rule. A missing key falls back to
    English and warns once, so the UI never shows a raw key.
@@ -113,3 +114,9 @@ class I18nState {
 }
 
 export const i18n = new I18nState();
+
+/** The label of a target chip in the current language: the translated word for Merge,
+    Split or Pages → PNG, and the format name itself for WebP, JSON or ZIP. */
+export function actionLabel(def: Pick<ActionDef, 'label' | 'labelKey'>): string {
+  return def.labelKey ? i18n.t(def.labelKey) : def.label;
+}

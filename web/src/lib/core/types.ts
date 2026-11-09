@@ -34,7 +34,10 @@ export interface ActionDef {
   id: ActionId;
   /** output extension, empty when the action does not produce a file (list/hash) */
   ext: string;
+  /** the English label; format names (WebP, JSON, ZIP) are the same in every language */
   label: string;
+  /** i18n key for a label that is a word rather than a format name (Merge, Split, Pages → PNG) */
+  labelKey?: string;
   hintKey?: string;
   options?: ActionOption[];
   /** needs more than one file of the same group */

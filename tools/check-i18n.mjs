@@ -22,7 +22,13 @@ for (const f of files) {
     .filter(k => k in dict && vars(base[k]) !== vars(dict[k]))
     .map(k => `${k} (${vars(base[k])} vs ${vars(dict[k])})`);
 
+  // The hero is rendered as `h1_pre <em>h1_accent</em>`; the pair has to read as the
+  // full sentence `h1` (spaces aside, since Japanese and Chinese use none).
+  const squeeze = (s) => String(s ?? '').replace(/\s+/g, '');
+  const heroBroken = squeeze(dict['hero.h1_pre']) + squeeze(dict['hero.h1_accent']) !== squeeze(dict['hero.h1']);
+
   const problems = [];
+  if (heroBroken) problems.push('hero.h1_pre + hero.h1_accent is not hero.h1');
   if (missing.length) problems.push(`missing: ${missing.join(', ')}`);
   if (extra.length) problems.push(`extra: ${extra.join(', ')}`);
   if (empty.length) problems.push(`empty: ${empty.join(', ')}`);

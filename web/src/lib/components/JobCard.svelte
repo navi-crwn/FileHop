@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { i18n } from '../i18n/index.svelte';
+  import { i18n, actionLabel } from '../i18n/index.svelte';
   import { targetsFor, actionDef, isHash } from '../core/actions';
   import type { Job } from '../core/types';
   import { fmtSize } from '../util/format';
@@ -12,6 +12,10 @@
     pdfCount: number;
     /** this PDF is folded into another card's merge, so it has no result of its own */
     absorbed?: boolean;
+    /** the group's merge is running on another card: this card's retry waits for it */
+    mergeBusy?: boolean;
+    /** when this card carries the merge: the names of the PDFs it will join, in queue order */
+    mergeNames?: string[];
     onAction: (id: Job['action']) => void;
     onOpt: (key: string, value: number | string) => void;
     onRun: () => void;
@@ -20,8 +24,15 @@
     onDownload: () => void;
   }
 
-  let { job, pdfCount, absorbed = false, onAction, onOpt, onRun, onCancel, onRemove, onDownload }: Props = $props();
+  let { job, pdfCount, absorbed = false, mergeBusy = false, mergeNames = [], onAction, onOpt, onRun, onCancel, onRemove, onDownload }: Props = $props();
   let copied = $state(false);
+
+  // While another card is building the group's merge, this card's retry waits:
+  // native disabled, with a visible line under the error that the button points at
+  // for screen readers. Only a failed or stopped card has a Retry to block.
+  const retryBlocked = $derived(
+    mergeBusy && job.action === 'pdf:merge' && !absorbed && (job.status === 'error' || job.status === 'canceled')
+  );
 
   const targets = $derived(
     targetsFor(job.det.category, job.det.ext).filter(id => (id === 'pdf:merge' ? pdfCount > 1 : true))
@@ -119,7 +130,7 @@
       {#if job.det.mismatch}
         <span class="badge warn" title={i18n.t('job.mismatch_title')}>{i18n.t('job.mismatch')}</span>
       {/if}
-      {#if absorbed}
+      {#if absorbed || job.status === 'merged'}
         <span class="badge">{i18n.t('job.absorbed')}</span>
       {:else if job.status === 'done'}
         <span class="badge ok">{i18n.t('job.done')}</span>
@@ -140,7 +151,14 @@
       {/if}
     </div>
 
-    {#if job.status !== 'done' && !absorbed}
+    {#if mergeNames.length > 1 && job.status !== 'done'}
+      <p class="merge-list" title={mergeNames.join(', ')}>
+        <strong>{i18n.t('job.merge_of', { n: mergeNames.length })}:</strong>
+        {mergeNames.join(' · ')}
+      </p>
+    {/if}
+
+    {#if job.status !== 'done' && job.status !== 'merged' && job.status !== 'running' && !absorbed}
       <div class="targets" role="group" aria-label={i18n.t('job.target')}>
         {#each targets as t (t)}
           {@const td = actionDef(t)}
@@ -151,7 +169,7 @@
               class:on={job.action === t}
               aria-pressed={job.action === t}
               onclick={() => onAction(t)}
-            >{td.label}</button>
+            >{actionLabel(td)}</button>
           {/if}
         {/each}
       </div>
@@ -164,6 +182,7 @@
                 <span>{i18n.t(o.labelKey)}</span>
                 <input
                   type="range"
+                  aria-label={i18n.t(o.labelKey)}
                   min={o.min}
                   max={o.max}
                   step={o.step}
@@ -176,6 +195,7 @@
               <label class="opt">
                 <span>{i18n.t(o.labelKey)}</span>
                 <input
+                  class="field-input"
                   type="number"
                   value={optValue(o.id)}
                   oninput={(e) => onOpt(o.id, Number((e.currentTarget as HTMLInputElement).value))}
@@ -185,6 +205,7 @@
               <label class="opt">
                 <span>{i18n.t(o.labelKey)}</span>
                 <input
+                  class="field-input"
                   type="text"
                   inputmode="numeric"
                   placeholder="1-3,7"
@@ -219,28 +240,45 @@
     {:else if job.status === 'error'}
       <p class="err"><Icon name="alert" size={15} /><span>{errText}</span></p>
     {/if}
+    {#if retryBlocked}
+      <p class="wait" id="retry-wait-{job.id}">{i18n.t('job.retry_wait')}</p>
+    {/if}
   </div>
 
   <div class="side">
-    {#if absorbed}
+    {#if absorbed || job.status === 'merged'}
       <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
     {:else if job.status === 'queued'}
-      <button class="mini primary" type="button" onclick={onRun}><Icon name="play" size={14} />{i18n.t('job.run')}</button>
+      <button class="mini secondary" type="button" onclick={onRun}><Icon name="play" size={14} />{i18n.t('job.run')}</button>
     {:else if job.status === 'running'}
       <button class="mini" type="button" onclick={onCancel}><Icon name="stop" size={14} />{i18n.t('job.cancel')}</button>
     {:else if job.status === 'done'}
-      <button class="mini primary" type="button" onclick={onDownload}><Icon name="download" size={14} />{i18n.t('job.download')}</button>
+      <button class="mini secondary" type="button" onclick={onDownload}><Icon name="download" size={14} />{i18n.t('job.download')}</button>
       {#if job.result?.hash}
         <button class="mini" type="button" onclick={copyHash}>{copied ? i18n.t('job.copied') : i18n.t('job.copy_hash')}</button>
       {/if}
       <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
     {:else}
-      <button class="mini" type="button" onclick={onRun}><Icon name="refresh" size={14} />{i18n.t('job.retry')}</button>
-      <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} /></button>
+      <button class="mini" type="button" onclick={onRun} disabled={retryBlocked} aria-describedby={retryBlocked ? 'retry-wait-' + job.id : undefined}><Icon name="refresh" size={14} />{i18n.t('job.retry')}</button>
+      <button class="mini icon" type="button" onclick={onRemove} aria-label={i18n.t('job.remove')} title={i18n.t('job.remove')}><Icon name="trash" size={14} /></button>
     {/if}
   </div>
 </article>
 
 <style>
   .card .side :global(svg) { flex: none; }
+  .merge-list {
+    margin: 2px 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--muted);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    word-break: break-word;
+  }
+  .merge-list strong { color: var(--text); font-weight: 600; }
+  .wait { margin: 6px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--muted); }
 </style>

@@ -4,13 +4,14 @@
   import JobCard from './lib/components/JobCard.svelte';
   import FormatRing from './lib/components/FormatRing.svelte';
   import SettingsDrawer from './lib/components/SettingsDrawer.svelte';
-  import { i18n, guessLocale, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
+  import { i18n, guessLocale, actionLabel, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
   import { Queue } from './lib/store/queue.svelte';
   import { Pool, hardwareSlots } from './lib/core/pool';
-  import { categoryLabel, detectFile } from './lib/core/detect';
-  import { targetsFor, actionDef, isAbsorbed } from './lib/core/actions';
+  import { detectFile } from './lib/core/detect';
+  import { targetsFor, actionDef, isAbsorbed, mergeCarrier, mergeMembers } from './lib/core/actions';
   import type { ActionId, Category, Job } from './lib/core/types';
   import { download, safeFileName } from './lib/util/format';
+  import { confirmAction } from './lib/util/confirm';
   import { zipSync } from 'fflate';
   import { account, loadAccount, initials, takeAuthError } from './lib/account.svelte';
 
@@ -50,6 +51,7 @@
   let version = $state(0);
   let toastTimer: number | undefined;
   let fileInput: HTMLInputElement;
+  let acctEl = $state<HTMLDetailsElement | undefined>();
 
   const pool = new Pool();
   const queue = new Queue(pool, { onChange: () => bump() });
@@ -76,10 +78,18 @@
 
   /* ------------------------------------------------------- language + theme */
 
-  // loading a dictionary is async; the state object swaps it in and every t() repaints
+  // loading a dictionary is async; the state object swaps it in and every t() repaints.
+  // The tab title follows too, so a bookmark made in Japanese does not read English.
   $effect(() => {
-    void i18n.load(locale);
+    void i18n.load(locale).then(() => {
+      document.title = i18n.t('app.title');
+    });
   });
+
+  // Japanese and Chinese put no space after their punctuation, and their text wraps
+  // between any two characters, which left a lone character hanging after the comma.
+  // There the accent phrase starts on its own line; every other language has a space.
+  const heroBreak = $derived(/[、，。]$/.test(i18n.t('hero.h1_pre')));
 
   let theme = $state<'dark' | 'light'>(readTheme());
 
@@ -333,10 +343,37 @@
     download(new Blob([zipped as unknown as BlobPart], { type: 'application/zip' }), `filehop-${stamp()}.zip`);
   }
 
-  function clearAll() {
+  /* Both clearing actions throw results away for good, so both ask first. An empty
+     queue has nothing to lose and is not asked about. */
+  async function clearAll(anchor?: Element | null) {
+    if (queue.jobs.length > 0) {
+      const yes = await confirmAction({
+        title: i18n.t('confirm.drop_title'),
+        message: i18n.t('confirm.drop_body', { n: queue.jobs.length }),
+        ok: i18n.t('confirm.drop_ok'),
+        danger: true,
+        anchor
+      });
+      if (!yes) return;
+    }
     queue.clearAll();
     bump();
     showToast(i18n.t('privacy.cleared'));
+  }
+
+  async function clearFinished(anchor?: Element | null) {
+    // the same statuses queue.clearFinished() removes: failed and stopped cards go too
+    const n = queue.jobs.filter(j => j.status === 'done' || j.status === 'error' || j.status === 'canceled' || j.status === 'merged').length;
+    if (n === 0) return;
+    const yes = await confirmAction({
+      title: i18n.t('confirm.clear_title'),
+      message: i18n.t('confirm.clear_body', { n }),
+      ok: i18n.t('queue.clear_done'),
+      anchor
+    });
+    if (!yes) return;
+    queue.clearFinished();
+    bump();
   }
 
   /* --------------------------------------------------- group-level helpers */
@@ -359,6 +396,25 @@
     bump();
   }
 
+  /* --------------------------------------------------------- account menu */
+
+  /* The menu is a <details>, which only closes on its own summary. On a phone the
+     header is sticky, so an open menu would cover the page until the avatar is
+     tapped again: Escape, a tap outside and scrolling close it as well. */
+  function closeAccountMenu() {
+    if (acctEl?.open) acctEl.open = false;
+  }
+
+  function onPointerDown(e: PointerEvent) {
+    if (acctEl?.open && !acctEl.contains(e.target as Node)) acctEl.open = false;
+  }
+
+  /* While the settings drawer or the licenses dialog is open the page behind does not
+     scroll, so a swipe on the panel does not move the page under it. */
+  $effect(() => {
+    document.body.classList.toggle('modal-open', settingsOpen || licensesOpen);
+  });
+
   /* ------------------------------------------------------------- keyboard */
 
   function onKeydown(e: KeyboardEvent) {
@@ -373,9 +429,12 @@
       void runAll();
     }
     if (e.key === 'Escape') {
+      // a family dialog on top takes Escape for itself; what is under it stays open
+      if (document.querySelector('dialog.hop-dialog[open]')) return;
       settingsOpen = false;
       licensesOpen = false;
       dragging = false;
+      closeAccountMenu();
     }
   }
 </script>
@@ -387,6 +446,8 @@
   ondragleave={onDragLeave}
   onpaste={onPaste}
   onkeydown={onKeydown}
+  onpointerdown={onPointerDown}
+  onscroll={closeAccountMenu}
 />
 
 <a class="skip" href="#main">{i18n.t('nav.skip')}</a>
@@ -425,7 +486,7 @@
     </button>
 
     {#if account.ready && account.signedIn}
-      <details class="acct">
+      <details class="acct" bind:this={acctEl}>
         <summary class="tbtn" aria-label={i18n.t('account.menu')} title={account.email || account.name}>
           <span class="avatar" aria-hidden="true">{initials(account.name, account.email)}</span>
           <span class="acct-name">{account.name || account.email}</span>
@@ -446,13 +507,13 @@
       <section class="hero">
         <div class="hero-copy">
           <span class="eyebrow"><i></i>{i18n.t('hero.eyebrow')}</span>
-          <h1>{i18n.t('hero.h1_pre')} <em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
+          <h1>{i18n.t('hero.h1_pre')}{#if heroBreak}<br />{:else}{' '}{/if}<em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
           <p class="lead">{i18n.t('hero.lead')}</p>
           <div class="cta">
-            <button class="tbtn primary" type="button" onclick={pickFiles}>
+            <button class="tbtn secondary lg" type="button" onclick={pickFiles}>
               <Icon name="upload" size={17} />{i18n.t('hero.cta')}
             </button>
-            <button class="tbtn" type="button" onclick={() => (settingsOpen = true)}>
+            <button class="tbtn lg" type="button" onclick={() => (settingsOpen = true)}>
               <Icon name="gear" size={17} />{i18n.t('nav.settings')}
             </button>
           </div>
@@ -493,7 +554,7 @@
           </h2>
           <span class="spacer"></span>
           {#if totalCount > 0}
-            <button class="tbtn" type="button" onclick={runAll} disabled={running}>
+            <button class="tbtn secondary" type="button" onclick={runAll} disabled={running}>
               <Icon name="play" size={16} />{i18n.t('queue.run_all')}
             </button>
             {#if doneCount > 1}
@@ -501,19 +562,19 @@
                 <Icon name="download" size={16} />{i18n.t('queue.download_all')}
               </button>
             {/if}
-            <button class="tbtn" type="button" onclick={() => { queue.clearFinished(); bump(); }}>
+            <button class="tbtn" type="button" onclick={(e) => clearFinished(e.currentTarget)}>
               {i18n.t('queue.clear_done')}
             </button>
           {/if}
         </div>
 
         {#if totalCount === 0}
-          <p class="queue-empty">{i18n.t('queue.empty')}</p>
+          <p class="queue-empty">{i18n.t('queue.empty')}<button class="tbtn primary empty-add" type="button" onclick={pickFiles}><Icon name="plus" size={17} />{i18n.t('nav.add')}</button></p>
         {:else}
           {#each groups as g (g.cat)}
             <div class="group">
               <div class="group-head">
-                <h3>{categoryLabel(g.cat)} · {g.items.length}</h3>
+                <h3>{i18n.t('group.' + g.cat)} · {g.items.length}</h3>
                 {#if g.items.length > 1}
                   <div class="chips">
                     {#each groupTargets(g.cat, g.items[0]?.det.ext ?? '') as t (t)}
@@ -523,8 +584,8 @@
                           type="button"
                           class="chip"
                           onclick={() => { queue.setActionForCategory(g.cat, t); bump(); }}
-                          title={i18n.t('group.all_to') + ' ' + d.label}
-                        >{d.label}</button>
+                          title={i18n.t('group.all_to') + ' ' + actionLabel(d)}
+                        >{actionLabel(d)}</button>
                       {/if}
                     {/each}
                   </div>
@@ -536,6 +597,8 @@
                   {job}
                   pdfCount={g.items.length}
                   absorbed={isAbsorbed(job, queue.jobs)}
+                  mergeBusy={mergeCarrier(queue.jobs)?.status === 'running'}
+                  mergeNames={job.action === 'pdf:merge' && !isAbsorbed(job, queue.jobs) ? mergeMembers(queue.jobs).map(j => j.name) : []}
                   onAction={(id) => handleAction(job, id)}
                   onOpt={(k, v) => handleOpt(job, k, v)}
                   onRun={() => runOne(job)}
@@ -583,27 +646,28 @@
         </div>
       </section>
 
-      <section class="sec">
+      <section class="sec" id="privacy">
         <div class="privacy-card">
           <h2>{i18n.t('privacy.title')}</h2>
           <p>{i18n.t('privacy.body')}</p>
           <span class="counter"><Icon name="net" size={14} />{i18n.t('privacy.network', { n: networkCount })}</span>
           <p class="small faint" style="margin-top:10px">{i18n.t('privacy.network_note')}</p>
-          <button class="tbtn" type="button" style="margin-top:14px" onclick={clearAll}>
-            <Icon name="trash" size={16} />{i18n.t('privacy.clear')}
+          <button class="tbtn danger-outline" type="button" style="margin-top:14px" onclick={(e) => clearAll(e.currentTarget)}>
+            <Icon name="trash" size={16} />{i18n.t('confirm.drop_ok')}
           </button>
         </div>
       </section>
 
       <footer class="ft">
         <div class="ft-in">
-          <span class="brand" style="gap:8px">
-            <img src="/mark.svg" alt="" width="22" height="22" />
-            <span class="word"><b>File</b><span>Hop</span></span>
+          <span class="ft-brand">
+            <img src="/mark.svg" alt="" width="28" height="28" />
+            <b>Hop Easy Link</b>
           </span>
           <a href="#privacy">{i18n.t('footer.privacy')}</a>
+          <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
           <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
-          <button class="tbtn" type="button" style="height:30px;padding:0 10px;font-size:12.5px" onclick={() => (licensesOpen = true)}>
+          <button class="mini ghost" type="button" onclick={() => (licensesOpen = true)}>
             {i18n.t('footer.licenses')}
           </button>
           <span class="grow"></span>
@@ -654,7 +718,7 @@
     <div class="dlg-in">
       <div class="dhead" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <h2 id="lic-h">{i18n.t('licenses.title')}</h2>
-        <button class="tbtn icon" type="button" onclick={() => (licensesOpen = false)} aria-label={i18n.t('licenses.close')}>
+        <button class="tbtn icon ghost" type="button" onclick={() => (licensesOpen = false)} aria-label={i18n.t('licenses.close')}>
           <Icon name="close" size={17} />
         </button>
       </div>

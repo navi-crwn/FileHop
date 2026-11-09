@@ -1,6 +1,6 @@
 import { Pool } from '../core/pool';
 import { detectFile, baseName } from '../core/detect';
-import { actionDef, defaultActionFor, defaultOpts, isHash, mergeCarrier } from '../core/actions';
+import { actionDef, defaultActionFor, defaultOpts, isHash, mergeCarrier, mergeMembers } from '../core/actions';
 import type { ActionId, Job, JobResult } from '../core/types';
 
 /* The queue is the app's only state. `jobs` is a $state array of $state jobs,
@@ -95,24 +95,36 @@ export class Queue {
   /** the files that belong to the same conversion group (needed by PDF merge) */
   groupFor(job: Job): File[] {
     if (job.action !== 'pdf:merge') return [job.file];
-    const pdfs = this.jobs.filter(j => j.det.category === 'pdf' && j.status !== 'canceled');
-    // the file the user pressed on carries the merge, so it comes first
-    return [job.file, ...pdfs.filter(j => j.id !== job.id).map(j => j.file)];
+    // Queue order, whichever card carries the merge: it is the order of the cards and
+    // the order the carrier card lists, so the pages come out as the person sees them.
+    const files = this.mergeGroup().map(j => j.file);
+    return files.includes(job.file) ? files : [job.file, ...files];
   }
 
-  /** PDFs that Merge will consume, in queue order */
+  /** PDFs that Merge will consume, in queue order: those set to Merge, nothing else */
   mergeGroup(): Job[] {
-    return this.jobs.filter(j => j.det.category === 'pdf' && j.status !== 'canceled');
+    return mergeMembers(this.jobs);
   }
 
   setAction(job: Job, action: ActionId): void {
+    // A running conversion keeps the target it started with: the run captured
+    // the action and options, and a mid-run change desyncs the card from it.
+    if (job.status === 'running') return;
     job.action = action;
     job.opts = { ...defaultOpts(action) };
     this.resetIfFinished(job);
+    // Merge is one result for the whole group: a PDF joining it after a finished
+    // merge restarts absorbed members, not cards that own completed downloads.
+    if (action === 'pdf:merge') {
+      for (const j of this.mergeGroup()) {
+        if (j.status !== 'done' || !j.result) this.resetIfFinished(j);
+      }
+    }
     this.deps.onChange();
   }
 
   setOpt(job: Job, key: string, value: number | string): void {
+    if (job.status === 'running') return;
     job.opts = { ...job.opts, [key]: value };
     this.resetIfFinished(job);
     this.deps.onChange();
@@ -124,6 +136,10 @@ export class Queue {
       const def = actionDef(action);
       if (!def) continue;
       if (j.det.category !== cat) continue;
+      // a running conversion keeps its target, and a finished card that already has
+      // this target keeps its result: choosing the same target again changes nothing
+      if (j.status === 'running') continue;
+      if (j.action === action && j.status === 'done' && j.result) continue;
       if (!this.isRelevant(j, action)) continue;
       j.action = action;
       j.opts = { ...defaultOpts(action) };
@@ -141,7 +157,7 @@ export class Queue {
   }
 
   private resetIfFinished(job: Job): void {
-    if (job.status === 'done' || job.status === 'error' || job.status === 'canceled') {
+    if (job.status === 'done' || job.status === 'error' || job.status === 'canceled' || job.status === 'merged') {
       job.status = 'queued';
       job.result = undefined;
       job.error = undefined;
@@ -158,7 +174,7 @@ export class Queue {
   }
 
   clearFinished(): void {
-    this.jobs = this.jobs.filter(j => j.status !== 'done' && j.status !== 'error' && j.status !== 'canceled');
+    this.jobs = this.jobs.filter(j => j.status !== 'done' && j.status !== 'error' && j.status !== 'canceled' && j.status !== 'merged');
     this.deps.onChange();
   }
 
@@ -185,6 +201,14 @@ export class Queue {
 
   async runOne(job: Job): Promise<void> {
     if (job.status === 'running') return;
+    // One merge per group, ever: a card that is not the carrier has no merge of
+    // its own to run, so it can never build the group a second time. (runAll
+    // applies the same rule; a lone Merge card still runs and says it needs two.)
+    // A failed or stopped card the person retries takes the group from a merely
+    // queued member; a merge that is already running still wins.
+    const carrier = job.action === 'pdf:merge' ? mergeCarrier(this.jobs) : undefined;
+    const retrying = job.status === 'error' || job.status === 'canceled';
+    if (carrier && carrier.id !== job.id && !(retrying && carrier.status !== 'running')) return;
 
     // Refuse what this device cannot hold instead of crashing the tab.
     const budget = deviceBudgetMb();
@@ -203,6 +227,10 @@ export class Queue {
     job.startedAt = performance.now();
     this.deps.onChange();
 
+    // the group this run builds, fixed at the start: a card that joins later is
+    // not in the result and must not be marked as if it were
+    const action = job.action;
+    const groupRest = action === 'pdf:merge' ? this.mergeGroup().filter(j => j.id !== job.id) : [];
     const { promise, cancel } = this.pool.run(
       {
         id: job.id,
@@ -210,7 +238,7 @@ export class Queue {
         group: this.groupFor(job),
         // a $state proxy cannot cross into a worker; snapshot it to plain data
         det: $state.snapshot(job.det) as Job['det'],
-        action: job.action,
+        action,
         opts: $state.snapshot(job.opts) as Record<string, number | string>
       },
       (p) => {
@@ -226,6 +254,20 @@ export class Queue {
       job.status = 'done';
       job.progress = 1;
       job.endedAt = performance.now();
+      if (action === 'pdf:merge') {
+        // the PDFs of the group are inside this result: they are finished too, with
+        // nothing of their own. That includes a member whose own attempt failed
+        // earlier: its pages are in this result, so its old error no longer holds.
+        // A stopped member was never part of the group and stays as it is.
+        for (const j of groupRest) {
+          if ((j.status === 'queued' || j.status === 'error') && j.action === 'pdf:merge') {
+            j.status = 'merged';
+            j.error = undefined;
+            j.progress = 1;
+            j.endedAt = job.endedAt;
+          }
+        }
+      }
       this.deps.onDone?.(job);
     } catch (e) {
       const err = e as Error & { canceled?: boolean };

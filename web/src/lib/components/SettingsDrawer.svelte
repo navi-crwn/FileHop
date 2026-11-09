@@ -14,7 +14,7 @@
     onWorkers: (n: number) => void;
     onBattery: (v: boolean) => void;
     networkCount: number;
-    onClearAll: () => void;
+    onClearAll: (anchor?: Element | null) => void;
     onClose: () => void;
   }
 
@@ -23,13 +23,30 @@
     onWorkers, onBattery, networkCount, onClearAll, onClose
   }: Props = $props();
 
+  // optional Clean style: one cookie on .hel.ink, so the choice holds in every HOP app
+  let uiStyle = $state(document.documentElement.dataset.ui === 'clean' ? 'clean' : 'hop');
+  function setUiStyle(v: string) {
+    uiStyle = v === 'clean' ? 'clean' : 'hop';
+    const dom = /(^|\.)hel\.ink$/.test(location.hostname) ? '; domain=.hel.ink; Secure' : '';
+    document.cookie = 'hop_ui=' + uiStyle + '; path=/; max-age=31536000; SameSite=Lax' + dom;
+    if (uiStyle === 'clean') document.documentElement.dataset.ui = 'clean';
+    else delete document.documentElement.dataset.ui;
+  }
+
   const isolated = $derived(typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated);
+
+  // a dialog takes focus when it opens, so the next Tab and Escape land in it
+  let root: HTMLDivElement | undefined;
+  $effect(() => {
+    root?.focus();
+  });
   const auto = $derived(autoWorkers || hardwareSlots());
 </script>
 
-<div class="drawer" role="dialog" aria-modal="true" aria-labelledby="settings-h" tabindex="-1">  <div class="dhead">
+<div class="drawer" role="dialog" aria-modal="true" aria-labelledby="settings-h" tabindex="-1" bind:this={root}>
+  <div class="dhead">
     <h2 id="settings-h">{i18n.t('settings.title')}</h2>
-    <button class="tbtn icon" type="button" onclick={onClose} aria-label={i18n.t('licenses.close')}>
+    <button class="tbtn icon ghost" type="button" onclick={onClose} aria-label={i18n.t('licenses.close')}>
       <Icon name="close" size={17} />
     </button>
   </div>
@@ -79,9 +96,9 @@
     {i18n.t('settings.engines')}
   </h3>
   <dl>
-    <dt>Images</dt><dd>{i18n.t('settings.engine_image')}</dd>
+    <dt>{i18n.t('group.image')}</dt><dd>{i18n.t('settings.engine_image')}</dd>
     <dt>PDF</dt><dd>{i18n.t('settings.engine_pdf', { pv: '6', lv: '1.17' })}</dd>
-    <dt>Hash</dt><dd>{i18n.t('settings.engine_hash')}</dd>
+    <dt>{i18n.t('formats.hash')}</dt><dd>{i18n.t('settings.engine_hash')}</dd>
     <dt>ZIP</dt><dd>{i18n.t('settings.engine_zip')}</dd>
   </dl>
   <p class="small faint" style="margin:-8px 0 18px">{i18n.t('settings.no_wasm')}</p>
@@ -93,7 +110,6 @@
   <select
     id="lang-select"
     class="select"
-    style="width:100%"
     value={locale}
     onchange={(e) => onLocale((e.currentTarget as HTMLSelectElement).value)}
   >
@@ -102,11 +118,21 @@
     {/each}
   </select>
 
+  <h3 class="small" style="margin:18px 0 8px;font:700 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">
+    {i18n.t('settings.ui_style')}
+  </h3>
+  <label class="sr" for="ui-style">{i18n.t('settings.ui_style')}</label>
+  <select id="ui-style" class="select" value={uiStyle} onchange={(e) => setUiStyle((e.currentTarget as HTMLSelectElement).value)}>
+    <option value="hop">HOP</option>
+    <option value="clean">{i18n.t('settings.ui_clean')}</option>
+  </select>
+  <p class="small faint" style="margin:6px 0 0">{i18n.t('settings.ui_hint')}</p>
+
   <p class="small muted" style="margin:16px 0 0">{i18n.t('privacy.network', { n: networkCount })}</p>
   <p class="small faint" style="margin:4px 0 20px">{i18n.t('privacy.network_note')}</p>
 
-  <button class="tbtn" type="button" style="width:100%;justify-content:center" onclick={onClearAll}>
-    <Icon name="trash" size={16} />{i18n.t('privacy.clear')}
+  <button class="tbtn danger-outline" type="button" onclick={(e) => onClearAll(e.currentTarget)}>
+    <Icon name="trash" size={16} />{i18n.t('confirm.drop_ok')}
   </button>
   <p class="small faint" style="margin:10px 0 0">{i18n.t('settings.prefs_saved')}</p>
 </div>

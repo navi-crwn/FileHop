@@ -2,7 +2,9 @@ import type { ActionDef, ActionId, Category, Job } from './types';
 import { AVIF_ENCODABLE } from './features';
 
 /* What a file can become. One flat table keeps the UI, the radial menu and the
-   command palette reading from the same source of truth. */
+   command palette reading from the same source of truth. `label` is the English
+   word; an action whose label is a word rather than a format name also carries a
+   `labelKey`, and the UI shows `actionLabel()` from the i18n module. */
 
 const QUALITY = {
   id: 'quality' as const,
@@ -19,13 +21,13 @@ export const ACTIONS: ActionDef[] = [
   { id: 'image:png', ext: 'png', label: 'PNG' },
   { id: 'image:pdf', ext: 'pdf', label: 'PDF', hintKey: 'hint.image_pdf' },
   // pdf
-  { id: 'pdf:merge', ext: 'pdf', label: 'Merge', batch: true },
-  { id: 'pdf:split', ext: 'zip', label: 'Split' },
-  { id: 'pdf:rotate', ext: 'pdf', label: 'Rotate 90°' },
-  { id: 'pdf:extract', ext: 'pdf', label: 'Pick pages', options: [{ id: 'pages', labelKey: 'opt.pages', type: 'text', default: '1-3' }] },
-  { id: 'pdf:png', ext: 'zip', label: 'Pages → PNG' },
-  { id: 'pdf:jpeg', ext: 'zip', label: 'Pages → JPEG' },
-  { id: 'pdf:meta', ext: 'json', label: 'Info' },
+  { id: 'pdf:merge', ext: 'pdf', label: 'Merge', labelKey: 'action.pdf_merge', batch: true },
+  { id: 'pdf:split', ext: 'zip', label: 'Split', labelKey: 'action.pdf_split' },
+  { id: 'pdf:rotate', ext: 'pdf', label: 'Rotate 90°', labelKey: 'action.pdf_rotate' },
+  { id: 'pdf:extract', ext: 'pdf', label: 'Pick pages', labelKey: 'action.pdf_extract', options: [{ id: 'pages', labelKey: 'opt.pages', type: 'text', default: '1-3' }] },
+  { id: 'pdf:png', ext: 'zip', label: 'Pages → PNG', labelKey: 'action.pdf_png' },
+  { id: 'pdf:jpeg', ext: 'zip', label: 'Pages → JPEG', labelKey: 'action.pdf_jpeg' },
+  { id: 'pdf:meta', ext: 'json', label: 'Info', labelKey: 'action.pdf_meta' },
   // data
   { id: 'data:json', ext: 'json', label: 'JSON' },
   { id: 'data:csv', ext: 'csv', label: 'CSV' },
@@ -34,11 +36,11 @@ export const ACTIONS: ActionDef[] = [
   // archives
   { id: 'archive:zip', ext: 'zip', label: 'ZIP' },
   { id: 'archive:gz', ext: 'gz', label: 'GZIP' },
-  { id: 'archive:list', ext: 'json', label: 'List' },
+  { id: 'archive:list', ext: 'json', label: 'List', labelKey: 'action.archive_list' },
   // text
   { id: 'text:html', ext: 'html', label: 'HTML' },
   { id: 'text:md', ext: 'md', label: 'Markdown' },
-  { id: 'text:txt', ext: 'txt', label: 'Plain text' },
+  { id: 'text:txt', ext: 'txt', label: 'Plain text', labelKey: 'action.text_txt' },
   // hashes (no file out)
   { id: 'hash:sha256', ext: '', label: 'SHA-256' },
   { id: 'hash:blake3', ext: '', label: 'BLAKE3' },
@@ -56,10 +58,18 @@ const DATA_TARGETS: ActionId[] = ['data:json', 'data:csv', 'data:tsv', 'data:yam
 const TEXT_TARGETS: ActionId[] = ['text:md', 'text:html', 'text:txt'];
 const HASH_TARGETS: ActionId[] = ['hash:sha256', 'hash:blake3', 'hash:md5'];
 
-/** One merge per group: the first PDF that asked for it carries the result,
-    the rest are absorbed so the same document is not built twice. */
+/** The PDFs that take part in the merge: only those whose target is Merge, in queue
+    order. A PDF set to Split or Rotate, or one already finished with another target,
+    is not part of it. */
+export function mergeMembers(jobs: Job[]): Job[] {
+  return jobs.filter(j => j.action === 'pdf:merge' && j.status !== 'canceled');
+}
+
+/** One merge per group: a running carrier wins globally, then the first queued
+    PDF starts the next merge. Finished cards do not take over a queued joiner. */
 export function mergeCarrier(jobs: Job[]): Job | undefined {
-  return jobs.find(j => j.action === 'pdf:merge' && j.status !== 'canceled');
+  const members = mergeMembers(jobs);
+  return members.find(j => j.status === 'running') ?? members.find(j => j.status === 'queued') ?? members[0];
 }
 
 /** Targets offered for a category, in the order the radial ring and the card show them.
@@ -97,9 +107,11 @@ export function targetsFor(cat: Category, ext: string): ActionId[] {
   }
 }
 
-/** Has anything in this list already taken responsibility for the merge? */
+/** Has anything in this list already taken responsibility for the merge? A card that
+    failed or was stopped keeps its own Retry, and a card with a result keeps its Download. */
 export function isAbsorbed(job: Job, jobs: Job[]): boolean {
   if (job.action !== 'pdf:merge') return false;
+  if (job.status === 'error' || job.status === 'canceled' || (job.status === 'done' && job.result)) return false;
   const carrier = mergeCarrier(jobs);
   return !!carrier && carrier.id !== job.id;
 }
