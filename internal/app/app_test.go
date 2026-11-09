@@ -293,3 +293,13 @@ func TestSafeNextAndFamilyURL(t *testing.T) {
 		}
 	}
 }
+
+// The hub's sign-out link carries this app's home, so the person lands back here.
+func TestSignOutLinkReturnsToApp(t *testing.T) {
+	_, srv := newTestApp(t, true)
+	me := decode(t, mustGet(t, noRedirect(), srv.URL+"/api/v1/me"))
+	want := "https://hub.example.org/logout?return=" + url.QueryEscape(srv.URL+"/")
+	if me["logout_url"] != want {
+		t.Fatalf("logout_url = %v, want %q", me["logout_url"], want)
+	}
+}

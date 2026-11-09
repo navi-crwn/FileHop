@@ -24,6 +24,7 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 - The browser app moved to `web/`.
 
 ### Fixed
+- The sign-out link sent to the account server carries `return=` with this app's address, so the person ends up back on FileHop.
 - Merging: only the PDFs set to Merge are merged, and a group keeps one merge through retries, late joiners and stops.
 - In browsers without `OffscreenCanvas` (Safari before 16.4 and the WebKit ports), every image conversion and PDF pages → PNG/JPEG failed with "Can't find variable: document". Those jobs now run on the page.
 
