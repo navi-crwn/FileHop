@@ -569,7 +569,7 @@
         </div>
 
         {#if totalCount === 0}
-          <p class="queue-empty">{i18n.t('queue.empty')}</p>
+          <div class="queue-empty"><p>{i18n.t('queue.empty')}</p><button class="tbtn primary" type="button" onclick={pickFiles}><Icon name="plus" size={17} />{i18n.t('nav.add')}</button></div>
         {:else}
           {#each groups as g (g.cat)}
             <div class="group">
@@ -660,9 +660,9 @@
 
       <footer class="ft">
         <div class="ft-in">
-          <span class="brand" style="gap:8px">
-            <img src="/mark.svg" alt="" width="22" height="22" />
-            <span class="word"><b>File</b><span>Hop</span></span>
+          <span class="ft-brand">
+            <img src="/mark.svg" alt="" width="28" height="28" />
+            <b>Hop Easy Link</b>
           </span>
           <a href="#privacy">{i18n.t('footer.privacy')}</a>
           <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
