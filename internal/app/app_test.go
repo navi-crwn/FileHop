@@ -32,6 +32,7 @@ func newTestApp(t *testing.T, sso bool) (*App, *httptest.Server) {
 		"index.html":                {Data: []byte("<!doctype html><title>FileHop</title>")},
 		"assets/app-abc123.js":      {Data: []byte("console.log(1)")},
 		"vendor/pdf.worker.min.mjs": {Data: []byte("export {}")},
+		"hop-ui/v5/hop-ui.js":       {Data: []byte("window.HopUI={}")},
 	}
 	cfg := Config{Version: "test", SSOClient: "filehop", HopClients: []string{"imperium", "helink"}}
 	if sso {
@@ -95,6 +96,7 @@ func TestStaticHeadersAndRoutes(t *testing.T) {
 		{"/send", "no-cache", 200}, // reserved for the peer-to-peer sender: gets the shell
 		{"/assets/app-abc123.js", "public, max-age=31536000, immutable", 200},
 		{"/vendor/pdf.worker.min.mjs", "public, max-age=31536000, immutable", 200},
+		{"/hop-ui/v5/hop-ui.js", "public, max-age=31536000, immutable", 200},
 		{"/missing.js", "", 404},
 	} {
 		res, err := http.Get(srv.URL + tc.path)

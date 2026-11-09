@@ -7,6 +7,7 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
+import { createHash } from 'node:crypto';
 
 /* The sources are TypeScript for the browser. `ts.transpileModule` strips the
    types without bundling, which is all these pure modules need: their only
@@ -88,6 +89,36 @@ test('every action label key is in the English dictionary', () => {
   for (const a of actions.ACTIONS) {
     if (a.labelKey) assert.ok(a.labelKey in en, `${a.id}: ${a.labelKey}`);
   }
+});
+
+test('confirmAction asks with the family dialog when it is loaded, with the native one otherwise', async () => {
+  const src = readFileSync(new URL('../web/src/lib/util/confirm.ts', import.meta.url), 'utf8');
+  const js = ts.transpileModule(src, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 }
+  }).outputText;
+  writeFileSync(join(dir, 'confirm.mjs'), js);
+  const { confirmAction } = await import('file://' + join(dir, 'confirm.mjs').replace(/\\/g, '/'));
+  const asked = [];
+  globalThis.confirm = (m) => { asked.push(m); return false; };
+  try {
+    assert.equal(await confirmAction({ title: 'Drop everything?', message: 'Files in the queue: 3.' }), false);
+    assert.deepEqual(asked, ['Drop everything?\n\nFiles in the queue: 3.']);
+    const seen = [];
+    globalThis.HopUI = { confirm: async (o) => { seen.push(o); return true; } };
+    assert.equal(await confirmAction({ title: 'Drop everything?', danger: true }), true);
+    assert.equal(seen[0].danger, true);
+    assert.equal(asked.length, 1, 'the native dialog is not used once HopUI is there');
+  } finally {
+    delete globalThis.HopUI;
+    delete globalThis.confirm;
+  }
+});
+
+test('the vendored family dialog is byte-identical to hop-assets v5', () => {
+  // the integrity values of ui_js and ui_css in hel.ink/hop-assets/apps.json
+  const sri = (rel) => 'sha384-' + createHash('sha384').update(readFileSync(new URL(rel, import.meta.url))).digest('base64');
+  assert.equal(sri('../web/public/hop-ui/v5/hop-ui.js'), 'sha384-IDcwQXxUXNwfC3GDCIJqMuOMHaY/SCZUaezF7ZhL4Els1pk5yrUMyml00NObV0fq');
+  assert.equal(sri('../web/public/hop-ui/v5/hop-ui.css'), 'sha384-wfq/3oTQ0jQYJQZHY7wgY3KoulTamoM2OHTwsb4boVF+dUy7JdPUurlLswZEXSt1');
 });
 
 test('every category has at least one target', () => {

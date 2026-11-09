@@ -625,6 +625,9 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
   .acct-menu { position: fixed; left: 16px; right: 16px; top: auto; margin-top: 6px; }
 }
 
+/* the family dialogs (hop-ui) take FileHop's amber, dark enough for their white label */
+:root { --hop-accent: #b45309; }
+
 /* HOP family links: every app lists the others in its footer */
 .ft-family { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
 .ft-family a { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; }

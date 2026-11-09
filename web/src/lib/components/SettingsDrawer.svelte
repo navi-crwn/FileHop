@@ -14,7 +14,7 @@
     onWorkers: (n: number) => void;
     onBattery: (v: boolean) => void;
     networkCount: number;
-    onClearAll: () => void;
+    onClearAll: (anchor?: Element | null) => void;
     onClose: () => void;
   }
 
@@ -112,7 +112,7 @@
   <p class="small muted" style="margin:16px 0 0">{i18n.t('privacy.network', { n: networkCount })}</p>
   <p class="small faint" style="margin:4px 0 20px">{i18n.t('privacy.network_note')}</p>
 
-  <button class="tbtn" type="button" style="width:100%;justify-content:center" onclick={onClearAll}>
+  <button class="tbtn" type="button" style="width:100%;justify-content:center" onclick={(e) => onClearAll(e.currentTarget)}>
     <Icon name="trash" size={16} />{i18n.t('privacy.clear')}
   </button>
   <p class="small faint" style="margin:10px 0 0">{i18n.t('settings.prefs_saved')}</p>

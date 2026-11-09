@@ -132,7 +132,7 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	if strings.HasPrefix(name, "assets/") || strings.HasPrefix(name, "hop-fonts/") || strings.HasPrefix(name, "vendor/") {
+	if strings.HasPrefix(name, "assets/") || strings.HasPrefix(name, "hop-fonts/") || strings.HasPrefix(name, "hop-ui/") || strings.HasPrefix(name, "vendor/") {
 		h.Set("Cache-Control", "public, max-age=31536000, immutable")
 	} else {
 		h.Set("Cache-Control", "no-cache")

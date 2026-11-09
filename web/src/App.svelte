@@ -11,6 +11,7 @@
   import { targetsFor, actionDef, isAbsorbed, mergeMembers } from './lib/core/actions';
   import type { ActionId, Category, Job } from './lib/core/types';
   import { download, safeFileName } from './lib/util/format';
+  import { confirmAction } from './lib/util/confirm';
   import { zipSync } from 'fflate';
   import { account, loadAccount, initials, takeAuthError } from './lib/account.svelte';
 
@@ -342,10 +343,37 @@
     download(new Blob([zipped as unknown as BlobPart], { type: 'application/zip' }), `filehop-${stamp()}.zip`);
   }
 
-  function clearAll() {
+  /* Both clearing actions throw results away for good, so both ask first. An empty
+     queue has nothing to lose and is not asked about. */
+  async function clearAll(anchor?: Element | null) {
+    if (queue.jobs.length > 0) {
+      const yes = await confirmAction({
+        title: i18n.t('confirm.drop_title'),
+        message: i18n.t('confirm.drop_body', { n: queue.jobs.length }),
+        ok: i18n.t('confirm.drop_ok'),
+        danger: true,
+        anchor
+      });
+      if (!yes) return;
+    }
     queue.clearAll();
     bump();
     showToast(i18n.t('privacy.cleared'));
+  }
+
+  async function clearFinished(anchor?: Element | null) {
+    // the same statuses queue.clearFinished() removes: failed and stopped cards go too
+    const n = queue.jobs.filter(j => j.status === 'done' || j.status === 'error' || j.status === 'canceled' || j.status === 'merged').length;
+    if (n === 0) return;
+    const yes = await confirmAction({
+      title: i18n.t('confirm.clear_title'),
+      message: i18n.t('confirm.clear_body', { n }),
+      ok: i18n.t('queue.clear_done'),
+      anchor
+    });
+    if (!yes) return;
+    queue.clearFinished();
+    bump();
   }
 
   /* --------------------------------------------------- group-level helpers */
@@ -401,6 +429,8 @@
       void runAll();
     }
     if (e.key === 'Escape') {
+      // a family dialog on top takes Escape for itself; what is under it stays open
+      if (document.querySelector('dialog.hop-dialog[open]')) return;
       settingsOpen = false;
       licensesOpen = false;
       dragging = false;
@@ -532,7 +562,7 @@
                 <Icon name="download" size={16} />{i18n.t('queue.download_all')}
               </button>
             {/if}
-            <button class="tbtn" type="button" onclick={() => { queue.clearFinished(); bump(); }}>
+            <button class="tbtn" type="button" onclick={(e) => clearFinished(e.currentTarget)}>
               {i18n.t('queue.clear_done')}
             </button>
           {/if}
@@ -621,7 +651,7 @@
           <p>{i18n.t('privacy.body')}</p>
           <span class="counter"><Icon name="net" size={14} />{i18n.t('privacy.network', { n: networkCount })}</span>
           <p class="small faint" style="margin-top:10px">{i18n.t('privacy.network_note')}</p>
-          <button class="tbtn" type="button" style="margin-top:14px" onclick={clearAll}>
+          <button class="tbtn" type="button" style="margin-top:14px" onclick={(e) => clearAll(e.currentTarget)}>
             <Icon name="trash" size={16} />{i18n.t('privacy.clear')}
           </button>
         </div>
