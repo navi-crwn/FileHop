@@ -4,6 +4,8 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-10
+
 ### Changed
 - Controls follow the HOP control standard: one radius, one height per row, buttons as wide as their text.
 - Surfaces use the flat neutral style (solid cards, hairline borders, sentence-case labels, 6 px badges) as an optional Clean interface style, chosen in the settings drawer.
