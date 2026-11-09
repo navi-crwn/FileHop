@@ -4,12 +4,12 @@
    FileHop's own colour is amber. */
 
 :root {
-  --bg: #0a0a0c;
-  --bg-2: #0a0a0c;
-  --panel: #141418;
-  --panel-2: #1b1b20;
-  --line: rgba(255, 255, 255, .09);
-  --line-2: rgba(255, 255, 255, .16);
+  --bg: #08090c;
+  --bg-2: #0d0f14;
+  --panel: #11131a;
+  --panel-2: #171a23;
+  --line: rgba(255, 255, 255, .08);
+  --line-2: rgba(255, 255, 255, .15);
   --text: #e8eaf0;
   --muted: #8c92a4;
   --faint: #5d6375;
@@ -24,8 +24,7 @@
   --on-accent: #1a1004;
   --radius: var(--hop-card-radius);
   --radius-sm: var(--hop-ctl-radius);
-  --shadow: 0 12px 32px -16px rgba(0, 0, 0, .6);
-  --card-shadow: none;
+  --shadow: 0 24px 60px rgba(0, 0, 0, .45);
   --dot: rgba(255, 255, 255, .055);
 
   --sans: var(--hop-font-body, ui-sans-serif), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -35,12 +34,12 @@
 }
 
 :root[data-theme="light"] {
-  --bg: #f7f7f8;
-  --bg-2: #f7f7f8;
+  --bg: #f6f7fb;
+  --bg-2: #eef0f6;
   --panel: #ffffff;
-  --panel-2: #f2f2f4;
-  --line: rgba(0, 0, 0, .09);
-  --line-2: rgba(0, 0, 0, .14);
+  --panel-2: #f3f4f9;
+  --line: rgba(15, 18, 40, .09);
+  --line-2: rgba(15, 18, 40, .18);
   --text: #10121a;
   --muted: #5a6074;
   --faint: #8a90a2;
@@ -51,20 +50,19 @@
   --red: #dc2626;
   --green: #059669;
   --on-accent: #ffffff;
-  --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 12px 32px -16px rgba(0, 0, 0, .12);
-  --card-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  --shadow: 0 20px 50px rgba(30, 30, 80, .12);
   --dot: rgba(15, 18, 40, .07);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --bg: #f7f7f8;
-    --bg-2: #f7f7f8;
+    --bg: #f6f7fb;
+    --bg-2: #eef0f6;
     --panel: #ffffff;
-    --panel-2: #f2f2f4;
-    --line: rgba(0, 0, 0, .09);
-    --line-2: rgba(0, 0, 0, .14);
+    --panel-2: #f3f4f9;
+    --line: rgba(15, 18, 40, .09);
+    --line-2: rgba(15, 18, 40, .18);
     --text: #10121a;
     --muted: #5a6074;
     --faint: #8a90a2;
@@ -75,8 +73,7 @@
     --red: #dc2626;
     --green: #059669;
     --on-accent: #ffffff;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 12px 32px -16px rgba(0, 0, 0, .12);
-  --card-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+    --shadow: 0 20px 50px rgba(30, 30, 80, .12);
     --dot: rgba(15, 18, 40, .07);
     color-scheme: light;
   }
@@ -94,6 +91,8 @@ body {
   font: 400 16px/1.55 var(--sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 ::selection { background: color-mix(in oklab, var(--amber) 35%, transparent); }
@@ -153,8 +152,9 @@ body.modal-open { overflow: hidden; }
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 22px;
-  background: var(--bg);
+  padding: 12px 22px;
+  background: color-mix(in oklab, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
   border-bottom: 1px solid var(--line);
 }
 
@@ -263,10 +263,16 @@ main { flex: 1; width: 100%; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font: 500 13px var(--sans);
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--panel);
+  font: 600 12px var(--mono);
+  letter-spacing: .04em;
   color: var(--muted);
+  text-transform: uppercase;
 }
-.hero-copy .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+.hero-copy .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 3px color-mix(in oklab, var(--amber) 22%, transparent); }
 .hero h1 { font-size: clamp(34px, 4.6vw, 58px); line-height: 1.02; font-weight: 800; margin: 20px 0 18px; text-wrap: balance; letter-spacing: -.045em; }
 .hero .lead { font-size: 17px; color: var(--muted); max-width: 34em; margin: 0 0 26px; }
 .hero .cta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -277,9 +283,10 @@ main { flex: 1; width: 100%; }
 .zone {
   position: relative;
   border-radius: var(--hop-card-radius);
-  border: 1px dashed var(--line-2);
-  background: var(--panel);
-  box-shadow: var(--card-shadow);
+  border: 1.5px dashed var(--line-2);
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--amber) 9%, transparent), transparent 70%),
+    var(--panel);
   padding: 34px 26px 30px;
   text-align: center;
   transition: border-color .18s, background .18s, transform .18s;
@@ -290,7 +297,9 @@ main { flex: 1; width: 100%; }
 .zone.over {
   border-color: var(--amber);
   border-style: solid;
-  background: color-mix(in oklab, var(--amber) 8%, var(--panel));
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--amber) 20%, transparent), transparent 72%),
+    var(--panel);
 }
 .zone .zicon { width: 54px; height: 54px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); color: var(--amber-soft); }
 .zone .zicon svg { width: 26px; height: 26px; }
@@ -690,28 +699,57 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
   .topbar .tbtn.primary { width: 44px; }
 }
 
-/* ---------- coss surfaces ----------
-   Flat neutral app background, solid cards with a 1 px low-contrast border and a barely-there
-   shadow, small sentence-case labels, 6 px badges for real status. Accent, hero art and the
-   family type stay as they were. */
-.zone .halo { display: none; }
-.card, .step, .fmt, .queue-empty, .privacy-card { box-shadow: var(--card-shadow); }
-.queue-empty { display: grid; justify-items: center; gap: 14px; }
-.queue-empty p { margin: 0; }
-.queue-head .count { border-radius: 6px; height: 20px; padding: 0 7px; font: 500 12px var(--sans); font-variant-numeric: tabular-nums; }
-.group-head h3 { font: 500 12px var(--sans); letter-spacing: 0; text-transform: none; }
-.badge { height: 20px; padding: 0 7px; font: 500 12px var(--sans); letter-spacing: 0; text-transform: none; }
-.bar i { background: var(--amber); }
-.bar.done i { background: var(--green); }
-.bar.error i { background: var(--red); }
-.step .n { font: 500 12px var(--sans); letter-spacing: 0; font-variant-numeric: tabular-nums; }
-.privacy-card { border-color: var(--line); background: var(--panel); }
-.counter { border-radius: 6px; height: 20px; padding: 0 7px; font: 500 12px var(--sans); font-variant-numeric: tabular-nums; }
-.drawer { background: var(--panel); border-left-color: var(--line); }
-.scrim { backdrop-filter: none; background: rgba(4, 6, 10, .45); }
-.dlg-in { border-color: var(--line); }
-.toast { border-radius: var(--hop-ctl-radius); border-color: var(--line); }
-.acct-menu { background: var(--panel); }
-.ft-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+/* ---------- optional "Clean" interface style (coss) ----------
+   Everything below applies only when <html data-ui="clean"> (cookie hop_ui=clean, set in
+   the settings drawer). The default HOP look above is unchanged. Flat neutral background,
+   solid cards with a 1 px low-contrast border and a barely-there shadow, small sentence-case
+   labels, 6 px badges for real status. Accent, hero art and the family type stay. */
+:root[data-ui="clean"] {
+  --bg: #0a0a0c; --bg-2: #0a0a0c; --panel: #141418; --panel-2: #1b1b20;
+  --line: rgba(255, 255, 255, .09); --line-2: rgba(255, 255, 255, .16);
+  --shadow: 0 12px 32px -16px rgba(0, 0, 0, .6); --card-shadow: none;
+}
+:root[data-ui="clean"][data-theme="light"] {
+  --bg: #f7f7f8; --bg-2: #f7f7f8; --panel: #ffffff; --panel-2: #f2f2f4;
+  --line: rgba(0, 0, 0, .09); --line-2: rgba(0, 0, 0, .14);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 12px 32px -16px rgba(0, 0, 0, .12); --card-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-ui="clean"]:not([data-theme="dark"]) {
+    --bg: #f7f7f8; --bg-2: #f7f7f8; --panel: #ffffff; --panel-2: #f2f2f4;
+    --line: rgba(0, 0, 0, .09); --line-2: rgba(0, 0, 0, .14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 12px 32px -16px rgba(0, 0, 0, .12); --card-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  }
+}
+:root[data-ui="clean"] body { background-image: none; }
+:root[data-ui="clean"] .topbar { padding: 10px 22px; background: var(--bg); backdrop-filter: none; }
+:root[data-ui="clean"] .hero-copy .eyebrow { padding: 0; border: 0; border-radius: 0; background: none; font: 500 13px var(--sans); letter-spacing: 0; text-transform: none; }
+:root[data-ui="clean"] .hero-copy .eyebrow i { box-shadow: none; }
+:root[data-ui="clean"] .zone { border-width: 1px; background: var(--panel); box-shadow: var(--card-shadow); }
+:root[data-ui="clean"] .zone.over { background: color-mix(in oklab, var(--amber) 8%, var(--panel)); }
+:root[data-ui="clean"] .zone .halo { display: none; }
+:root[data-ui="clean"] :is(.card, .step, .fmt, .queue-empty, .privacy-card) { box-shadow: var(--card-shadow); }
+:root[data-ui="clean"] .queue-empty { display: grid; justify-items: center; gap: 14px; margin-block: 0; }
+:root[data-ui="clean"] .queue-empty .empty-add { display: inline-flex; }
+:root[data-ui="clean"] .queue-head .count { border-radius: 6px; height: 20px; padding: 0 7px; font: 500 12px var(--sans); }
+:root[data-ui="clean"] .group-head h3 { font: 500 12px var(--sans); letter-spacing: 0; text-transform: none; }
+:root[data-ui="clean"] .badge { height: 20px; padding: 0 7px; font: 500 12px var(--sans); letter-spacing: 0; text-transform: none; }
+:root[data-ui="clean"] .bar i { background: var(--amber); }
+:root[data-ui="clean"] .bar.done i { background: var(--green); }
+:root[data-ui="clean"] .bar.error i { background: var(--red); }
+:root[data-ui="clean"] .step .n { font: 500 12px var(--sans); letter-spacing: 0; }
+:root[data-ui="clean"] .privacy-card { border-color: var(--line); background: var(--panel); }
+:root[data-ui="clean"] .counter { border-radius: 6px; height: 20px; padding: 0 7px; font: 500 12px var(--sans); }
+:root[data-ui="clean"] .drawer { background: var(--panel); border-left-color: var(--line); }
+:root[data-ui="clean"] .drawer h3 { font: 500 12px var(--sans) !important; letter-spacing: 0 !important; text-transform: none !important; }
+:root[data-ui="clean"] .scrim { backdrop-filter: none; background: rgba(4, 6, 10, .45); }
+:root[data-ui="clean"] .dlg-in { border-color: var(--line); }
+:root[data-ui="clean"] .toast { border-radius: var(--hop-ctl-radius); border-color: var(--line); }
+:root[data-ui="clean"] .acct-menu { background: var(--panel); }
+:root[data-ui="clean"] .ft-brand { color: var(--muted); }
+
+/* shared by both styles: the footer brand line; the empty-queue action shows only in Clean */
+.ft-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; }
 .ft-brand img { width: 28px; height: 28px; display: block; }
-.ft-brand b { color: var(--text); font-weight: 600; }
+.ft-brand b { font-weight: 600; }
+.queue-empty .empty-add { display: none; }
