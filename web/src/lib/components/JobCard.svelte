@@ -195,6 +195,7 @@
               <label class="opt">
                 <span>{i18n.t(o.labelKey)}</span>
                 <input
+                  class="field-input"
                   type="number"
                   value={optValue(o.id)}
                   oninput={(e) => onOpt(o.id, Number((e.currentTarget as HTMLInputElement).value))}
@@ -204,6 +205,7 @@
               <label class="opt">
                 <span>{i18n.t(o.labelKey)}</span>
                 <input
+                  class="field-input"
                   type="text"
                   inputmode="numeric"
                   placeholder="1-3,7"
@@ -247,18 +249,18 @@
     {#if absorbed || job.status === 'merged'}
       <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
     {:else if job.status === 'queued'}
-      <button class="mini primary" type="button" onclick={onRun}><Icon name="play" size={14} />{i18n.t('job.run')}</button>
+      <button class="mini secondary" type="button" onclick={onRun}><Icon name="play" size={14} />{i18n.t('job.run')}</button>
     {:else if job.status === 'running'}
       <button class="mini" type="button" onclick={onCancel}><Icon name="stop" size={14} />{i18n.t('job.cancel')}</button>
     {:else if job.status === 'done'}
-      <button class="mini primary" type="button" onclick={onDownload}><Icon name="download" size={14} />{i18n.t('job.download')}</button>
+      <button class="mini secondary" type="button" onclick={onDownload}><Icon name="download" size={14} />{i18n.t('job.download')}</button>
       {#if job.result?.hash}
         <button class="mini" type="button" onclick={copyHash}>{copied ? i18n.t('job.copied') : i18n.t('job.copy_hash')}</button>
       {/if}
       <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
     {:else}
       <button class="mini" type="button" onclick={onRun} disabled={retryBlocked} aria-describedby={retryBlocked ? 'retry-wait-' + job.id : undefined}><Icon name="refresh" size={14} />{i18n.t('job.retry')}</button>
-      <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} /></button>
+      <button class="mini icon" type="button" onclick={onRemove} aria-label={i18n.t('job.remove')} title={i18n.t('job.remove')}><Icon name="trash" size={14} /></button>
     {/if}
   </div>
 </article>

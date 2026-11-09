@@ -22,8 +22,8 @@
   --grad: linear-gradient(115deg, var(--amber), #fb923c 45%, var(--violet));
   --accent: var(--amber);
   --on-accent: #1a1004;
-  --radius: 16px;
-  --radius-sm: 10px;
+  --radius: var(--hop-card-radius);
+  --radius-sm: var(--hop-ctl-radius);
   --shadow: 0 24px 60px rgba(0, 0, 0, .45);
   --dot: rgba(255, 255, 255, .055);
 
@@ -128,7 +128,7 @@ em.acc {
   top: -60px;
   z-index: 100;
   padding: 10px 16px;
-  border-radius: 10px;
+  border-radius: var(--hop-ctl-radius);
   background: var(--panel);
   border: 1px solid var(--line-2);
   transition: top .18s;
@@ -164,49 +164,94 @@ body.modal-open { overflow: hidden; }
 .brand .word span { color: var(--amber-soft); }
 .topbar .spacer { flex: 1; }
 
-.tbtn {
+/* ---------- controls (HOP control standard) ----------
+   .tbtn is the button: 36 px, .lg 40 px for the main action of the page. .mini and .chip
+   are its small size, 32 px. .select and .field-input are the field. Everything has the
+   8 px radius, is as wide as its text and never stretches. Variants: primary (accent fill,
+   one per view), secondary (neutral fill), outline (the default), ghost, danger-outline. */
+.tbtn, .mini, .chip {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  height: 38px;
+  flex-shrink: 0;
+  width: auto;
+  height: var(--hop-ctl-h);
   padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line-2);
-  background: var(--panel);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 550;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color .16s, background .16s, transform .16s;
-}
-.tbtn:hover { border-color: var(--amber); }
-.tbtn:active { transform: translateY(1px); }
-.tbtn svg { width: 17px; height: 17px; flex: none; }
-.tbtn.icon { padding: 0; width: 38px; justify-content: center; }
-.tbtn.primary {
-  background: var(--text);
-  color: var(--bg);
-  border-color: var(--text);
-}
-:root[data-theme="light"] .tbtn.primary { background: var(--text); color: #fff; }
-
-.select {
-  height: 38px;
-  padding: 0 30px 0 12px;
-  border-radius: 999px;
-  border: 1px solid var(--line-2);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid var(--hop-line);
+  border-radius: var(--hop-ctl-radius);
+  background: var(--hop-surface);
+  color: var(--hop-text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--hop-ctl-font);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .12s ease;
+}
+.tbtn:hover, .mini:hover, .chip:hover { background: var(--hop-fill); text-decoration: none; }
+.tbtn:active, .mini:active, .chip:active { transform: scale(.97); }
+.tbtn:focus-visible, .mini:focus-visible, .chip:focus-visible, .select:focus-visible, .field-input:focus-visible {
+  outline: none;
+  border-color: var(--hop-accent);
+  box-shadow: 0 0 0 var(--hop-ring) color-mix(in srgb, var(--hop-accent) 30%, transparent);
+}
+.tbtn:disabled, .mini:disabled, .chip:disabled, .select:disabled, .field-input:disabled { opacity: .64; cursor: not-allowed; }
+.tbtn:disabled:active, .mini:disabled:active, .chip:disabled:active { transform: none; }
+.tbtn svg { width: 17px; height: 17px; flex: none; }
+.mini svg { width: 14px; height: 14px; flex: none; }
+.tbtn.lg { height: var(--hop-ctl-h-lg); padding: 0 16px; }
+.mini, .chip { height: var(--hop-ctl-h-sm); padding: 0 12px; gap: 6px; font-size: 13px; }
+.tbtn.icon { width: var(--hop-ctl-h); padding: 0; }
+.mini.icon { width: var(--hop-ctl-h-sm); padding: 0; }
+.tbtn.primary, .mini.primary { background: var(--hop-accent); border-color: transparent; color: #fff; }
+.tbtn.primary:hover, .mini.primary:hover { background: var(--hop-accent-hover); }
+.tbtn.secondary, .mini.secondary { background: var(--hop-fill); border-color: transparent; }
+.tbtn.secondary:hover, .mini.secondary:hover { background: var(--hop-fill-hover); }
+.tbtn.ghost, .mini.ghost { background: transparent; border-color: transparent; }
+.tbtn.ghost:hover, .mini.ghost:hover { background: var(--hop-fill); }
+.tbtn.danger-outline, .mini.danger-outline { color: var(--red); border-color: color-mix(in oklab, var(--red) 45%, transparent); }
+.tbtn.danger-outline:hover, .mini.danger-outline:hover { background: color-mix(in oklab, var(--red) 10%, var(--hop-surface)); }
+
+/* after the variants, so a filled or ghost button shows the accent border on focus too */
+.tbtn:focus-visible, .mini:focus-visible, .chip:focus-visible { border-color: var(--hop-accent); }
+
+/* a target chip is a small button; the chosen one keeps the amber tint */
+.chip { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+.chip:hover { color: var(--text); }
+.chip.on { background: color-mix(in oklab, var(--amber) 20%, var(--panel)); border-color: var(--amber); color: var(--text); }
+
+.select, .field-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--hop-ctl-h);
+  padding: 0 var(--hop-ctl-px);
+  border: 1px solid var(--hop-line);
+  border-radius: var(--hop-ctl-radius);
+  background-color: var(--hop-surface);
+  color: var(--hop-text);
+  font: inherit;
+  font-size: var(--hop-ctl-font);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.select {
   appearance: none;
+  padding-right: 30px;
+  text-overflow: ellipsis;
   cursor: pointer;
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: calc(100% - 17px) 16px, calc(100% - 12px) 16px;
+  background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
 }
+.field-input[aria-invalid="true"] { border-color: var(--hop-danger); box-shadow: 0 0 0 var(--hop-ring) rgb(225 29 72 / .16); }
+/* a field is as wide as its wrapper, and the wrapper is capped */
+.field { display: block; width: 100%; max-width: var(--hop-field-max); }
+.topbar .select { width: auto; max-width: var(--hop-field-max-short); }
 
 main { flex: 1; width: 100%; }
 
@@ -237,7 +282,7 @@ main { flex: 1; width: 100%; }
 /* ---------- dropzone ---------- */
 .zone {
   position: relative;
-  border-radius: 22px;
+  border-radius: var(--hop-card-radius);
   border: 1.5px dashed var(--line-2);
   background:
     radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--amber) 9%, transparent), transparent 70%),
@@ -256,7 +301,7 @@ main { flex: 1; width: 100%; }
     radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--amber) 20%, transparent), transparent 72%),
     var(--panel);
 }
-.zone .zicon { width: 54px; height: 54px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 16px; background: var(--panel-2); border: 1px solid var(--line); color: var(--amber-soft); }
+.zone .zicon { width: 54px; height: 54px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); color: var(--amber-soft); }
 .zone .zicon svg { width: 26px; height: 26px; }
 .zone h2 { font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
 .zone p { margin: 8px auto 0; max-width: 40ch; font-size: 13.5px; color: var(--muted); }
@@ -327,7 +372,7 @@ main { flex: 1; width: 100%; }
 .queue { margin-top: 34px; }
 .queue-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .queue-head h2 { font-size: 15px; font-weight: 700; letter-spacing: 0; display: flex; align-items: center; gap: 8px; }
-.queue-head .count { font: 600 11px var(--mono); color: var(--muted); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-2); }
+.queue-head .count { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; font: 600 11px var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); border-radius: 999px; border: 1px solid var(--line-2); }
 .queue-head .spacer { flex: 1; }
 .queue-empty {
   padding: 44px 20px;
@@ -344,20 +389,6 @@ main { flex: 1; width: 100%; }
 .group-head h3 { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-family: var(--mono); }
 .group-head .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 
-.chip {
-  height: 28px;
-  padding: 0 11px;
-  border-radius: 999px;
-  border: 1px solid var(--line-2);
-  background: var(--panel);
-  color: var(--muted);
-  font: 600 12px var(--mono);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color .14s, color .14s, background .14s;
-}
-.chip:hover { color: var(--text); border-color: var(--amber); }
-.chip.on { background: color-mix(in oklab, var(--amber) 20%, var(--panel)); border-color: var(--amber); color: var(--text); }
 
 /* ---------- card ---------- */
 .card {
@@ -379,7 +410,7 @@ main { flex: 1; width: 100%; }
 .card .ico {
   width: 44px; height: 44px;
   display: grid; place-items: center;
-  border-radius: 12px;
+  border-radius: var(--hop-ctl-radius);
   background: var(--panel-2);
   border: 1px solid var(--line);
   font: 700 10px var(--mono);
@@ -399,9 +430,11 @@ main { flex: 1; width: 100%; }
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 7px;
-  border-radius: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--hop-ctl-radius-sm);
   font: 600 10px var(--mono);
+  font-variant-numeric: tabular-nums;
   letter-spacing: .03em;
   border: 1px solid var(--line-2);
   color: var(--muted);
@@ -414,15 +447,10 @@ main { flex: 1; width: 100%; }
 .targets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
 
 .opts { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
-.opt { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.opt { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--muted); }
 .opt input[type="range"] { width: 150px; }
-.opt input[type="number"], .opt input[type="text"] {
-  width: 92px; height: 28px; padding: 0 8px;
-  border-radius: 8px; border: 1px solid var(--line-2);
-  background: var(--panel-2); color: var(--text);
-  font: 600 12px var(--mono);
-}
-.opt .val { font: 600 12px var(--mono); color: var(--text); min-width: 2.4em; }
+.opt .field-input { width: 9rem; max-width: var(--hop-field-max-short); height: var(--hop-ctl-h-sm); font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.opt .val { font: 600 12px var(--mono); font-variant-numeric: tabular-nums; color: var(--text); min-width: 2.4em; }
 
 .bar { height: 4px; border-radius: 99px; background: var(--panel-2); overflow: hidden; margin-top: 10px; }
 .bar i { display: block; height: 100%; background: var(--grad); border-radius: 99px; transition: width .2s linear; }
@@ -434,20 +462,7 @@ main { flex: 1; width: 100%; }
 .err { margin-top: 8px; font-size: 12.5px; color: var(--red); display: flex; gap: 8px; align-items: flex-start; }
 .err svg { width: 15px; height: 15px; flex: none; margin-top: 2px; }
 
-.card .side { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
-.mini {
-  height: 30px; padding: 0 12px;
-  border-radius: 8px; border: 1px solid var(--line-2);
-  background: var(--panel-2); color: var(--text);
-  font-size: 12px; font-weight: 600; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  white-space: nowrap;
-}
-.mini:hover { border-color: var(--amber); }
-.mini:disabled { cursor: default; opacity: .45; border-color: var(--line-2); }
-.mini.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
-:root[data-theme="light"] .mini.primary { color: #fff; }
-.mini svg { width: 14px; height: 14px; }
+.card .side { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; max-width: 17rem; }
 
 /* ---------- sections ---------- */
 .sec { margin-top: 84px; }
@@ -470,7 +485,6 @@ main { flex: 1; width: 100%; }
 
 .privacy-card { scroll-margin-top: 84px; padding: 24px; border-radius: var(--radius); border: 1px solid color-mix(in oklab, var(--green) 28%, var(--line)); background: linear-gradient(180deg, color-mix(in oklab, var(--green) 7%, var(--panel)), var(--panel)); }
 .privacy-card h2 { font-size: 22px; margin-bottom: 8px; }
-.privacy-card .tbtn, .drawer .tbtn:not(.icon) { height: auto; min-height: 38px; padding: 8px 14px; white-space: normal; text-align: start; }
 .privacy-card p { margin: 0 0 14px; color: var(--muted); max-width: 46em; }
 .counter { display: inline-flex; align-items: center; gap: 8px; font: 600 13px var(--mono); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel); }
 .counter b { color: var(--green); }
@@ -503,11 +517,13 @@ footer.ft { margin-top: 90px; padding: 34px 0 44px; border-top: 1px solid var(--
 .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 .row:last-child { border-bottom: 0; }
 .row .lbl { color: var(--text); }
-.row .val { font: 600 12px var(--mono); color: var(--muted); }
+.row .val { font: 600 12px var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); }
 .switch { position: relative; width: 40px; height: 22px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel-2); cursor: pointer; flex: none; transition: background .16s, border-color .16s; }
 .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: transform .16s, background .16s; }
 .switch.on { background: color-mix(in oklab, var(--amber) 30%, var(--panel)); border-color: var(--amber); }
 .switch.on::after { transform: translateX(18px); background: var(--amber-soft); }
+.switch::before { content: ""; position: absolute; inset: -12px -3px; }
+.switch:focus-visible { outline: none; border-color: var(--hop-accent); box-shadow: 0 0 0 var(--hop-ring) color-mix(in srgb, var(--hop-accent) 30%, transparent); }
 .slider-row { display: grid; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .slider-row input[type="range"] { width: 100%; }
 .slider-row .lbl { display: flex; justify-content: space-between; font-size: 13.5px; }
@@ -526,7 +542,7 @@ input[type="range"] {
   cursor: pointer;
   touch-action: pan-y;
 }
-input[type="range"]:disabled { cursor: default; opacity: .45; }
+input[type="range"]:disabled { cursor: not-allowed; opacity: .64; }
 input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 99px; background: var(--line-2); }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -580,27 +596,31 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
   .steps { grid-template-columns: 1fr; }
   .fmts { grid-template-columns: 1fr; }
   .card { grid-template-columns: 38px minmax(0, 1fr); }
-  .card .side { grid-column: 1 / -1; flex-direction: row; }
-  .card .side .mini { flex: 1; }
+  .card .side { grid-column: 1 / -1; justify-content: flex-start; max-width: none; }
   .topbar { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
   .brand .word { display: none; }
 }
 
 /* phones: one row, as the family chrome has it (primary action, language, theme, account).
    The add button keeps its text for screen readers; settings stay one tap away in the hero. */
-@media (max-width: 600px) {
+@media (max-width: 639px) {
   .topbar { flex-wrap: nowrap; padding: 8px 12px; }
   .opt { flex: 1 1 100%; }
   .opt input[type="range"] { flex: 1; width: auto; min-width: 0; }
-  .topbar .tbtn.primary { width: 38px; padding: 0; justify-content: center; flex: none; }
+  .topbar .tbtn.primary { width: var(--hop-ctl-h); padding: 0; }
   .topbar .tbtn.primary .tlabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .topbar .tsettings { display: none; }
-  .topbar .select { min-width: 0; max-width: 128px; text-overflow: ellipsis; }
+  .topbar .select { min-width: 0; max-width: 128px; }
+  /* fields are 16 px on phones, so iOS does not zoom the page on focus */
+  .select, .field-input, .opt .field-input { font-size: 16px; }
+  /* a card's buttons share the row under the text */
+  .card .side .mini:not(.icon) { flex: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
   .zone .halo { display: none; }
+  .tbtn:active, .mini:active, .chip:active, .hop-dialog .hop-btn:active { transform: none; }
 }
 
 /* account control (HOP ID): shown only when the server has sign-in set up */
@@ -614,20 +634,54 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 .acct-name { max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .acct-menu {
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 220px;
-  display: grid; gap: 4px; padding: 10px; border: 1px solid var(--line); border-radius: 12px;
+  display: grid; gap: 4px; padding: 10px; border: 1px solid var(--line); border-radius: var(--hop-card-radius);
   background: var(--bg); box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
 }
 .acct-menu p { margin: 0 0 6px; overflow-wrap: anywhere; }
 .acct-menu a { padding: 6px 8px; border-radius: 8px; color: inherit; text-decoration: none; }
 .acct-menu a:hover, .acct-menu a:focus-visible { background: var(--soft, rgb(127 127 127 / 0.12)); }
-@media (max-width: 600px) {
+@media (max-width: 639px) {
   .acct-name { display: none; }
   /* the control can wrap to the left half of a phone: keep the menu on screen */
   .acct-menu { position: fixed; left: 16px; right: 16px; top: auto; margin-top: 6px; }
 }
 
-/* the family dialogs (hop-ui) take FileHop's amber, dark enough for their white label */
-:root { --hop-accent: #b45309; }
+/* ---------- HOP control standard: tokens ----------
+   The names are the family's, the same in every HOP app. The colours map to FileHop's own. */
+:root {
+  --hop-ctl-radius: 8px;
+  --hop-ctl-radius-sm: 6px;
+  --hop-card-radius: 14px;
+  --hop-ctl-h: 36px;
+  --hop-ctl-h-sm: 32px;
+  --hop-ctl-h-lg: 40px;
+  --hop-ctl-px: 12px;
+  --hop-ctl-font: 14px;
+  --hop-ring: 3px;
+  --hop-field-max: 28rem;
+  --hop-field-max-narrow: 24rem;
+  --hop-field-max-short: 11rem;
+  --hop-field-max-xs: 6rem;
+  --hop-search-max: 20rem;
+  /* amber dark enough for a white label in both themes; the family dialogs use it too */
+  --hop-accent: #b45309;
+  --hop-accent-hover: #92400e;
+  --hop-danger: #e11d48;
+  --hop-line: var(--line-2);
+  --hop-surface: var(--panel);
+  --hop-fill: color-mix(in oklab, var(--text) 11%, var(--panel));
+  --hop-fill-hover: color-mix(in oklab, var(--text) 17%, var(--panel));
+  --hop-text: var(--text);
+  /* the family dialog: its panel like the cards, which puts its buttons at 8 px */
+  --hop-ui-radius: var(--hop-card-radius);
+}
+
+/* The vendored family dialog (hop-ui v5) draws 44 px, 15 px buttons at every width. On this
+   page they follow the same heights as every other button; the vendored file is untouched. */
+.hop-dialog .hop-btn { height: var(--hop-ctl-h); min-height: var(--hop-ctl-h); padding: 0 14px; font-size: var(--hop-ctl-font); line-height: 1; }
+.hop-dialog .hop-btn--danger { white-space: nowrap; }
+
+.mono, .sub, .result, .counter { font-variant-numeric: tabular-nums; }
 
 /* HOP family links: every app lists the others in its footer */
 .ft-family { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
@@ -637,7 +691,10 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 
 /* touch screens: every control at least 44 px tall */
 @media (pointer: coarse) {
-  .tbtn, .select, .chip, .mini, .ft-family a, .ft-in a, .acct-menu a { min-height: 44px; }
+  .tbtn, .select, .field-input, .chip, .mini, .hop-dialog .hop-btn, .ft-family a, .ft-in a, .acct-menu a { min-height: 44px; }
   .ft-in a { display: inline-flex; align-items: center; }
-  .tbtn.icon, .topbar .tbtn.primary { width: 44px; }
+  .tbtn.icon, .mini.icon { min-width: 44px; }
+}
+@media (pointer: coarse) and (max-width: 639px) {
+  .topbar .tbtn.primary { width: 44px; }
 }

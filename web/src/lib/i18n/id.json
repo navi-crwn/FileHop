@@ -104,7 +104,6 @@
   "privacy.body": "Tidak ada. File dibuka dengan File API, didekode dan dikodekan di tab ini, lalu dikembalikan lewat blob URL. Tidak ada konversi di server, tidak ada antrean, dan tidak perlu akun. Jika Anda masuk dengan HOP ID, server hanya menyimpan sesi Anda, tidak pernah file.",
   "privacy.network": "Permintaan jaringan sejak tab ini dibuka: {n}",
   "privacy.network_note": "Font, ikon, dan kode datang dari origin yang sama.",
-  "privacy.clear": "Buang semuanya dan bebaskan memori",
   "privacy.cleared": "Antrean dan memori dibersihkan",
   "confirm.drop_title": "Buang semuanya?",
   "confirm.drop_body": "File di antrean: {n}. Semuanya, beserta hasilnya, dihapus dari memori tab ini; hasil yang belum diunduh ikut hilang.",

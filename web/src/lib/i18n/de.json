@@ -104,7 +104,6 @@
   "privacy.body": "Nichts. Dateien werden mit der File API geöffnet, in diesem Tab dekodiert und kodiert und über eine Blob-URL zurückgegeben. Es gibt keine Umwandlung auf dem Server und keine Warteschlange, und ein Konto ist nicht nötig. Wenn du dich mit der HOP ID anmeldest, speichert der Server nur deine Sitzung, niemals eine Datei.",
   "privacy.network": "Netzwerkanfragen seit dem Öffnen dieses Tabs: {n}",
   "privacy.network_note": "Schriften, Symbole und Code kommen aus derselben Quelle.",
-  "privacy.clear": "Alles verwerfen und Speicher freigeben",
   "privacy.cleared": "Warteschlange und Speicher geleert",
   "confirm.drop_title": "Alles verwerfen?",
   "confirm.drop_body": "Dateien in der Warteschlange: {n}. Sie und ihre Ergebnisse verlassen den Speicher dieses Tabs; ein Ergebnis, das du nicht heruntergeladen hast, ist weg.",

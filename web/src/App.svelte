@@ -510,10 +510,10 @@
           <h1>{i18n.t('hero.h1_pre')}{#if heroBreak}<br />{:else}{' '}{/if}<em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
           <p class="lead">{i18n.t('hero.lead')}</p>
           <div class="cta">
-            <button class="tbtn primary" type="button" onclick={pickFiles}>
+            <button class="tbtn secondary lg" type="button" onclick={pickFiles}>
               <Icon name="upload" size={17} />{i18n.t('hero.cta')}
             </button>
-            <button class="tbtn" type="button" onclick={() => (settingsOpen = true)}>
+            <button class="tbtn lg" type="button" onclick={() => (settingsOpen = true)}>
               <Icon name="gear" size={17} />{i18n.t('nav.settings')}
             </button>
           </div>
@@ -554,7 +554,7 @@
           </h2>
           <span class="spacer"></span>
           {#if totalCount > 0}
-            <button class="tbtn" type="button" onclick={runAll} disabled={running}>
+            <button class="tbtn secondary" type="button" onclick={runAll} disabled={running}>
               <Icon name="play" size={16} />{i18n.t('queue.run_all')}
             </button>
             {#if doneCount > 1}
@@ -652,8 +652,8 @@
           <p>{i18n.t('privacy.body')}</p>
           <span class="counter"><Icon name="net" size={14} />{i18n.t('privacy.network', { n: networkCount })}</span>
           <p class="small faint" style="margin-top:10px">{i18n.t('privacy.network_note')}</p>
-          <button class="tbtn" type="button" style="margin-top:14px" onclick={(e) => clearAll(e.currentTarget)}>
-            <Icon name="trash" size={16} />{i18n.t('privacy.clear')}
+          <button class="tbtn danger-outline" type="button" style="margin-top:14px" onclick={(e) => clearAll(e.currentTarget)}>
+            <Icon name="trash" size={16} />{i18n.t('confirm.drop_ok')}
           </button>
         </div>
       </section>
@@ -667,7 +667,7 @@
           <a href="#privacy">{i18n.t('footer.privacy')}</a>
           <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
           <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
-          <button class="tbtn" type="button" style="height:30px;padding:0 10px;font-size:12.5px" onclick={() => (licensesOpen = true)}>
+          <button class="mini ghost" type="button" onclick={() => (licensesOpen = true)}>
             {i18n.t('footer.licenses')}
           </button>
           <span class="grow"></span>
@@ -718,7 +718,7 @@
     <div class="dlg-in">
       <div class="dhead" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <h2 id="lic-h">{i18n.t('licenses.title')}</h2>
-        <button class="tbtn icon" type="button" onclick={() => (licensesOpen = false)} aria-label={i18n.t('licenses.close')}>
+        <button class="tbtn icon ghost" type="button" onclick={() => (licensesOpen = false)} aria-label={i18n.t('licenses.close')}>
           <Icon name="close" size={17} />
         </button>
       </div>

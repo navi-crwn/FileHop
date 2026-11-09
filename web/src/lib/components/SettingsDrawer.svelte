@@ -36,7 +36,7 @@
 <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="settings-h" tabindex="-1" bind:this={root}>
   <div class="dhead">
     <h2 id="settings-h">{i18n.t('settings.title')}</h2>
-    <button class="tbtn icon" type="button" onclick={onClose} aria-label={i18n.t('licenses.close')}>
+    <button class="tbtn icon ghost" type="button" onclick={onClose} aria-label={i18n.t('licenses.close')}>
       <Icon name="close" size={17} />
     </button>
   </div>
@@ -100,7 +100,6 @@
   <select
     id="lang-select"
     class="select"
-    style="width:100%"
     value={locale}
     onchange={(e) => onLocale((e.currentTarget as HTMLSelectElement).value)}
   >
@@ -112,8 +111,8 @@
   <p class="small muted" style="margin:16px 0 0">{i18n.t('privacy.network', { n: networkCount })}</p>
   <p class="small faint" style="margin:4px 0 20px">{i18n.t('privacy.network_note')}</p>
 
-  <button class="tbtn" type="button" style="width:100%;justify-content:center" onclick={(e) => onClearAll(e.currentTarget)}>
-    <Icon name="trash" size={16} />{i18n.t('privacy.clear')}
+  <button class="tbtn danger-outline" type="button" onclick={(e) => onClearAll(e.currentTarget)}>
+    <Icon name="trash" size={16} />{i18n.t('confirm.drop_ok')}
   </button>
   <p class="small faint" style="margin:10px 0 0">{i18n.t('settings.prefs_saved')}</p>
 </div>

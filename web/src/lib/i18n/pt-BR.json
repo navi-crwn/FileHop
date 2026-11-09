@@ -104,7 +104,6 @@
   "privacy.body": "Nada. Os arquivos são abertos com a File API, decodificados e codificados nesta aba e devolvidos por uma URL blob. Não há conversão no servidor nem fila, e nenhuma conta é necessária. Se você entrar com o HOP ID, o servidor guarda só a sua sessão, nunca um arquivo.",
   "privacy.network": "Requisições de rede desde que esta aba abriu: {n}",
   "privacy.network_note": "Fontes, ícones e código vêm desta mesma origem.",
-  "privacy.clear": "Jogar tudo fora e liberar memória",
   "privacy.cleared": "Fila e memória limpas",
   "confirm.drop_title": "Jogar tudo fora?",
   "confirm.drop_body": "Arquivos na fila: {n}. Eles e seus resultados saem da memória desta aba; um resultado que você não baixou se perde.",
