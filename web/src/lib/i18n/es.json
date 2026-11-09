@@ -43,6 +43,7 @@
   "job.copied": "Copiado",
   "job.remove": "Quitar",
   "job.retry": "Reintentar",
+  "job.retry_wait": "Otra unión está en marcha. Reintenta cuando termine.",
   "job.cancel": "Cancelar",
   "job.target": "Convertir a",
   "job.run": "Convertir",

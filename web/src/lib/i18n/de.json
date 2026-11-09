@@ -43,6 +43,7 @@
   "job.copied": "Kopiert",
   "job.remove": "Entfernen",
   "job.retry": "Nochmal versuchen",
+  "job.retry_wait": "Eine andere Zusammenführung läuft gerade. Versuche es nochmal, wenn sie fertig ist.",
   "job.cancel": "Abbrechen",
   "job.target": "Konvertieren zu",
   "job.run": "Konvertieren",

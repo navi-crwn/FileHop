@@ -43,6 +43,7 @@
   "job.copied": "Copied",
   "job.remove": "Remove",
   "job.retry": "Try again",
+  "job.retry_wait": "Another merge is running. Try again after it finishes.",
   "job.cancel": "Cancel",
   "job.target": "Convert to",
   "job.run": "Convert",

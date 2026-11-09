@@ -43,6 +43,7 @@
   "job.copied": "Tersalin",
   "job.remove": "Buang",
   "job.retry": "Coba lagi",
+  "job.retry_wait": "Merge lain sedang berjalan. Coba lagi setelah selesai.",
   "job.cancel": "Batalkan",
   "job.target": "Konversi ke",
   "job.run": "Konversi",

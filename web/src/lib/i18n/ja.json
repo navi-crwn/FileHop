@@ -43,6 +43,7 @@
   "job.copied": "コピーしました",
   "job.remove": "削除",
   "job.retry": "再試行",
+  "job.retry_wait": "別の結合が実行中です。完了してから再試行してください。",
   "job.cancel": "キャンセル",
   "job.target": "変換先",
   "job.run": "変換",

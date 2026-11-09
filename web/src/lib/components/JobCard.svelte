@@ -12,7 +12,9 @@
     pdfCount: number;
     /** this PDF is folded into another card's merge, so it has no result of its own */
     absorbed?: boolean;
-    /** when this card carries the merge: the names of the PDFs it will join, this one first */
+    /** the group's merge is running on another card: this card's retry waits for it */
+    mergeBusy?: boolean;
+    /** when this card carries the merge: the names of the PDFs it will join, in queue order */
     mergeNames?: string[];
     onAction: (id: Job['action']) => void;
     onOpt: (key: string, value: number | string) => void;
@@ -22,8 +24,15 @@
     onDownload: () => void;
   }
 
-  let { job, pdfCount, absorbed = false, mergeNames = [], onAction, onOpt, onRun, onCancel, onRemove, onDownload }: Props = $props();
+  let { job, pdfCount, absorbed = false, mergeBusy = false, mergeNames = [], onAction, onOpt, onRun, onCancel, onRemove, onDownload }: Props = $props();
   let copied = $state(false);
+
+  // While another card is building the group's merge, this card's retry waits:
+  // native disabled, with a visible line under the error that the button points at
+  // for screen readers. Only a failed or stopped card has a Retry to block.
+  const retryBlocked = $derived(
+    mergeBusy && job.action === 'pdf:merge' && !absorbed && (job.status === 'error' || job.status === 'canceled')
+  );
 
   const targets = $derived(
     targetsFor(job.det.category, job.det.ext).filter(id => (id === 'pdf:merge' ? pdfCount > 1 : true))
@@ -149,7 +158,7 @@
       </p>
     {/if}
 
-    {#if job.status !== 'done' && job.status !== 'merged' && !absorbed}
+    {#if job.status !== 'done' && job.status !== 'merged' && job.status !== 'running' && !absorbed}
       <div class="targets" role="group" aria-label={i18n.t('job.target')}>
         {#each targets as t (t)}
           {@const td = actionDef(t)}
@@ -229,6 +238,9 @@
     {:else if job.status === 'error'}
       <p class="err"><Icon name="alert" size={15} /><span>{errText}</span></p>
     {/if}
+    {#if retryBlocked}
+      <p class="wait" id="retry-wait-{job.id}">{i18n.t('job.retry_wait')}</p>
+    {/if}
   </div>
 
   <div class="side">
@@ -245,7 +257,7 @@
       {/if}
       <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
     {:else}
-      <button class="mini" type="button" onclick={onRun}><Icon name="refresh" size={14} />{i18n.t('job.retry')}</button>
+      <button class="mini" type="button" onclick={onRun} disabled={retryBlocked} aria-describedby={retryBlocked ? 'retry-wait-' + job.id : undefined}><Icon name="refresh" size={14} />{i18n.t('job.retry')}</button>
       <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} /></button>
     {/if}
   </div>
@@ -266,4 +278,5 @@
     word-break: break-word;
   }
   .merge-list strong { color: var(--text); font-weight: 600; }
+  .wait { margin: 6px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--muted); }
 </style>

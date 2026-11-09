@@ -43,6 +43,7 @@
   "job.copied": "已复制",
   "job.remove": "移除",
   "job.retry": "重试",
+  "job.retry_wait": "另一个合并正在进行。完成后再重试。",
   "job.cancel": "取消",
   "job.target": "转换为",
   "job.run": "转换",

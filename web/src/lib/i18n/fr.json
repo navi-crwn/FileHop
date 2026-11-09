@@ -43,6 +43,7 @@
   "job.copied": "Copié",
   "job.remove": "Retirer",
   "job.retry": "Réessayer",
+  "job.retry_wait": "Une autre fusion est en cours. Réessayez quand elle sera terminée.",
   "job.cancel": "Annuler",
   "job.target": "Convertir en",
   "job.run": "Convertir",

@@ -65,10 +65,11 @@ export function mergeMembers(jobs: Job[]): Job[] {
   return jobs.filter(j => j.action === 'pdf:merge' && j.status !== 'canceled');
 }
 
-/** One merge per group: the first PDF that asked for it carries the result,
-    the rest are absorbed so the same document is not built twice. */
+/** One merge per group: a running carrier wins globally, then the first queued
+    PDF starts the next merge. Finished cards do not take over a queued joiner. */
 export function mergeCarrier(jobs: Job[]): Job | undefined {
-  return mergeMembers(jobs)[0];
+  const members = mergeMembers(jobs);
+  return members.find(j => j.status === 'running') ?? members.find(j => j.status === 'queued') ?? members[0];
 }
 
 /** Targets offered for a category, in the order the radial ring and the card show them.
@@ -106,9 +107,11 @@ export function targetsFor(cat: Category, ext: string): ActionId[] {
   }
 }
 
-/** Has anything in this list already taken responsibility for the merge? */
+/** Has anything in this list already taken responsibility for the merge? A card that
+    failed or was stopped keeps its own Retry, and a card with a result keeps its Download. */
 export function isAbsorbed(job: Job, jobs: Job[]): boolean {
   if (job.action !== 'pdf:merge') return false;
+  if (job.status === 'error' || job.status === 'canceled' || (job.status === 'done' && job.result)) return false;
   const carrier = mergeCarrier(jobs);
   return !!carrier && carrier.id !== job.id;
 }

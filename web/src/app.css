@@ -444,6 +444,7 @@ main { flex: 1; width: 100%; }
   white-space: nowrap;
 }
 .mini:hover { border-color: var(--amber); }
+.mini:disabled { cursor: default; opacity: .45; border-color: var(--line-2); }
 .mini.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
 :root[data-theme="light"] .mini.primary { color: #fff; }
 .mini svg { width: 14px; height: 14px; }

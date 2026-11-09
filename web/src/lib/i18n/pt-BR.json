@@ -43,6 +43,7 @@
   "job.copied": "Copiado",
   "job.remove": "Remover",
   "job.retry": "Tentar de novo",
+  "job.retry_wait": "Outra junção está em andamento. Tente de novo quando terminar.",
   "job.cancel": "Cancelar",
   "job.target": "Converter para",
   "job.run": "Converter",
