@@ -5,6 +5,9 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 ## [Unreleased]
 
 ### Changed
+- Controls follow the HOP control standard: one radius, one height per row, buttons as wide as their text.
+- Surfaces use the flat neutral style (solid cards, hairline borders, sentence-case labels, 6 px badges) as an optional Clean interface style, chosen in the settings drawer.
+- "Drop everything" and "Clear finished" ask first, through the shared HopUI dialog.
 - The FileHop mark is the family's pixel mark from hop-assets v4 (a document with a folded corner and a white arrow down), the same as on hel.ink, in the other apps' family lists and in FileHop's 3D art and floating tile.
 - PNG icons for installing the app: `icon-192.png` and `icon-512.png` in the web manifest (any and maskable) and `apple-touch-icon.png`, all byte-identical to hop-assets v4.
 - On phones the top bar is one row, as in the family chrome: primary action (icon), language, theme, account. The settings stay one tap away in the hero.
@@ -21,6 +24,7 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 - The browser app moved to `web/`.
 
 ### Fixed
+- Merging: only the PDFs set to Merge are merged, and a group keeps one merge through retries, late joiners and stops.
 - In browsers without `OffscreenCanvas` (Safari before 16.4 and the WebKit ports), every image conversion and PDF pages → PNG/JPEG failed with "Can't find variable: document". Those jobs now run on the page.
 
 ## 0.1.0 - 2026-11-08
