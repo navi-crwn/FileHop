@@ -182,5 +182,12 @@
   "auth.err_expired": "O login demorou demais ou foi iniciado em outro navegador. Tente de novo.",
   "auth.err_invalid": "Este link de login não é mais válido. Tente de novo.",
   "auth.err_suspended": "Este HOP ID está suspenso.",
-  "auth.err_failed": "O login falhou do nosso lado. Tente de novo em instantes."
+  "auth.err_failed": "O login falhou do nosso lado. Tente de novo em instantes.",
+  "dash.title": "Painel — FileHop",
+  "dash.convert": "Converter",
+  "dash.menu": "Menu",
+  "dash.account": "Sua conta",
+  "dash.never_uploaded": "Seus arquivos nunca são enviados. Tudo é convertido neste dispositivo.",
+  "auth.err_cookies": "Seu navegador não guardou o cookie de login, então o FileHop não consegue entrar. Permita cookies neste site e tente de novo.",
+  "auth.err_hub": "Não foi possível alcançar o HOP ID agora, então o FileHop não consegue entrar. Tente de novo em instantes."
 }

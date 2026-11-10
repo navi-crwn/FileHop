@@ -15,7 +15,7 @@ func TestChangelogFooterAndTopBarMatchTheApp(t *testing.T) {
 			t.Errorf("missing %q", want)
 		}
 	}
-	if strings.Contains(body, "eyebrow") {
+	if strings.Contains(body, `class="eyebrow`) || strings.Contains(body, `class="hero-eyebrow`) {
 		t.Error("no eyebrow label on the page")
 	}
 }

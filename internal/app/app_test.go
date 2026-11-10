@@ -43,6 +43,7 @@ func newTestApp(t *testing.T, sso bool) (*App, *httptest.Server) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	a.hubUp = func() bool { return true }
 	srv := httptest.NewServer(a.Handler())
 	t.Cleanup(srv.Close)
 	a.cfg.BaseURL = srv.URL
@@ -196,12 +197,12 @@ func TestSignInMeEventsAndLogout(t *testing.T) {
 		t.Fatalf("foreign aud: %s", res.Header.Get("Location"))
 	}
 
-	// the right one signs in and lands on next
+	// the right one signs in and, with no next, lands on /dashboard
 	res = mustGet(t, c, srv.URL+"/auth/sso")
 	loc, _ = url.Parse(res.Header.Get("Location"))
 	claims["state"] = loc.Query().Get("state")
 	res = mustGet(t, c, srv.URL+"/auth/sso/callback?ticket="+url.QueryEscape(ticket(t, claims)))
-	if res.StatusCode != 303 || res.Header.Get("Location") != "/" {
+	if res.StatusCode != 303 || res.Header.Get("Location") != "/dashboard?_rc=1" {
 		t.Fatalf("callback: %d %s", res.StatusCode, res.Header.Get("Location"))
 	}
 	me = decode(t, mustGet(t, c, srv.URL+"/api/v1/me"))

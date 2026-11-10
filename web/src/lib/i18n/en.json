@@ -182,5 +182,12 @@
   "auth.err_expired": "The sign-in took too long or started in another browser. Please try again.",
   "auth.err_invalid": "This sign-in link is not valid any more. Please try again.",
   "auth.err_suspended": "This HOP ID is suspended.",
-  "auth.err_failed": "Signing in failed on our side. Please try again in a moment."
+  "auth.err_failed": "Signing in failed on our side. Please try again in a moment.",
+  "dash.title": "Dashboard — FileHop",
+  "dash.convert": "Convert",
+  "dash.menu": "Menu",
+  "dash.account": "Your account",
+  "dash.never_uploaded": "Your files are never uploaded. Everything is converted on this device.",
+  "auth.err_cookies": "Your browser did not keep the sign-in cookie, so FileHop cannot sign you in. Allow cookies for this site and try again.",
+  "auth.err_hub": "HOP ID cannot be reached right now, so FileHop cannot sign you in. Please try again in a moment."
 }

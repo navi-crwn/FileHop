@@ -182,5 +182,12 @@
   "auth.err_expired": "Proses masuk terlalu lama atau dimulai di browser lain. Silakan coba lagi.",
   "auth.err_invalid": "Tautan masuk ini sudah tidak berlaku. Silakan coba lagi.",
   "auth.err_suspended": "HOP ID ini sedang ditangguhkan.",
-  "auth.err_failed": "Gagal masuk karena masalah di pihak kami. Coba lagi sebentar lagi."
+  "auth.err_failed": "Gagal masuk karena masalah di pihak kami. Coba lagi sebentar lagi.",
+  "dash.title": "Dasbor — FileHop",
+  "dash.convert": "Konversi",
+  "dash.menu": "Menu",
+  "dash.account": "Akun Anda",
+  "dash.never_uploaded": "File Anda tidak pernah diunggah. Semua dikonversi di perangkat ini.",
+  "auth.err_cookies": "Browser Anda tidak menyimpan cookie masuk, jadi FileHop tidak bisa memasukkan Anda. Izinkan cookie untuk situs ini lalu coba lagi.",
+  "auth.err_hub": "HOP ID sedang tidak dapat dijangkau, jadi FileHop belum bisa memasukkan Anda. Coba lagi sebentar lagi."
 }

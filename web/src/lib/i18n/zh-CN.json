@@ -182,5 +182,12 @@
   "auth.err_expired": "登录耗时过长，或是在另一个浏览器中开始的。请重试。",
   "auth.err_invalid": "此登录链接已失效。请重试。",
   "auth.err_suspended": "此 HOP ID 已被停用。",
-  "auth.err_failed": "我们这边登录失败。请稍后再试。"
+  "auth.err_failed": "我们这边登录失败。请稍后再试。",
+  "dash.title": "仪表盘 — FileHop",
+  "dash.convert": "转换",
+  "dash.menu": "菜单",
+  "dash.account": "你的账户",
+  "dash.never_uploaded": "你的文件从不上传，所有转换都在本设备上完成。",
+  "auth.err_cookies": "你的浏览器没有保存登录 Cookie，FileHop 无法让你登录。请允许此网站使用 Cookie 后重试。",
+  "auth.err_hub": "目前无法连接 HOP ID，FileHop 暂时无法让你登录。请稍后重试。"
 }

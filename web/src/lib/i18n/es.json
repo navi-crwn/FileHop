@@ -182,5 +182,12 @@
   "auth.err_expired": "El inicio de sesión tardó demasiado o empezó en otro navegador. Inténtalo de nuevo.",
   "auth.err_invalid": "Este enlace de inicio de sesión ya no es válido. Inténtalo de nuevo.",
   "auth.err_suspended": "Este HOP ID está suspendido.",
-  "auth.err_failed": "El inicio de sesión falló por nuestra parte. Inténtalo de nuevo en un momento."
+  "auth.err_failed": "El inicio de sesión falló por nuestra parte. Inténtalo de nuevo en un momento.",
+  "dash.title": "Panel — FileHop",
+  "dash.convert": "Convertir",
+  "dash.menu": "Menú",
+  "dash.account": "Tu cuenta",
+  "dash.never_uploaded": "Tus archivos nunca se suben. Todo se convierte en este dispositivo.",
+  "auth.err_cookies": "Tu navegador no guardó la cookie de inicio de sesión, así que FileHop no puede iniciarla. Permite las cookies de este sitio e inténtalo de nuevo.",
+  "auth.err_hub": "No se puede acceder a HOP ID ahora mismo, así que FileHop no puede iniciar tu sesión. Inténtalo de nuevo en un momento."
 }

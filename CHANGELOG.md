@@ -5,9 +5,14 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 ## [Unreleased]
 
 ### Added
+- A dashboard at `/dashboard` for people signed in with HOP ID: the same converter workspace as the home page (queue, per-file X button) without the marketing page, in the family's dashboard chrome (sidebar with Convert, Changelog and the HOP family; topbar with Add files, language, theme and the account menu, where the settings now live) plus a small account card that says files are never uploaded. A guest who opens it is sent through sign-in and comes back to it; after sign-in with no `next`, people land on it. The public home page is unchanged, and the headers (CSP, COOP, COEP) are the app's own. New text in all nine languages.
+- A test for the sign-in/sign-out cases below, and a migration test for databases made before `sessions.verified_at`.
 - A real `/changelog` page (server-rendered from the embedded snapshot `web/changelog.json`, nine languages, light and dark, same CSP and cross-origin isolation headers as the app), a footer link to it, and `scripts/build-changelog.py` / `scripts/check-changelog.py` like the other apps. FileHop is listed in the family changelog sources.
 - `og:image` and Open Graph / Twitter card tags on the app and on `/changelog`; the image is `og-image.png` in this repository.
 - A test that the family list in the app equals the family manifest (`tools/hop-apps.json`, hop-assets v8) without FileHop.
+
+### Fixed
+- FileHop could keep showing an account the browser was no longer signed in with at HOP ID (for example after switching accounts there without signing out, or signing out in another browser, when the hub's `session.revoked` did not arrive). A session now records when the hub last vouched for it; after five minutes the next page load (the home page or `/dashboard`, once, never while converting) asks the hub quietly (`prompt=none`, the hub never shows a login page): the same HOP ID keeps the session, another one replaces it, and a signed-out hub ends it. The home page skips the check while files are queued or a conversion runs, and no check is offered while the hub is unreachable (a one-minute cached probe): then the page acts as a guest and `/dashboard` says the hub cannot be reached. If the session still cannot be read after the round trip (cookies blocked) FileHop says so in nine languages instead of redirecting again. A new sign-in also ends the session the browser held before.
 
 ### Changed
 - Every file row has an X button at its right end (32 px, 44 px on phones, always visible, with the file name in its label in all nine languages): it removes the file before it is processed, stops that one file while it runs (the others keep going), and drops a finished or failed row from the list without touching a download already made. Removing a PDF from a merge group keeps the group sound. The old per-state Remove, trash and Cancel buttons are replaced by it.
