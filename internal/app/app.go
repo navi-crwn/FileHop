@@ -67,6 +67,8 @@ func (a *App) Handler() http.Handler {
 
 	a.hopRoutes(m)
 
+	m.HandleFunc("GET /changelog", a.changelog)
+
 	m.HandleFunc("GET /auth/sso", a.ssoStart)
 	m.HandleFunc("GET /auth/sso/callback", a.ssoCallback)
 	m.HandleFunc("GET /auth/sso/logout", a.ssoLogout)
@@ -95,6 +97,15 @@ const csp = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-sr
 	"style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; " +
 	"connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 
+// setAppHeaders is the cross-origin isolation and CSP of the app's own pages
+// (the shell, its files and /changelog); never of the hub or marketing pages.
+func setAppHeaders(h http.Header) {
+	h.Set("Cross-Origin-Opener-Policy", "same-origin")
+	h.Set("Cross-Origin-Embedder-Policy", "require-corp")
+	h.Set("Cross-Origin-Resource-Policy", "same-origin")
+	h.Set("Content-Security-Policy", csp)
+}
+
 func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		w.Header().Set("Allow", "GET, HEAD")
@@ -103,12 +114,7 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	}
 	name := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
 	h := w.Header()
-	// Cross-origin isolation belongs to the app's own files only, never to
-	// the hub or to marketing pages (there are none here yet).
-	h.Set("Cross-Origin-Opener-Policy", "same-origin")
-	h.Set("Cross-Origin-Embedder-Policy", "require-corp")
-	h.Set("Cross-Origin-Resource-Policy", "same-origin")
-	h.Set("Content-Security-Policy", csp)
+	setAppHeaders(h)
 
 	if name == "" || name == "index.html" || !strings.Contains(path.Base(name), ".") {
 		// The shell, for / and for app routes such as /send.

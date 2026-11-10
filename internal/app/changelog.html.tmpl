@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.S.Title}} — FileHop</title>
+<meta name="description" content="{{.S.Lead}}">
+<meta name="theme-color" content="#08090c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+<meta name="referrer" content="no-referrer">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="FileHop">
+<meta property="og:title" content="{{.S.Title}} — FileHop">
+<meta property="og:description" content="{{.S.Lead}}">
+<meta property="og:url" content="https://file.hel.ink/changelog">
+<meta property="og:image" content="https://file.hel.ink/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/mark.svg" type="image/svg+xml">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/hop-fonts/fonts-amnesia.css">
+<link rel="stylesheet" href="/hop-brand/hop-brand.css">
+<link rel="stylesheet" href="/changelog.css">
+<script src="/theme.js"></script>
+<script src="/changelog.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">{{.S.Title}}</a>
+<header class="top">
+  <a class="brand" href="/" aria-label="{{.S.Back}}">
+    <img src="/mark.svg" alt="" width="26" height="26">
+    <span class="hop-name hop-name-filehop">FileHop</span>
+  </a>
+  <span class="spacer"></span>
+  <details class="lang">
+    <summary aria-label="{{.S.Language}}" title="{{.S.Language}}"><span>{{.LangCode}}</span></summary>
+    <ul>
+      {{- range .Langs}}
+      <li><a href="{{.URL}}" lang="{{.Code}}" data-lang="{{.Code}}"{{if eq .Code $.Lang}} aria-current="true"{{end}}><span>{{.Name}}</span><code>{{.Code}}</code></a></li>
+      {{- end}}
+    </ul>
+  </details>
+  <button class="icon" type="button" id="theme" aria-label="{{.S.Theme}}" title="{{.S.Theme}}">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
+  </button>
+</header>
+<main id="main">
+  <div class="wrap">
+    <p class="eyebrow"><i></i>FileHop</p>
+    <h1>{{.S.Title}}</h1>
+    <p class="lead">{{.S.Lead}}</p>
+    <ol class="log">
+      {{- range .Rows}}
+      <li>
+        <time datetime="{{.Date}}">{{.Date}}</time>
+        <span class="kind">{{.Kind}}</span>
+        <a class="what" href="{{.URL}}" rel="noopener">{{.Title}}</a>
+        <code class="ref">{{.ID}}</code>
+      </li>
+      {{- end}}
+    </ol>
+    <nav class="pager" aria-label="{{.PageLabel}}">
+      {{if .Previous}}<a href="{{.Previous}}" rel="prev">&larr; {{.S.Newer}}</a>{{else}}<span></span>{{end}}
+      <span class="muted">{{.PageLabel}}</span>
+      {{if .Next}}<a href="{{.Next}}" rel="next">{{.S.Older}} &rarr;</a>{{else}}<span></span>{{end}}
+    </nav>
+    <p class="back"><a href="/">&larr; {{.S.Back}}</a></p>
+  </div>
+</main>
+<footer class="ft">
+  <a class="ft-part" href="https://hel.ink" rel="noopener"><img src="/hop-id-mark.png" alt="" width="20" height="20"><span>{{.S.PartOf}}</span></a>
+  <p class="ft-copy">© 2026 navi-crwn · MIT License</p>
+</footer>
+</body>
+</html>

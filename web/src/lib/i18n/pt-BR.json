@@ -142,6 +142,7 @@
   "footer.terms": "Termos",
   "footer.licenses": "Licenças",
   "footer.source": "Código",
+  "footer.changelog": "Histórico de alterações",
   "footer.note": "Auto-hospedado, sem rastreadores, sem scripts de terceiros.",
   "licenses.title": "Bibliotecas nesta versão",
   "licenses.body": "Todas estão empacotadas aqui; nada é carregado de CDN de terceiros.",

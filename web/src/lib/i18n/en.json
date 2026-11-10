@@ -142,6 +142,7 @@
   "footer.terms": "Terms",
   "footer.licenses": "Licenses",
   "footer.source": "Source",
+  "footer.changelog": "Changelog",
   "footer.note": "Self-hosted, no trackers, no third-party scripts.",
   "licenses.title": "Libraries in this build",
   "licenses.body": "Each one is bundled or vendored here; nothing is loaded from a third-party CDN.",

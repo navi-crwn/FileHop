@@ -3,7 +3,7 @@
 // Run with: node tools/unit.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -674,3 +674,34 @@ test('runAll runs the merge once and skips the absorbed cards', async () => {
 });
 
 process.on('exit', () => rmSync(dir, { recursive: true, force: true }));
+
+/* U-1: the family list in the app is the family manifest (hop-assets apps.json, copied to tools/hop-apps.json),
+   minus FileHop itself; the footer is the only place that lists it now. */
+test('FAMILY in App.svelte equals the family manifest, without FileHop', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const block = src.match(/const FAMILY = \[([\s\S]*?)\n  \];/)[1];
+  const got = [...block.matchAll(/\{ slug: '([^']+)', name: '([^']+)', url: '([^']+)', mark: '([^']+)' \}/g)]
+    .map(m => ({ slug: m[1], name: m[2], url: m[3], mark: m[4] }));
+  const manifest = JSON.parse(readFileSync(new URL('./hop-apps.json', import.meta.url), 'utf8'));
+  const want = manifest.apps.filter(a => a.public && a.slug !== 'filehop').map(a => ({ slug: a.slug, name: a.name, url: a.url }));
+  assert.deepEqual(got.map(({ slug, name, url }) => ({ slug, name, url })), want);
+  for (const a of got) {
+    assert.equal(a.mark, a.slug === 'hub' ? '/hop-id-mark.png' : `/hop-marks/${a.slug}.svg`);
+    assert.ok(existsSync(new URL(`../web/public${a.mark}`, import.meta.url)), `${a.mark} is vendored`);
+  }
+});
+
+test('the top bar has no app grid; the family list lives in the footer', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  assert.ok(!/class="apps/.test(src) && !/SWITCHER/.test(src));
+  assert.match(src, /\{#each FAMILY as app/);
+  assert.match(src, /href="\/changelog"/);
+});
+
+test('the changelog scripts list FileHop and the snapshot is FileHop only', () => {
+  const py = readFileSync(new URL('../scripts/build-changelog.py', import.meta.url), 'utf8');
+  assert.match(py, /PUBLIC = \{[^}]*"FileHop": "FileHop"/);
+  const snap = JSON.parse(readFileSync(new URL('../web/changelog.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(snap.sources), ['FileHop']);
+  assert.ok(snap.entries.length > 0 && snap.entries.every(e => e.repo === 'FileHop'));
+});

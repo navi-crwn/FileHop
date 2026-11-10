@@ -142,6 +142,7 @@
   "footer.terms": "利用規約",
   "footer.licenses": "ライセンス",
   "footer.source": "ソース",
+  "footer.changelog": "変更履歴",
   "footer.note": "セルフホスト、トラッカーなし、第三者スクリプトなし。",
   "licenses.title": "このビルドのライブラリ",
   "licenses.body": "すべてここに同梱されています。第三者の CDN から読み込むものはありません。",
