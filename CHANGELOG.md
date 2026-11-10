@@ -5,6 +5,7 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 ## [Unreleased]
 
 ### Changed
+- The home page grids use the hop-assets v8 bento (five family tiles in one row from 1100 px, no lone box, art capped at 160-200 px); the 3D engine, bento stylesheet and BioHop assets are byte-identical v8 copies.
 - In "What goes in, what comes out" the six format boxes fill two full rows and the "not here yet" note closes the grid as a full-width strip, so no box stands alone.
 
 ## [1.0.0] - 2026-11-10
