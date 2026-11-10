@@ -4,6 +4,9 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 
 ## [Unreleased]
 
+### Changed
+- In "What goes in, what comes out" the six format boxes fill two full rows and the "not here yet" note closes the grid as a full-width strip, so no box stands alone.
+
 ## [1.0.0] - 2026-11-10
 
 ### Changed

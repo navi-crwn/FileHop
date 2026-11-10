@@ -688,7 +688,7 @@
           <article class="fmt" data-spot data-scene><h3><Icon name="text" size={16} />{i18n.t('formats.text')}</h3><p>{i18n.t('formats.text_v')}</p><div class="sc sc-text" aria-hidden="true"><i class="a"># md</i><i class="b">H</i></div></article>
           <article class="fmt" data-spot data-scene><h3><Icon name="archive" size={16} />{i18n.t('formats.archive')}</h3><p>{i18n.t('formats.archive_v')}</p><div class="sc sc-zip" aria-hidden="true"><i class="bar"></i></div></article>
           <article class="fmt" data-spot data-scene><h3><Icon name="hash" size={16} />{i18n.t('formats.hash')}</h3><p>{i18n.t('formats.hash_v')}</p><div class="sc sc-hash" aria-hidden="true"><i>9f2c</i><i>e41a</i><i>07bd</i></div></article>
-          <article class="fmt soon" data-spot><h3><Icon name="alert" size={16} />{i18n.t('formats.soon')}</h3><p></p></article>
+          <article class="fmt soon" data-spot data-span="6"><h3><Icon name="alert" size={16} />{i18n.t('formats.soon')}</h3><p></p></article>
         </div>
       </section>
 
