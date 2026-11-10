@@ -135,6 +135,8 @@
   "formats.hash_v": "SHA-256、BLAKE3 与 MD5，流式计算，2 GB 的文件不必一次塞进内存。",
   "formats.soon": "刻意还没做：DOCX/LaTeX（需要 pandoc）、RAR 与 7z（只读，尚无 WASM）、视频与音频（需要 WebCodecs 方面的工作）。",
   "footer.family": "HOP 家族",
+  "footer.support": "帮助",
+  "footer.policies": "政策",
   "footer.part_of": "{name} 的一部分",
   "footer.privacy": "隐私",
   "footer.terms": "条款",

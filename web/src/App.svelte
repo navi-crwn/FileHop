@@ -18,11 +18,11 @@
   /* The other HOP apps, as the family manifest (hel.ink/hop-assets/apps.json) lists them.
      Written out rather than fetched: the page loads nothing from another origin. */
   const FAMILY = [
-    { slug: 'hub', name: 'HOP ID', url: 'https://hel.ink', color: '#6366f1' },
-    { slug: 'linkhop', name: 'LinkHop', url: 'https://link.hel.ink', color: '#6366f1' },
-    { slug: 'biohop', name: 'BioHop', url: 'https://bio.hel.ink', color: '#a855f7' },
-    { slug: 'pixelhop', name: 'PixelHop', url: 'https://pixel.hel.ink', color: '#22d3ee' },
-    { slug: 'notehop', name: 'NoteHop', url: 'https://note.hel.ink', color: '#10b981' }
+    { slug: 'hub', name: 'HOP ID', url: 'https://hel.ink', mark: '/hop-id-mark.png' },
+    { slug: 'linkhop', name: 'LinkHop', url: 'https://link.hel.ink', mark: '/hop-marks/linkhop.svg' },
+    { slug: 'biohop', name: 'BioHop', url: 'https://bio.hel.ink', mark: '/hop-marks/biohop.svg' },
+    { slug: 'pixelhop', name: 'PixelHop', url: 'https://pixel.hel.ink', mark: '/hop-marks/pixelhop.svg' },
+    { slug: 'notehop', name: 'NoteHop', url: 'https://note.hel.ink', mark: '/hop-marks/notehop.svg' }
   ];
 
   /* Signed in through the hub, another app opens through the hub's launcher (/apps/{slug}),
@@ -520,6 +520,11 @@
           <p class="proof"><Icon name="shield" size={15} />{i18n.t('hero.proof')}</p>
         </div>
 
+        <div class="hero-side">
+        <figure class="hero-art" aria-hidden="true">
+          <picture><source srcset="/hop-home/home/filehop-dark.webp" media="(prefers-color-scheme: dark)"><img src="/hop-home/home/filehop-light.webp" alt="" width="200" height="200" /></picture>
+          <canvas data-hop-hero="filehop"></canvas>
+        </figure>
         <div
           class="zone"
           class:over={dragging}
@@ -535,6 +540,7 @@
           <p>
             {@html i18n.t('drop.hint').replace('{kbd}', '<kbd>Ctrl/⌘ V</kbd>')}
           </p>
+        </div>
         </div>
       </section>
 
@@ -663,22 +669,35 @@
           <img src="/hop-id-mark.png" alt="" width="20" height="20" />
           <span>{#each i18n.t('footer.part_of').split('{name}') as part, i}{#if i > 0}<b>Hop Easy Link</b>{/if}{part}{/each}</span>
         </a>
-        <div class="ft-in">
-          <a href="#privacy">{i18n.t('footer.privacy')}</a>
-          <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
-          <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
-          <button class="mini ghost" type="button" onclick={() => (licensesOpen = true)}>
-            {i18n.t('footer.licenses')}
-          </button>
-          <span class="grow"></span>
-          <span class="note">{i18n.t('footer.note')}</span>
+        <div class="ft-grid">
+          <div class="ft-col ft-brand">
+            <b><img src="/mark.svg" alt="" width="20" height="20" />FileHop</b>
+            <p>{i18n.t('footer.note')}</p>
+          </div>
+          <div class="ft-col">
+            <h2 class="ft-h">{i18n.t('footer.support')}</h2>
+            <nav aria-label={i18n.t('footer.support')}>
+              <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
+            </nav>
+          </div>
+          <div class="ft-col">
+            <h2 class="ft-h">{i18n.t('footer.policies')}</h2>
+            <nav aria-label={i18n.t('footer.policies')}>
+              <a href="#privacy">{i18n.t('footer.privacy')}</a>
+              <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
+              <button class="ft-link" type="button" onclick={() => (licensesOpen = true)}>{i18n.t('footer.licenses')}</button>
+            </nav>
+          </div>
+          <div class="ft-col">
+            <h2 class="ft-h">{i18n.t('footer.family')}</h2>
+            <nav aria-label={i18n.t('footer.family')}>
+              {#each FAMILY as app (app.url)}
+                <a href={familyHref(app)} rel="noopener"><img src={app.mark} alt="" width="16" height="16" />{app.name}</a>
+              {/each}
+            </nav>
+          </div>
         </div>
-        <nav class="ft-family" aria-label={i18n.t('footer.family')}>
-          <a class="ft-family-h" href="https://hel.ink" rel="noopener">{i18n.t('footer.family')}</a>
-          {#each FAMILY as app (app.url)}
-            <a href={familyHref(app)} rel="noopener"><i style="background:{app.color}" aria-hidden="true"></i>{app.name}</a>
-          {/each}
-        </nav>
+        <p class="ft-copy">© 2026 navi-crwn · MIT License</p>
       </footer>
     </div>
   </main>

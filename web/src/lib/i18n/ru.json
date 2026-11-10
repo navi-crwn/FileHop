@@ -135,6 +135,8 @@
   "formats.hash_v": "SHA-256, BLAKE3 и MD5, потоково, чтобы файл на 2 ГБ не обязан был помещаться в память.",
   "formats.soon": "Намеренно пока нет: DOCX/LaTeX (нужен pandoc), RAR и 7z (только чтение, WASM ещё нет), видео и аудио (нужна работа по WebCodecs).",
   "footer.family": "Семейство HOP",
+  "footer.support": "Помощь",
+  "footer.policies": "Правила",
   "footer.part_of": "Часть {name}",
   "footer.privacy": "Приватность",
   "footer.terms": "Условия",

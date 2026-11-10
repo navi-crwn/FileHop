@@ -5,6 +5,7 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 ## [Unreleased]
 
 ### Changed
+- The footer has the same structure as the other apps (the app, Support, Policies, HOP family with each app's mark, then the copyright line), and the hero shows FileHop's own 3D mark (v6 engine and WebP, vendored byte-identical).
 - Controls follow the HOP control standard: one radius, one height per row, buttons as wide as their text.
 - Surfaces use the flat neutral style (solid cards, hairline borders, sentence-case labels, 6 px badges) as an optional Clean interface style, chosen in the settings drawer.
 - "Drop everything" and "Clear finished" ask first, through the shared HopUI dialog.

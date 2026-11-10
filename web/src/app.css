@@ -490,8 +490,6 @@ main { flex: 1; width: 100%; }
 .counter b { color: var(--green); }
 
 footer.ft { margin-top: 90px; padding: 34px 0 44px; border-top: 1px solid var(--line); }
-.ft-in { display: flex; gap: 22px; flex-wrap: wrap; align-items: center; }
-.ft-in .grow { flex: 1; }
 .ft a { color: var(--muted); font-size: 13px; }
 .ft a:hover { color: var(--text); }
 .ft .note { font-size: 12.5px; color: var(--faint); }
@@ -683,16 +681,11 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 
 .mono, .sub, .result, .counter { font-variant-numeric: tabular-nums; }
 
-/* HOP family links: every app lists the others in its footer */
-.ft-family { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
-.ft-family a { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; }
-.ft-family a i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.ft-family .ft-family-h { color: var(--text); font-weight: 600; }
 
 /* touch screens: every control at least 44 px tall */
 @media (pointer: coarse) {
-  .tbtn, .select, .field-input, .chip, .mini, .hop-dialog .hop-btn, .ft-family a, .ft-in a, .acct-menu a { min-height: 44px; }
-  .ft-in a { display: inline-flex; align-items: center; }
+  .tbtn, .select, .field-input, .chip, .mini, .hop-dialog .hop-btn, .ft-col nav a, .ft-link, .acct-menu a { min-height: 44px; }
+  .ft-col nav a, .ft-link { display: inline-flex; align-items: center; }
   .tbtn.icon, .mini.icon { min-width: 44px; }
 }
 @media (pointer: coarse) and (max-width: 639px) {
@@ -753,3 +746,27 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 .ft-part b { font-weight: 400; color: var(--text); }
 .ft-part:hover b { text-decoration: underline; }
 .queue-empty .empty-add { display: none; }
+
+/* footer: the app, Support, Policies, HOP family; then the copyright line */
+.ft-grid { display: grid; grid-template-columns: minmax(180px, 1.35fr) repeat(3, minmax(0, 1fr)); gap: 28px 24px; align-items: start; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.ft-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ft-col p { margin: 0; font-size: 13px; color: var(--muted); }
+.ft-h { margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text); }
+.ft-col nav { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.ft-col nav a, .ft-link { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: none; }
+.ft-col nav a:hover, .ft-link:hover { color: var(--text); }
+.ft-col nav a img { width: 16px; height: 16px; border-radius: 4px; }
+.ft-copy { margin: 0; padding-top: 16px; font-size: 12.5px; color: var(--faint); text-align: right; }
+@media (max-width: 960px) { .ft-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ft-brand { grid-column: 1 / -1; } }
+@media (max-width: 520px) { .ft-grid { grid-template-columns: minmax(0, 1fr); } .ft-copy { text-align: center; } }
+
+/* hero: FileHop's own 3D mark above the drop zone (v6 engine, WebP before WebGL) */
+.hero-side { display: grid; gap: 14px; justify-items: stretch; min-width: 0; }
+.hero-art { position: relative; margin: 0 auto; width: 100%; max-width: 190px; aspect-ratio: 1; }
+.hero-art img, .hero-art canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.hero-art canvas { opacity: 0; cursor: grab; touch-action: pan-y; }
+.hero-art canvas.on { opacity: 1; }
+.hero-art:has(canvas.on) img { visibility: hidden; }
+
+.ft-brand b { display: inline-flex; align-items: center; gap: 8px; }
+.ft-brand b img { width: 20px; height: 20px; display: block; }

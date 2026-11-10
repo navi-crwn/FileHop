@@ -121,6 +121,13 @@ test('the vendored family dialog is byte-identical to hop-assets v5', () => {
   assert.equal(sri('../web/public/hop-ui/v5/hop-ui.css'), 'sha384-wfq/3oTQ0jQYJQZHY7wgY3KoulTamoM2OHTwsb4boVF+dUy7JdPUurlLswZEXSt1');
 });
 
+test('the vendored 3D engine and FileHop tile are byte-identical to hop-assets v6', () => {
+  const sri = (rel) => 'sha384-' + createHash('sha384').update(readFileSync(new URL(rel, import.meta.url))).digest('base64');
+  assert.equal(sri('../web/public/hop-home/hop-hero3d.js'), 'sha384-Is6fDsSpuAjhzJCUTDqAr1yw8SxVIqzcf98RgdnY+2dRPkXSRTH4Ro+VUU11zeU1');
+  assert.equal(sri('../web/public/hop-home/home/filehop-light.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
+  assert.equal(sri('../web/public/hop-home/home/filehop-dark.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
+});
+
 test('every category has at least one target', () => {
   for (const cat of ['image', 'pdf', 'data', 'text', 'archive', 'font', 'media', 'unknown']) {
     assert.ok(actions.targetsFor(cat, '').length > 0, `no target for ${cat}`);
