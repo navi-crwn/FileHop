@@ -187,5 +187,6 @@
   "dash.convert": "変換",
   "dash.menu": "メニュー",
   "dash.account": "アカウント",
-  "dash.never_uploaded": "ファイルはアップロードされません。変換はすべてこのデバイス上で行われます。"
+  "dash.never_uploaded": "ファイルはアップロードされません。変換はすべてこのデバイス上で行われます。",
+  "auth.err_cookies": "ブラウザがログイン用の Cookie を保存しなかったため、FileHop にログインできません。このサイトの Cookie を許可してからもう一度お試しください。"
 }

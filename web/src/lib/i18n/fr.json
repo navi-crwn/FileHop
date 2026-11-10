@@ -187,5 +187,6 @@
   "dash.convert": "Convertir",
   "dash.menu": "Menu",
   "dash.account": "Votre compte",
-  "dash.never_uploaded": "Vos fichiers ne sont jamais envoyés. Tout est converti sur cet appareil."
+  "dash.never_uploaded": "Vos fichiers ne sont jamais envoyés. Tout est converti sur cet appareil.",
+  "auth.err_cookies": "Votre navigateur n'a pas conservé le cookie de connexion, FileHop ne peut donc pas vous connecter. Autorisez les cookies pour ce site et réessayez."
 }

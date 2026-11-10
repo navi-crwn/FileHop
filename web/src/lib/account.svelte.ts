@@ -9,6 +9,7 @@ export interface Account {
   ready: boolean;
   sso: boolean;
   signedIn: boolean;
+  stale: boolean;
   name: string;
   email: string;
   hubUrl: string;
@@ -19,6 +20,7 @@ export const account: Account = $state({
   ready: false,
   sso: false,
   signedIn: false,
+  stale: false,
   name: '',
   email: '',
   hubUrl: '',
@@ -32,6 +34,7 @@ export async function loadAccount(): Promise<void> {
     const me = await res.json();
     account.sso = me.sso === true;
     account.signedIn = me.signed_in === true;
+    account.stale = me.stale === true;
     account.name = typeof me.name === 'string' ? me.name : '';
     account.email = typeof me.email === 'string' ? me.email : '';
     account.hubUrl = typeof me.hub_url === 'string' ? me.hub_url : '';
@@ -58,5 +61,19 @@ export function takeAuthError(): string | null {
   if (!code) return null;
   url.searchParams.delete('auth');
   history.replaceState(null, '', url.pathname + url.search + url.hash);
-  return ['expired', 'invalid', 'suspended', 'failed'].includes(code) ? code : 'failed';
+  return ['expired', 'invalid', 'suspended', 'failed', 'cookies'].includes(code) ? code : 'failed';
+}
+
+/** True when this page load is the return from the hub (?_rc=1); the mark is removed from the address bar. */
+export function takeRecheckMark(): boolean {
+  const url = new URL(location.href);
+  if (!url.searchParams.has('_rc')) return false;
+  url.searchParams.delete('_rc');
+  history.replaceState(null, '', url.pathname + url.search + url.hash);
+  return true;
+}
+
+/** One quiet trip through the hub for a session it has not vouched for lately (page load only, never repeated). */
+export function recheckQuietly(next: string): void {
+  location.replace('/auth/sso?prompt=none&next=' + encodeURIComponent(next));
 }

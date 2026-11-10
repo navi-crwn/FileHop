@@ -187,5 +187,6 @@
   "dash.convert": "转换",
   "dash.menu": "菜单",
   "dash.account": "你的账户",
-  "dash.never_uploaded": "你的文件从不上传，所有转换都在本设备上完成。"
+  "dash.never_uploaded": "你的文件从不上传，所有转换都在本设备上完成。",
+  "auth.err_cookies": "你的浏览器没有保存登录 Cookie，FileHop 无法让你登录。请允许此网站使用 Cookie 后重试。"
 }

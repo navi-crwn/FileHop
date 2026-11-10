@@ -13,7 +13,7 @@
   import { download, safeFileName } from './lib/util/format';
   import { confirmAction } from './lib/util/confirm';
   import { zipSync } from 'fflate';
-  import { account, loadAccount, initials, takeAuthError } from './lib/account.svelte';
+  import { account, loadAccount, initials, takeAuthError, takeRecheckMark, recheckQuietly } from './lib/account.svelte';
 
   /* The other HOP apps, as the family manifest (hel.ink/hop-assets/apps.json) lists them.
      Written out rather than fetched: the page loads nothing from another origin. */
@@ -172,7 +172,11 @@
 
   // who is signed in (HOP ID); a guest keeps the whole app
   onMount(() => {
-    void loadAccount();
+    const justBack = takeRecheckMark();
+    void loadAccount().then(() => {
+      // a session the hub has not vouched for lately: ask it once, quietly, on this page load only
+      if (!dash && !justBack && account.stale) recheckQuietly('/');
+    });
     const code = takeAuthError();
     if (code) showToast(i18n.t('auth.err_' + code));
   });

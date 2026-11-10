@@ -187,5 +187,6 @@
   "dash.convert": "Konvertieren",
   "dash.menu": "Menü",
   "dash.account": "Dein Konto",
-  "dash.never_uploaded": "Deine Dateien werden nie hochgeladen. Alles wird auf diesem Gerät konvertiert."
+  "dash.never_uploaded": "Deine Dateien werden nie hochgeladen. Alles wird auf diesem Gerät konvertiert.",
+  "auth.err_cookies": "Dein Browser hat das Anmelde-Cookie nicht behalten, daher kann FileHop dich nicht anmelden. Erlaube Cookies für diese Seite und versuche es erneut."
 }

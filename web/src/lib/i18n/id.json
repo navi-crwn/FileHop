@@ -187,5 +187,6 @@
   "dash.convert": "Konversi",
   "dash.menu": "Menu",
   "dash.account": "Akun Anda",
-  "dash.never_uploaded": "File Anda tidak pernah diunggah. Semua dikonversi di perangkat ini."
+  "dash.never_uploaded": "File Anda tidak pernah diunggah. Semua dikonversi di perangkat ini.",
+  "auth.err_cookies": "Browser Anda tidak menyimpan cookie masuk, jadi FileHop tidak bisa memasukkan Anda. Izinkan cookie untuk situs ini lalu coba lagi."
 }

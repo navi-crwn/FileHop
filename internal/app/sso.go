@@ -32,6 +32,8 @@ const (
 // tests can move it.
 var recheckAfter = 5 * time.Minute
 
+const dashboardPath = "/dashboard"
+
 // usedTickets remembers ticket ids until they expire, so each works once.
 type usedTickets struct {
 	sync.Mutex
@@ -76,9 +78,19 @@ func (a *App) ssoStart(w http.ResponseWriter, r *http.Request) {
 	if n := r.FormValue("next"); n != "" {
 		next = safeNext(n)
 	}
-	http.SetCookie(w, &http.Cookie{Name: ssoCookie, Value: state + "|" + url.QueryEscape(next),
+	// prompt=none: the hub must never show a login page. It answers with a ticket, or with
+	// error=login_required to the callback, which then ends this app's session.
+	silent := r.FormValue("prompt") == "none"
+	mark := state + "|" + url.QueryEscape(next)
+	if silent {
+		mark += "|none"
+	}
+	http.SetCookie(w, &http.Cookie{Name: ssoCookie, Value: mark,
 		Path: "/auth/", HttpOnly: true, Secure: a.cfg.SecureCookies, SameSite: http.SameSiteLaxMode, MaxAge: 900})
 	q := url.Values{"state": {state}, "return_to": {a.cfg.BaseURL + "/auth/sso/callback"}}
+	if silent {
+		q.Set("prompt", "none")
+	}
 	http.Redirect(w, r, a.cfg.SSOURL+"/sso/"+url.PathEscape(a.cfg.SSOClient)+"?"+q.Encode(), http.StatusFound)
 }
 
@@ -92,8 +104,26 @@ func (a *App) ssoCallback(w http.ResponseWriter, r *http.Request) {
 		a.authFail(w, r, "expired")
 		return
 	}
-	state, next, _ := strings.Cut(c.Value, "|")
+	state, rest, _ := strings.Cut(c.Value, "|")
+	next, flag, _ := strings.Cut(rest, "|")
 	next, _ = url.QueryUnescape(next)
+	silent := flag == "none"
+	if e := r.FormValue("error"); e != "" {
+		// Only the answer to a silent check, carrying our own state, counts: the hub has no
+		// session for this browser, so whatever account this app still held is not valid.
+		if !silent || e != "login_required" || !hmac.Equal([]byte(r.FormValue("state")), []byte(state)) {
+			a.authFail(w, r, "invalid")
+			return
+		}
+		a.endSession(w, r)
+		http.SetCookie(w, &http.Cookie{Name: ssoCookie, Path: "/auth/", MaxAge: -1})
+		if next == dashboardPath {
+			http.Redirect(w, r, "/auth/sso?next="+url.QueryEscape(dashboardPath), http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, safeNext(next), http.StatusSeeOther)
+		}
+		return
+	}
 	t, err := hop.ParseTicket(r.FormValue("ticket"), a.cfg.SSOSecret, time.Now())
 	// A ticket the hub made for another of its apps must not work here.
 	if err != nil || !hmac.Equal([]byte(t.State), []byte(state)) || (t.Aud != "" && t.Aud != a.cfg.SSOClient) || !a.used.first(t.Jti, t.Exp) {
@@ -133,9 +163,19 @@ func (a *App) ssoCallback(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode, MaxAge: int(sessionTTL.Seconds())})
 	http.SetCookie(w, &http.Cookie{Name: ssoCookie, Path: "/auth/", MaxAge: -1})
 	if next == "" {
-		next = "/dashboard"
+		next = dashboardPath
 	}
-	http.Redirect(w, r, safeNext(next), http.StatusSeeOther)
+	dest := safeNext(next)
+	// ?_rc=1 says "you have just been through the hub". If the session is still not readable
+	// when the page asks for it (cookies blocked), the page shows an error instead of going round again.
+	if silent || dest == dashboardPath {
+		if strings.Contains(dest, "?") {
+			dest += "&_rc=1"
+		} else {
+			dest += "?_rc=1"
+		}
+	}
+	http.Redirect(w, r, dest, http.StatusSeeOther)
 }
 
 func (a *App) currentUser(r *http.Request) *db.User {
@@ -156,16 +196,23 @@ func (a *App) currentUser(r *http.Request) *db.User {
 // signed out in another browser), so it counts as nobody until the next trip
 // through the hub.
 func (a *App) verifiedUser(r *http.Request) *db.User {
-	u := a.currentUser(r)
-	if u == nil {
-		return nil
-	}
-	c, _ := r.Cookie(sessionCookie)
-	at, err := a.db.SessionVerifiedAt(hashHex(c.Value))
-	if err != nil || time.Since(at) > recheckAfter {
+	u, fresh := a.sessionState(r)
+	if !fresh {
 		return nil
 	}
 	return u
+}
+
+// sessionState is the account behind the cookie (nil when there is none) and whether the hub
+// vouched for it recently. A live but not fresh session is "stale": worth one silent trip to the hub.
+func (a *App) sessionState(r *http.Request) (*db.User, bool) {
+	u := a.currentUser(r)
+	if u == nil {
+		return nil, false
+	}
+	c, _ := r.Cookie(sessionCookie)
+	at, err := a.db.SessionVerifiedAt(hashHex(c.Value))
+	return u, err == nil && time.Since(at) <= recheckAfter
 }
 
 // dashboard is the signed-in workspace. Guests and stale sessions are sent
@@ -175,9 +222,18 @@ func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	if a.verifiedUser(r) == nil {
+	if u, fresh := a.sessionState(r); !fresh {
 		w.Header().Set("Cache-Control", "no-store")
-		http.Redirect(w, r, "/auth/sso?next="+url.QueryEscape("/dashboard"), http.StatusFound)
+		switch {
+		case r.URL.Query().Get("_rc") != "":
+			// just back from the hub and still no readable session: say so, do not go round again
+			http.Redirect(w, r, "/?auth=cookies", http.StatusFound)
+		case u != nil:
+			// a session this app holds but the hub has not vouched for lately: ask the hub quietly
+			http.Redirect(w, r, "/auth/sso?prompt=none&next="+url.QueryEscape(dashboardPath), http.StatusFound)
+		default:
+			http.Redirect(w, r, "/auth/sso?next="+url.QueryEscape(dashboardPath), http.StatusFound)
+		}
 		return
 	}
 	h := w.Header()
@@ -191,7 +247,9 @@ func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
 // so a guest's console stays clean; sso:false means sign-in is not set up here.
 func (a *App) apiMe(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"sso": a.cfg.SSOEnabled(), "signed_in": false}
-	if u := a.verifiedUser(r); u != nil {
+	if u, fresh := a.sessionState(r); u != nil && !fresh {
+		out["stale"] = true // the page may re-check once, quietly, through the hub
+	} else if u != nil {
 		out["signed_in"] = true
 		out["name"] = u.Name
 		out["email"] = u.Email

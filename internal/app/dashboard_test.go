@@ -51,7 +51,7 @@ func TestDashboardIsForSignedInPeopleOnly(t *testing.T) {
 
 	// the callback with no next lands on /dashboard
 	res = signIn(t, c, srv.URL, "7", "Ana", "d-1", "")
-	if res.StatusCode != 303 || res.Header.Get("Location") != "/dashboard" {
+	if res.StatusCode != 303 || res.Header.Get("Location") != "/dashboard?_rc=1" {
 		t.Fatalf("callback without next: %d %s", res.StatusCode, res.Header.Get("Location"))
 	}
 
@@ -117,14 +117,14 @@ func TestNoStaleAccountAfterSwitchingAtTheHub(t *testing.T) {
 		t.Fatal("a session the hub has not vouched for lately must not be shown")
 	}
 	res := mustGet(t, c, srv.URL+"/dashboard")
-	if res.StatusCode != 302 || res.Header.Get("Location") != "/auth/sso?next=%2Fdashboard" {
+	if res.StatusCode != 302 || res.Header.Get("Location") != "/auth/sso?prompt=none&next=%2Fdashboard" {
 		t.Fatalf("stale session on /dashboard: %d %s", res.StatusCode, res.Header.Get("Location"))
 	}
 
 	// the trip through the hub, now as B: B is shown, A's old row is gone
 	recheckAfter = old
 	res = signIn(t, c, srv.URL, "2", "Ana", "s-3", "/dashboard")
-	if res.Header.Get("Location") != "/dashboard" || meName(t, c, srv.URL) != "Ana" {
+	if res.Header.Get("Location") != "/dashboard?_rc=1" || meName(t, c, srv.URL) != "Ana" {
 		t.Fatalf("after the switch: %s %v", res.Header.Get("Location"), meName(t, c, srv.URL))
 	}
 	if n, err := a.db.DeleteSessions("1"); err != nil || n != 0 {

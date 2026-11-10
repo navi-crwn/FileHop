@@ -4,7 +4,8 @@
 // It does what the real hub does for an app in its registry, with the same
 // wire formats:
 //
-//	GET  /sso/filehop?state&return_to  sign-in page; POST issues a ticket
+//	GET  /sso/filehop?state&return_to  sign-in page; POST issues a ticket and keeps a stub session cookie
+//	GET  /sso/filehop?prompt=none&…    silent: a ticket when that cookie is set, else error=login_required (never a page)
 //	GET  /logout                       chained logout through FileHop's /auth/sso/logout
 //	POST /push?type=...&sub=...         a signed account event to FileHop /hop/events (as "helink")
 //	GET  /imperium/{path...}            a signed GET to FileHop /hop/{path} (as "imperium")
@@ -113,6 +114,16 @@ func main() {
 			http.Error(w, "unknown client, missing state, or return_to not on localhost", 400)
 			return
 		}
+		if q.Get("prompt") == "none" { // silent: a ticket if the stub "hub session" cookie is set, else login_required, never a page
+			if c, err := r.Cookie("stub_acct"); err == nil {
+				if f := strings.SplitN(c.Value, "|", 3); len(f) == 3 {
+					issue(w, r, q.Get("return_to"), q.Get("state"), f[0], f[1], f[2], "active")
+					return
+				}
+			}
+			http.Redirect(w, r, q.Get("return_to")+"?"+url.Values{"error": {"login_required"}, "state": {q.Get("state")}}.Encode(), http.StatusFound)
+			return
+		}
 		page.Execute(w, view{SignIn: true, Client: client, State: q.Get("state"), ReturnTo: q.Get("return_to")})
 	})
 	m.HandleFunc("POST /sso/{client}", func(w http.ResponseWriter, r *http.Request) {
@@ -120,15 +131,13 @@ func main() {
 			http.Error(w, "return_to not on localhost", 400)
 			return
 		}
-		now := time.Now().Unix()
-		counter++
-		t := ticket(map[string]any{"sub": r.FormValue("sub"), "aud": client, "email": r.FormValue("email"),
-			"name": r.FormValue("name"), "status": r.FormValue("status"), "roles": []string{},
-			"state": r.FormValue("state"), "iat": now, "exp": now + 120, "jti": fmt.Sprintf("stub-%d-%d", now, counter), "v": 2})
-		http.Redirect(w, r, r.FormValue("return_to")+"?ticket="+url.QueryEscape(t), http.StatusFound)
+		http.SetCookie(w, &http.Cookie{Name: "stub_acct", Path: "/", HttpOnly: true, SameSite: http.SameSiteLaxMode,
+			Value: r.FormValue("sub") + "|" + r.FormValue("name") + "|" + r.FormValue("email")})
+		issue(w, r, r.FormValue("return_to"), r.FormValue("state"), r.FormValue("sub"), r.FormValue("name"), r.FormValue("email"), r.FormValue("status"))
 	})
 	// The real hub ends its own session, then walks every app's logout path in turn.
 	m.HandleFunc("GET /logout", func(w http.ResponseWriter, r *http.Request) {
+		http.SetCookie(w, &http.Cookie{Name: "stub_acct", Path: "/", MaxAge: -1})
 		http.Redirect(w, r, app+"/auth/sso/logout?next="+url.QueryEscape(self+"/?out=signed+out+everywhere"), http.StatusFound)
 	})
 	m.HandleFunc("POST /push", func(w http.ResponseWriter, r *http.Request) {
@@ -151,6 +160,15 @@ func main() {
 	})
 	log.Printf("hub stub on %s → FileHop at %s (client %q)", self, app, client)
 	log.Fatal(http.ListenAndServe(addr, m))
+}
+
+// issue sends the browser back to the app with a ticket for the account, as the real hub does.
+func issue(w http.ResponseWriter, r *http.Request, returnTo, state, sub, name, email, status string) {
+	now := time.Now().Unix()
+	counter++
+	t := ticket(map[string]any{"sub": sub, "aud": client, "email": email, "name": name, "status": status, "roles": []string{},
+		"state": state, "iat": now, "exp": now + 120, "jti": fmt.Sprintf("stub-%d-%d", now, counter), "v": 2})
+	http.Redirect(w, r, returnTo+"?ticket="+url.QueryEscape(t), http.StatusFound)
 }
 
 func call(as, method, path string, body []byte) string {
