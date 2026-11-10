@@ -1,9 +1,72 @@
 {
   "schema": 1,
   "sources": {
-    "FileHop": "9487ae0f9491c6e08643a3d093acc31f4dfd2cac"
+    "FileHop": "f5fa9bbb202d2b26b0592348c2521ee1ceb95110"
   },
   "entries": [
+    {
+      "kind": "pr",
+      "date": "2026-11-10T15:12:28Z",
+      "title": "Add an X button at the right end of every file row",
+      "url": "https://github.com/navi-crwn/FileHop/pull/13",
+      "id": "#13",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T22:12:27+07:00",
+      "title": "Merge pull request #13: Add an X button at the right end of every file row",
+      "url": "https://github.com/navi-crwn/FileHop/commit/f5fa9bbb202d2b26b0592348c2521ee1ceb95110",
+      "id": "f5fa9bbb",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T16:05:28+01:00",
+      "title": "Add an X button at the right end of every file row",
+      "url": "https://github.com/navi-crwn/FileHop/commit/e012401f0fe9f25fc0fc08329e3853d6945c0435",
+      "id": "e012401f",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "pr",
+      "date": "2026-11-10T14:51:09Z",
+      "title": "Add a real /changelog page, og:image, and remove the top bar app grid",
+      "url": "https://github.com/navi-crwn/FileHop/pull/12",
+      "id": "#12",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T21:51:08+07:00",
+      "title": "Merge pull request #12: Add a real /changelog page, og:image, and remove the top bar app grid",
+      "url": "https://github.com/navi-crwn/FileHop/commit/8ed6cb7b27d52d0fbae257aec6d6979e26bc872b",
+      "id": "8ed6cb7b",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T15:05:24+01:00",
+      "title": "Changelog page: family top bar and footer, no eyebrow label",
+      "url": "https://github.com/navi-crwn/FileHop/commit/ef27b89bbdd2f52cec4f8964dd37af0306c459ac",
+      "id": "ef27b89b",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T14:50:09+01:00",
+      "title": "Add a real /changelog page, og:image, and drop the top bar app grid",
+      "url": "https://github.com/navi-crwn/FileHop/commit/623d01b240ae465ee2f6eab48e3144b5c3311973",
+      "id": "623d01b2",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
     {
       "kind": "pr",
       "date": "2026-11-10T07:40:11Z",
