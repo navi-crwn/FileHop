@@ -38,6 +38,32 @@
 
   let locale = $state(guessLocale());
   let settingsOpen = $state(false);
+  let langOpen = $state(false);
+  let langBtn = $state<HTMLButtonElement>();
+  let langList = $state<HTMLElement>();
+  const langCode = (l: string) => l.split('-')[0].toUpperCase();
+
+  function openLang() {
+    langOpen = true;
+    queueMicrotask(() => (langList?.querySelector<HTMLElement>('[aria-selected="true"]') ?? langList?.querySelector<HTMLElement>('[role="option"]'))?.focus());
+  }
+  function closeLang(refocus = false) {
+    langOpen = false;
+    if (refocus) langBtn?.focus();
+  }
+  function pickLang(l: string) {
+    locale = l as typeof locale;
+    closeLang(true);
+  }
+  function onLangKey(e: KeyboardEvent) {
+    const items = [...(langList?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])];
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0]?.focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1]?.focus(); }
+    else if (e.key === 'Tab') closeLang();
+  }
   let licensesOpen = $state(false);
   let toast = $state('');
   let dragging = $state(false);
@@ -407,6 +433,7 @@
 
   function onPointerDown(e: PointerEvent) {
     if (acctEl?.open && !acctEl.contains(e.target as Node)) acctEl.open = false;
+    if (langOpen && !(e.target as HTMLElement).closest?.('.lang')) langOpen = false;
   }
 
   /* While the settings drawer or the licenses dialog is open the page behind does not
@@ -435,6 +462,7 @@
       licensesOpen = false;
       dragging = false;
       closeAccountMenu();
+      if (langOpen) { e.preventDefault(); closeLang(true); }
     }
   }
 </script>
@@ -465,17 +493,29 @@
       <Icon name="plus" size={17} /><span class="tlabel">{i18n.t('nav.add')}</span>
     </button>
 
-    <label class="sr" for="top-lang">{i18n.t('nav.language')}</label>
-    <select
-      id="top-lang"
-      class="select"
-      value={locale}
-      onchange={(e) => (locale = (e.currentTarget as HTMLSelectElement).value as typeof locale)}
-    >
-      {#each LOCALES as l (l)}
-        <option value={l}>{LOCALE_NAMES[l] ?? l}</option>
-      {/each}
-    </select>
+    <div class="lang">
+      <button
+        bind:this={langBtn}
+        class="tbtn lang-btn"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={langOpen}
+        aria-label={i18n.t('nav.language')}
+        title={LOCALE_NAMES[locale] ?? locale}
+        onclick={() => (langOpen ? closeLang() : openLang())}
+      >
+        <Icon name="net" size={16} /><span>{langCode(locale)}</span>
+      </button>
+      {#if langOpen}
+        <ul class="lang-list" role="listbox" aria-label={i18n.t('nav.language')} bind:this={langList} onkeydown={onLangKey}>
+          {#each LOCALES as l (l)}
+            <li role="option" tabindex="-1" aria-selected={l === locale} lang={l} onclick={() => pickLang(l)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickLang(l); } }}>
+              <span>{LOCALE_NAMES[l] ?? l}</span><code>{langCode(l)}</code>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
 
     <button class="tbtn icon" type="button" onclick={toggleTheme} aria-label={i18n.t('nav.theme')} title={i18n.t('nav.theme')}>
       <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
@@ -641,14 +681,14 @@
 
       <section class="sec" id="features" aria-labelledby="fmt-h">
         <h2 id="fmt-h">{i18n.t('formats.title')}</h2>
-        <div class="fmts">
-          <article class="fmt"><h3><Icon name="image" size={16} />{i18n.t('formats.images')}</h3><p>{i18n.t('formats.images_v')}</p></article>
-          <article class="fmt"><h3><Icon name="pdf" size={16} />{i18n.t('formats.pdf')}</h3><p>{i18n.t('formats.pdf_v')}</p></article>
-          <article class="fmt"><h3><Icon name="data" size={16} />{i18n.t('formats.data')}</h3><p>{i18n.t('formats.data_v')}</p></article>
-          <article class="fmt"><h3><Icon name="text" size={16} />{i18n.t('formats.text')}</h3><p>{i18n.t('formats.text_v')}</p></article>
-          <article class="fmt"><h3><Icon name="archive" size={16} />{i18n.t('formats.archive')}</h3><p>{i18n.t('formats.archive_v')}</p></article>
-          <article class="fmt"><h3><Icon name="hash" size={16} />{i18n.t('formats.hash')}</h3><p>{i18n.t('formats.hash_v')}</p></article>
-          <article class="fmt soon"><h3><Icon name="alert" size={16} />{i18n.t('formats.soon')}</h3><p></p></article>
+        <div class="hop-bento fmts">
+          <article class="fmt" data-spot data-scene><h3><Icon name="image" size={16} />{i18n.t('formats.images')}</h3><p>{i18n.t('formats.images_v')}</p><div class="sc sc-img" aria-hidden="true"><i class="a">PNG</i><i class="b">WebP</i></div></article>
+          <article class="fmt" data-spot data-scene><h3><Icon name="pdf" size={16} />{i18n.t('formats.pdf')}</h3><p>{i18n.t('formats.pdf_v')}</p><div class="sc sc-pdf" aria-hidden="true"><i></i><i></i><i></i></div></article>
+          <article class="fmt" data-spot data-scene><h3><Icon name="data" size={16} />{i18n.t('formats.data')}</h3><p>{i18n.t('formats.data_v')}</p><div class="sc sc-data" aria-hidden="true"><i class="a">a,b,c</i><i class="b">&#123;&#125;</i></div></article>
+          <article class="fmt" data-spot data-scene><h3><Icon name="text" size={16} />{i18n.t('formats.text')}</h3><p>{i18n.t('formats.text_v')}</p><div class="sc sc-text" aria-hidden="true"><i class="a"># md</i><i class="b">H</i></div></article>
+          <article class="fmt" data-spot data-scene><h3><Icon name="archive" size={16} />{i18n.t('formats.archive')}</h3><p>{i18n.t('formats.archive_v')}</p><div class="sc sc-zip" aria-hidden="true"><i class="bar"></i></div></article>
+          <article class="fmt" data-spot data-scene><h3><Icon name="hash" size={16} />{i18n.t('formats.hash')}</h3><p>{i18n.t('formats.hash_v')}</p><div class="sc sc-hash" aria-hidden="true"><i>9f2c</i><i>e41a</i><i>07bd</i></div></article>
+          <article class="fmt soon" data-spot><h3><Icon name="alert" size={16} />{i18n.t('formats.soon')}</h3><p></p></article>
         </div>
       </section>
 

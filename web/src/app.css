@@ -475,7 +475,7 @@ main { flex: 1; width: 100%; }
 .step h3 { font-size: 17px; margin: 8px 0 6px; letter-spacing: -.02em; }
 .step p { margin: 0; font-size: 13.5px; color: var(--muted); }
 
-.fmts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.fmts { --hb-accent: var(--amber); --hb-gap: 14px; --hb-panel: var(--panel); --hb-line: var(--line); --hb-text: var(--text); --hb-muted: var(--muted); --hb-radius: var(--radius); }
 .fmt { padding: 18px 20px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); }
 .fmt h3 { font-size: 15px; display: flex; align-items: center; gap: 8px; letter-spacing: -.01em; }
 .fmt h3 svg { width: 16px; height: 16px; color: var(--amber-soft); }
@@ -592,7 +592,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; gap: 26px; padding-top: 34px; }
   .steps { grid-template-columns: 1fr; }
-  .fmts { grid-template-columns: 1fr; }
   .card { grid-template-columns: 38px minmax(0, 1fr); }
   .card .side { grid-column: 1 / -1; justify-content: flex-start; max-width: none; }
   .topbar { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
@@ -607,8 +606,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
   .opt input[type="range"] { flex: 1; width: auto; min-width: 0; }
   .topbar .tbtn.primary { width: var(--hop-ctl-h); padding: 0; }
   .topbar .tbtn.primary .tlabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .topbar .tsettings { display: none; }
-  .topbar .select { min-width: 0; max-width: 128px; }
   /* fields are 16 px on phones, so iOS does not zoom the page on focus */
   .select, .field-input, .opt .field-input { font-size: 16px; }
   /* a card's buttons share the row under the text */
@@ -770,3 +767,44 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 
 .ft-brand b { display: inline-flex; align-items: center; gap: 8px; }
 .ft-brand b img { width: 20px; height: 20px; display: block; }
+
+/* language menu: the family's compact code button, a list with the native name left and the code right */
+.lang { position: relative; }
+.lang-btn { gap: 6px; font: 600 13px var(--mono); letter-spacing: .02em; }
+.lang-btn svg { width: 16px; height: 16px; }
+.lang-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 220px; margin: 0; padding: 6px; list-style: none; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 18px 40px rgb(0 0 0 / .22); transform-origin: top right; animation: lang-in 160ms cubic-bezier(.23, 1, .32, 1) both; }
+.lang-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 36px; padding: 6px 10px; border-radius: 9px; font-size: 14px; color: var(--text); cursor: pointer; }
+.lang-list li code { font: 600 12px var(--mono); color: var(--faint); }
+.lang-list li:hover, .lang-list li:focus-visible { background: var(--soft, rgb(127 127 127 / .14)); outline: none; }
+.lang-list li[aria-selected="true"] { font-weight: 650; }
+@keyframes lang-in { from { opacity: 0; transform: scale(.96); } }
+@media (max-width: 639px) { .lang-btn span { display: inline; } .lang-list { position: fixed; left: 12px; right: 12px; top: 58px; } }
+@media (prefers-reduced-motion: reduce) { .lang-list { animation: none; } }
+
+/* formats: one bento, a small scene in each box that runs only while it is on screen */
+.fmt { position: relative; display: flex; flex-direction: column; }
+.fmt .sc { margin-top: auto; padding-top: 14px; display: flex; align-items: center; gap: 8px; min-height: 44px; font: 600 11px var(--mono); color: var(--muted); }
+.sc i { font-style: normal; padding: 4px 8px; border: 1px solid var(--line-2, var(--line)); border-radius: 8px; background: var(--soft, rgb(127 127 127 / .08)); }
+.sc { --ease: cubic-bezier(.23, 1, .32, 1); }
+.sc-img { position: relative; } .sc-img i { position: absolute; left: 0; }
+.sc-img .a { animation: sc-out 4s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); }
+.sc-img .b { animation: sc-in 4s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); color: var(--text); }
+.sc-data { position: relative; } .sc-data i { position: absolute; left: 0; }
+.sc-data .a { animation: sc-out 4s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); }
+.sc-data .b { animation: sc-in 4s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); color: var(--text); }
+.sc-text { position: relative; } .sc-text i { position: absolute; left: 0; }
+.sc-text .a { animation: sc-out 4s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); }
+.sc-text .b { animation: sc-in 4s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); color: var(--text); font-size: 15px; }
+.sc-pdf i { width: 26px; height: 34px; padding: 0; border-radius: 4px; animation: sc-page 3.2s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); }
+.sc-pdf i:nth-child(2) { animation-delay: .15s; } .sc-pdf i:nth-child(3) { animation-delay: .3s; }
+.fmt .sc-zip { position: relative; height: 8px; min-height: 8px; padding: 0; margin-top: auto; border-radius: 99px; background: var(--soft, rgb(127 127 127 / .14)); overflow: hidden; }
+.sc-zip .bar { position: absolute; inset: 0; padding: 0; border: 0; border-radius: 99px; background: var(--amber); transform-origin: left; animation: sc-fill 3.6s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); }
+.sc-hash i { color: var(--text); animation: sc-hash 3s var(--ease) infinite both; animation-play-state: var(--scene-play, paused); }
+.sc-hash i:nth-child(2) { animation-delay: .2s; } .sc-hash i:nth-child(3) { animation-delay: .4s; }
+@keyframes sc-out { 0%, 35% { opacity: 1; transform: none; } 50%, 100% { opacity: 0; transform: translateY(-6px); } }
+@keyframes sc-in { 0%, 35% { opacity: 0; transform: translateY(6px); } 50%, 100% { opacity: 1; transform: none; } }
+@keyframes sc-page { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+@keyframes sc-fill { 0% { transform: scaleX(.08); } 70%, 100% { transform: scaleX(1); } }
+@keyframes sc-hash { 0%, 100% { opacity: .35; } 45% { opacity: 1; } }
+/* resting style = the final frame; with reduced motion no scene moves */
+@media (prefers-reduced-motion: reduce) { .sc * { animation: none !important; } .sc-img .a, .sc-data .a, .sc-text .a { opacity: 0; } }
