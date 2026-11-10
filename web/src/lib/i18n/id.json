@@ -135,6 +135,8 @@
   "formats.hash_v": "SHA-256, BLAKE3, dan MD5, dialirkan sehingga file 2 GB tidak perlu masuk memori sekaligus.",
   "formats.soon": "Sengaja belum ada: DOCX/LaTeX (butuh pandoc), RAR dan 7z (baca saja, belum ada WASM), video dan audio (butuh pekerjaan WebCodecs).",
   "footer.family": "Keluarga HOP",
+  "footer.support": "Bantuan",
+  "footer.policies": "Kebijakan",
   "footer.part_of": "Bagian dari {name}",
   "footer.privacy": "Privasi",
   "footer.terms": "Ketentuan",

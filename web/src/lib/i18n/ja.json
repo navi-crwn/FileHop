@@ -135,6 +135,8 @@
   "formats.hash_v": "SHA-256、BLAKE3、MD5 をストリームで。2 GB のファイルがメモリに収まる必要はありません。",
   "formats.soon": "あえてまだ入れていません：DOCX/LaTeX（pandoc が必要）、RAR と 7z（読み取りのみ、WASM 未対応）、動画と音声（WebCodecs の作業が必要）。",
   "footer.family": "HOP ファミリー",
+  "footer.support": "サポート",
+  "footer.policies": "ポリシー",
   "footer.part_of": "{name} の一員",
   "footer.privacy": "プライバシー",
   "footer.terms": "利用規約",

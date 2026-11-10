@@ -135,6 +135,8 @@
   "formats.hash_v": "SHA-256, BLAKE3 et MD5, en flux, pour qu'un fichier de 2 Go n'ait pas à tenir en mémoire.",
   "formats.soon": "Volontairement absent pour l'instant : DOCX/LaTeX (nécessite pandoc), RAR et 7z (lecture seule, pas encore de WASM), vidéo et audio (demande du travail sur WebCodecs).",
   "footer.family": "Famille HOP",
+  "footer.support": "Aide",
+  "footer.policies": "Règles",
   "footer.part_of": "Fait partie de {name}",
   "footer.privacy": "Confidentialité",
   "footer.terms": "Conditions",
