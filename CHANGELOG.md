@@ -4,6 +4,8 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-11
+
 ### Added
 - PayHop (`pay.hel.ink`) in the family list (footer, dashboard sidebar and `/changelog`), its mark `hop-marks/payhop.svg`, and the Unbounded name class `hop-name-payhop` in `hop-brand.css`.
 - `sitemap.xml` (the home page and `/changelog`, nothing signed-in) and a `Sitemap:` line in `robots.txt`.
