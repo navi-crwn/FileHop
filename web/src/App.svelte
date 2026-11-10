@@ -39,6 +39,28 @@
   let locale = $state(guessLocale());
   let settingsOpen = $state(false);
   let langOpen = $state(false);
+  let appsOpen = $state(false);
+  let appsBtn = $state<HTMLButtonElement>();
+  let appsList = $state<HTMLElement>();
+  const SWITCHER = [...FAMILY, { slug: 'filehop', name: 'FileHop', url: '/', mark: '/mark.svg' }];
+
+  function openApps() {
+    appsOpen = true;
+    queueMicrotask(() => (appsList?.querySelector<HTMLElement>('[aria-current="true"]') ?? appsList?.querySelector<HTMLElement>('a'))?.focus());
+  }
+  function closeApps(refocus = false) {
+    appsOpen = false;
+    if (refocus) appsBtn?.focus();
+  }
+  function onAppsKey(e: KeyboardEvent) {
+    const items = [...(appsList?.querySelectorAll<HTMLElement>('a') ?? [])];
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0]?.focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1]?.focus(); }
+    else if (e.key === 'Tab') closeApps();
+  }
   let langBtn = $state<HTMLButtonElement>();
   let langList = $state<HTMLElement>();
   const langCode = (l: string) => l.split('-')[0].toUpperCase();
@@ -434,6 +456,7 @@
   function onPointerDown(e: PointerEvent) {
     if (acctEl?.open && !acctEl.contains(e.target as Node)) acctEl.open = false;
     if (langOpen && !(e.target as HTMLElement).closest?.('.lang')) langOpen = false;
+    if (appsOpen && !(e.target as HTMLElement).closest?.('.apps')) appsOpen = false;
   }
 
   /* While the settings drawer or the licenses dialog is open the page behind does not
@@ -463,6 +486,7 @@
       dragging = false;
       closeAccountMenu();
       if (langOpen) { e.preventDefault(); closeLang(true); }
+      if (appsOpen) { e.preventDefault(); closeApps(true); }
     }
   }
 </script>
@@ -492,6 +516,31 @@
     <button class="tbtn primary" type="button" onclick={pickFiles}>
       <Icon name="plus" size={17} /><span class="tlabel">{i18n.t('nav.add')}</span>
     </button>
+
+    <div class="apps">
+      <button
+        bind:this={appsBtn}
+        class="tbtn icon"
+        type="button"
+        aria-haspopup="true"
+        aria-expanded={appsOpen}
+        aria-label={i18n.t('footer.family')}
+        title={i18n.t('footer.family')}
+        onclick={() => (appsOpen ? closeApps() : openApps())}
+      >
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>
+      </button>
+      {#if appsOpen}
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+        <nav class="apps-list" aria-label={i18n.t('footer.family')} bind:this={appsList} onkeydown={onAppsKey}>
+          {#each SWITCHER as a (a.slug)}
+            <a href={a.slug === 'filehop' ? '/' : familyHref(a)} rel={a.slug === 'filehop' ? undefined : 'noopener'} aria-current={a.slug === 'filehop' ? 'true' : undefined}>
+              <img src={a.mark} alt="" width="22" height="22" /><span>{a.name}</span>
+            </a>
+          {/each}
+        </nav>
+      {/if}
+    </div>
 
     <div class="lang">
       <button
