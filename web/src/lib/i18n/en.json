@@ -135,6 +135,7 @@
   "formats.hash_v": "SHA-256, BLAKE3 and MD5, streamed so a 2 GB file does not have to fit in memory.",
   "formats.soon": "Not here yet, on purpose: DOCX/LaTeX (needs pandoc), RAR and 7z (read-only, no WASM yet), video and audio (needs WebCodecs work).",
   "footer.family": "HOP family",
+  "footer.part_of": "Part of {name}",
   "footer.privacy": "Privacy",
   "footer.terms": "Terms",
   "footer.licenses": "Licenses",

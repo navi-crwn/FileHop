@@ -139,8 +139,12 @@ func (a *App) apiMe(w http.ResponseWriter, r *http.Request) {
 	}
 	if a.cfg.SSOEnabled() {
 		out["hub_url"] = a.cfg.SSOURL
-		// Signing out goes through the hub, which walks every app's logout in turn.
+		// Signing out goes through the hub, which walks every app's logout in
+		// turn; return= brings the person back to this app afterwards.
 		out["logout_url"] = a.cfg.SSOURL + "/logout"
+		if a.cfg.BaseURL != "" {
+			out["logout_url"] = a.cfg.SSOURL + "/logout?return=" + url.QueryEscape(a.cfg.BaseURL+"/")
+		}
 	}
 	writeJSON(w, http.StatusOK, out)
 }

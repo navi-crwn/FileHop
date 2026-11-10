@@ -659,11 +659,11 @@
       </section>
 
       <footer class="ft">
+        <a class="ft-part" href="https://hel.ink" rel="noopener">
+          <img src="/hop-id-mark.png" alt="" width="20" height="20" />
+          <span>{#each i18n.t('footer.part_of').split('{name}') as part, i}{#if i > 0}<b>Hop Easy Link</b>{/if}{part}{/each}</span>
+        </a>
         <div class="ft-in">
-          <span class="ft-brand">
-            <img src="/mark.svg" alt="" width="28" height="28" />
-            <b>Hop Easy Link</b>
-          </span>
           <a href="#privacy">{i18n.t('footer.privacy')}</a>
           <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
           <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>

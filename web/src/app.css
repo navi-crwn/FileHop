@@ -746,10 +746,10 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 :root[data-ui="clean"] .dlg-in { border-color: var(--line); }
 :root[data-ui="clean"] .toast { border-radius: var(--hop-ctl-radius); border-color: var(--line); }
 :root[data-ui="clean"] .acct-menu { background: var(--panel); }
-:root[data-ui="clean"] .ft-brand { color: var(--muted); }
 
 /* shared by both styles: the footer brand line; the empty-queue action shows only in Clean */
-.ft-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; }
-.ft-brand img { width: 28px; height: 28px; display: block; }
-.ft-brand b { font-weight: 600; }
+.ft-part { display: flex; align-items: center; gap: 8px; width: fit-content; margin-bottom: 18px; font-size: 13px; line-height: 20px; color: var(--muted); text-decoration: none; }
+.ft-part img { width: 20px; height: 20px; display: block; }
+.ft-part b { font-weight: 400; color: var(--text); }
+.ft-part:hover b { text-decoration: underline; }
 .queue-empty .empty-add { display: none; }
