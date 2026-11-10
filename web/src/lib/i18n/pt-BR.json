@@ -188,5 +188,6 @@
   "dash.menu": "Menu",
   "dash.account": "Sua conta",
   "dash.never_uploaded": "Seus arquivos nunca são enviados. Tudo é convertido neste dispositivo.",
-  "auth.err_cookies": "Seu navegador não guardou o cookie de login, então o FileHop não consegue entrar. Permita cookies neste site e tente de novo."
+  "auth.err_cookies": "Seu navegador não guardou o cookie de login, então o FileHop não consegue entrar. Permita cookies neste site e tente de novo.",
+  "auth.err_hub": "Não foi possível alcançar o HOP ID agora, então o FileHop não consegue entrar. Tente de novo em instantes."
 }

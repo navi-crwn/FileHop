@@ -188,5 +188,6 @@
   "dash.menu": "Menu",
   "dash.account": "Your account",
   "dash.never_uploaded": "Your files are never uploaded. Everything is converted on this device.",
-  "auth.err_cookies": "Your browser did not keep the sign-in cookie, so FileHop cannot sign you in. Allow cookies for this site and try again."
+  "auth.err_cookies": "Your browser did not keep the sign-in cookie, so FileHop cannot sign you in. Allow cookies for this site and try again.",
+  "auth.err_hub": "HOP ID cannot be reached right now, so FileHop cannot sign you in. Please try again in a moment."
 }

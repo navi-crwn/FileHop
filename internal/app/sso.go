@@ -225,6 +225,9 @@ func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
 	if u, fresh := a.sessionState(r); !fresh {
 		w.Header().Set("Cache-Control", "no-store")
 		switch {
+		case !a.hubUp():
+			// no way to sign in or re-check while the hub is down: say so rather than send the browser there
+			http.Redirect(w, r, "/?auth=hub", http.StatusFound)
 		case r.URL.Query().Get("_rc") != "":
 			// just back from the hub and still no readable session: say so, do not go round again
 			http.Redirect(w, r, "/?auth=cookies", http.StatusFound)
@@ -248,7 +251,11 @@ func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
 func (a *App) apiMe(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"sso": a.cfg.SSOEnabled(), "signed_in": false}
 	if u, fresh := a.sessionState(r); u != nil && !fresh {
-		out["stale"] = true // the page may re-check once, quietly, through the hub
+		// The page may re-check once, quietly, through the hub, but never when the hub is down:
+		// the browser would be sent to its own error page. Then the page simply acts as a guest.
+		if a.cfg.SSOEnabled() && a.hubUp() {
+			out["stale"] = true
+		}
 	} else if u != nil {
 		out["signed_in"] = true
 		out["name"] = u.Name

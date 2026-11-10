@@ -41,6 +41,7 @@ type App struct {
 	used    usedTickets
 	nonces  hop.Nonces
 	started time.Time
+	hubUp   func() bool // is the hub reachable (cached); replaced in tests
 }
 
 // New builds the handler. static is the built browser app (web/dist).
@@ -49,7 +50,9 @@ func New(cfg Config, d *db.DB, static fs.FS) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &App{cfg: cfg, db: d, static: static, index: index, used: usedTickets{m: map[string]int64{}}, started: time.Now()}, nil
+	a := &App{cfg: cfg, db: d, static: static, index: index, used: usedTickets{m: map[string]int64{}}, started: time.Now()}
+	a.hubUp = newHubProbe(cfg.SSOURL).Up
+	return a, nil
 }
 
 func (a *App) Handler() http.Handler {

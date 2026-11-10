@@ -61,7 +61,7 @@ export function takeAuthError(): string | null {
   if (!code) return null;
   url.searchParams.delete('auth');
   history.replaceState(null, '', url.pathname + url.search + url.hash);
-  return ['expired', 'invalid', 'suspended', 'failed', 'cookies'].includes(code) ? code : 'failed';
+  return ['expired', 'invalid', 'suspended', 'failed', 'cookies', 'hub'].includes(code) ? code : 'failed';
 }
 
 /** True when this page load is the return from the hub (?_rc=1); the mark is removed from the address bar. */

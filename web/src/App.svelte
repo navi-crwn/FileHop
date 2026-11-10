@@ -175,7 +175,8 @@
     const justBack = takeRecheckMark();
     void loadAccount().then(() => {
       // a session the hub has not vouched for lately: ask it once, quietly, on this page load only
-      if (!dash && !justBack && account.stale) recheckQuietly('/');
+      // (never when files are queued or a conversion runs: leaving the page would drop them; the next load checks)
+      if (!dash && !justBack && account.stale && queue.jobs.length === 0 && !running) recheckQuietly('/');
     });
     const code = takeAuthError();
     if (code) showToast(i18n.t('auth.err_' + code));

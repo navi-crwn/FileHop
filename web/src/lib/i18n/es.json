@@ -188,5 +188,6 @@
   "dash.menu": "Menú",
   "dash.account": "Tu cuenta",
   "dash.never_uploaded": "Tus archivos nunca se suben. Todo se convierte en este dispositivo.",
-  "auth.err_cookies": "Tu navegador no guardó la cookie de inicio de sesión, así que FileHop no puede iniciarla. Permite las cookies de este sitio e inténtalo de nuevo."
+  "auth.err_cookies": "Tu navegador no guardó la cookie de inicio de sesión, así que FileHop no puede iniciarla. Permite las cookies de este sitio e inténtalo de nuevo.",
+  "auth.err_hub": "No se puede acceder a HOP ID ahora mismo, así que FileHop no puede iniciar tu sesión. Inténtalo de nuevo en un momento."
 }

@@ -43,6 +43,7 @@ func newTestApp(t *testing.T, sso bool) (*App, *httptest.Server) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	a.hubUp = func() bool { return true }
 	srv := httptest.NewServer(a.Handler())
 	t.Cleanup(srv.Close)
 	a.cfg.BaseURL = srv.URL
