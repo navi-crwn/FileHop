@@ -45,6 +45,8 @@
   "job.retry": "Reintentar",
   "job.retry_wait": "Otra unión está en marcha. Reintenta cuando termine.",
   "job.cancel": "Cancelar",
+  "job.cancel_file": "Cancelar {name}",
+  "job.remove_file": "Quitar {name}",
   "job.target": "Convertir a",
   "job.run": "Convertir",
   "job.saved": "{pct}% más pequeño",

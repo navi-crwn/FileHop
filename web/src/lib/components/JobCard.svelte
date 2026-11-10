@@ -246,23 +246,30 @@
   </div>
 
   <div class="side">
-    {#if absorbed || job.status === 'merged'}
-      <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
+    {#if absorbed || job.status === 'merged' || job.status === 'running'}
+      <!-- nothing of its own: the X at the end of the row removes it or stops it -->
     {:else if job.status === 'queued'}
       <button class="mini secondary" type="button" onclick={onRun}><Icon name="play" size={14} />{i18n.t('job.run')}</button>
-    {:else if job.status === 'running'}
-      <button class="mini" type="button" onclick={onCancel}><Icon name="stop" size={14} />{i18n.t('job.cancel')}</button>
     {:else if job.status === 'done'}
       <button class="mini secondary" type="button" onclick={onDownload}><Icon name="download" size={14} />{i18n.t('job.download')}</button>
       {#if job.result?.hash}
         <button class="mini" type="button" onclick={copyHash}>{copied ? i18n.t('job.copied') : i18n.t('job.copy_hash')}</button>
       {/if}
-      <button class="mini" type="button" onclick={onRemove}><Icon name="trash" size={14} />{i18n.t('job.remove')}</button>
     {:else}
       <button class="mini" type="button" onclick={onRun} disabled={retryBlocked} aria-describedby={retryBlocked ? 'retry-wait-' + job.id : undefined}><Icon name="refresh" size={14} />{i18n.t('job.retry')}</button>
-      <button class="mini icon" type="button" onclick={onRemove} aria-label={i18n.t('job.remove')} title={i18n.t('job.remove')}><Icon name="trash" size={14} /></button>
     {/if}
   </div>
+
+  <!-- One X at the end of every row. A running file is stopped (the others keep going and the row stays,
+       with Try again); any other file leaves the list. A finished file's download is not affected. -->
+  <button
+    class="rm"
+    type="button"
+    data-rm
+    onclick={job.status === 'running' ? onCancel : onRemove}
+    aria-label={i18n.t(job.status === 'running' ? 'job.cancel_file' : 'job.remove_file', { name: job.name })}
+    title={i18n.t(job.status === 'running' ? 'job.cancel_file' : 'job.remove_file', { name: job.name })}
+  ><Icon name="close" size={16} /></button>
 </article>
 
 <style>

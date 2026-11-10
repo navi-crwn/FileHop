@@ -45,6 +45,8 @@
   "job.retry": "Tentar de novo",
   "job.retry_wait": "Outra junção está em andamento. Tente de novo quando terminar.",
   "job.cancel": "Cancelar",
+  "job.cancel_file": "Cancelar {name}",
+  "job.remove_file": "Remover {name}",
   "job.target": "Converter para",
   "job.run": "Converter",
   "job.saved": "{pct}% menor",

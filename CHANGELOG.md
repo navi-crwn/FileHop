@@ -10,6 +10,7 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 - A test that the family list in the app equals the family manifest (`tools/hop-apps.json`, hop-assets v8) without FileHop.
 
 ### Changed
+- Every file row has an X button at its right end (32 px, 44 px on phones, always visible, with the file name in its label in all nine languages): it removes the file before it is processed, stops that one file while it runs (the others keep going), and drops a finished or failed row from the list without touching a download already made. Removing a PDF from a merge group keeps the group sound. The old per-state Remove, trash and Cancel buttons are replaced by it.
 - The top bar no longer has the family app grid (primary action, language, theme, settings, account); the family list stays in the footer.
 - (Earlier, now removed) The top bar has the family app switcher (grid button, the apps with their marks, the current one marked, arrow keys, Escape and outside click close it), placed before the language menu like in the other apps.
 - The home page grids use the hop-assets v8 bento (five family tiles in one row from 1100 px, no lone box, art capped at 160-200 px); the 3D engine, bento stylesheet and BioHop assets are byte-identical v8 copies.

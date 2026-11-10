@@ -169,7 +169,21 @@ export class Queue {
     this.running.get(job.id)?.();
     const i = this.jobs.indexOf(job);
     if (i >= 0) this.jobs.splice(i, 1);
+    // The merge result of a group went with its card: the members that were folded
+    // into it are PDFs waiting for a merge again, not orphans of a result that is gone.
+    const lostMerge = job.action === 'pdf:merge' && job.status === 'done' && job.result;
     job.result = undefined;
+    if (job.action === 'pdf:merge') {
+      const rest = this.mergeGroup();
+      if (lostMerge) for (const j of rest) if (j.status === 'merged') this.resetIfFinished(j);
+      // a merge needs two: a lone member that is still waiting goes back to its default target
+      const waiting = rest.filter(j => j.status !== 'done' && j.status !== 'merged' && !(j.status === 'running'));
+      if (rest.length === 1 && waiting.length === 1) {
+        waiting[0].action = defaultActionFor(waiting[0].det.category, waiting[0].det.ext);
+        waiting[0].opts = { ...defaultOpts(waiting[0].action) };
+        this.resetIfFinished(waiting[0]);
+      }
+    }
     this.deps.onChange();
   }
 

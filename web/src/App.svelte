@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import Icon from './lib/components/Icon.svelte';
   import JobCard from './lib/components/JobCard.svelte';
   import FormatRing from './lib/components/FormatRing.svelte';
@@ -340,6 +340,19 @@
     bump();
   }
 
+  /* Drop one file. With the keyboard on its X, focus moves to the X of the next row (the previous one
+     when it was the last), and to the add button when the list is now empty. No confirmation: it is one file. */
+  async function removeJob(job: Job) {
+    const xs = () => [...document.querySelectorAll<HTMLElement>('.card [data-rm]')];
+    const at = xs().indexOf(document.activeElement as HTMLElement);
+    queue.remove(job);
+    bump();
+    if (at < 0) return;
+    await tick();
+    const rest = xs();
+    (rest[at] ?? rest[at - 1] ?? document.querySelector<HTMLElement>('.topbar .tbtn.primary'))?.focus();
+  }
+
   function downloadOne(job: Job) {
     if (!job.result) return;
     download(job.result.blob, queue.outName(job));
@@ -649,7 +662,7 @@
                   onOpt={(k, v) => handleOpt(job, k, v)}
                   onRun={() => runOne(job)}
                   onCancel={() => { queue.cancel(job); bump(); }}
-                  onRemove={() => { queue.remove(job); bump(); }}
+                  onRemove={() => removeJob(job)}
                   onDownload={() => downloadOne(job)}
                 />
               {/each}

@@ -45,6 +45,8 @@
   "job.retry": "Try again",
   "job.retry_wait": "Another merge is running. Try again after it finishes.",
   "job.cancel": "Cancel",
+  "job.cancel_file": "Cancel {name}",
+  "job.remove_file": "Remove {name}",
   "job.target": "Convert to",
   "job.run": "Convert",
   "job.saved": "{pct}% smaller",
