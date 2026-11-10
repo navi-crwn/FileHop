@@ -22,7 +22,8 @@
     { slug: 'linkhop', name: 'LinkHop', url: 'https://link.hel.ink', mark: '/hop-marks/linkhop.svg' },
     { slug: 'biohop', name: 'BioHop', url: 'https://bio.hel.ink', mark: '/hop-marks/biohop.svg' },
     { slug: 'pixelhop', name: 'PixelHop', url: 'https://pixel.hel.ink', mark: '/hop-marks/pixelhop.svg' },
-    { slug: 'notehop', name: 'NoteHop', url: 'https://note.hel.ink', mark: '/hop-marks/notehop.svg' }
+    { slug: 'notehop', name: 'NoteHop', url: 'https://note.hel.ink', mark: '/hop-marks/notehop.svg' },
+    { slug: 'payhop', name: 'PayHop', url: 'https://pay.hel.ink', mark: '/hop-marks/payhop.svg' }
   ];
 
   /* Signed in through the hub, another app opens through the hub's launcher (/apps/{slug}),
@@ -543,12 +544,6 @@
       <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
     </button>
 
-    {#if !dash}
-    <button class="tbtn icon tsettings" type="button" onclick={() => (settingsOpen = true)} aria-label={i18n.t('nav.settings')} title={i18n.t('nav.settings')}>
-      <Icon name="gear" size={17} />
-    </button>
-    {/if}
-
     {#if account.ready && account.signedIn}
       <details class="acct" bind:this={acctEl}>
         <summary class="tbtn" aria-label={i18n.t('account.menu')} title={account.email || account.name}>
@@ -557,7 +552,7 @@
         </summary>
         <div class="acct-menu">
           <p class="small muted">{i18n.t('account.signed_in_as')}<br /><strong>{account.email || account.name}</strong></p>
-          {#if dash}<button class="acct-item" type="button" onclick={() => { closeAccountMenu(); settingsOpen = true; }}><Icon name="gear" size={15} />{i18n.t('nav.settings')}</button>{/if}
+          <button class="acct-item" type="button" onclick={() => { closeAccountMenu(); settingsOpen = true; }}><Icon name="gear" size={15} />{i18n.t('nav.settings')}</button>
           {#if account.hubUrl}<a href={account.hubUrl}>{i18n.t('account.hop_id')}</a>{/if}
           <a href={account.logoutUrl || '/auth/sso/logout'}>{i18n.t('account.sign_out')}</a>
         </div>

@@ -121,15 +121,17 @@ test('the vendored family dialog is byte-identical to hop-assets v5', () => {
   assert.equal(sri('../web/public/hop-ui/v5/hop-ui.css'), 'sha384-wfq/3oTQ0jQYJQZHY7wgY3KoulTamoM2OHTwsb4boVF+dUy7JdPUurlLswZEXSt1');
 });
 
-test('the vendored 3D engine and FileHop tile are byte-identical to hop-assets v7/v8', () => {
+test('the vendored 3D engine and FileHop tile are byte-identical to hop-assets v9', () => {
   const sri = (rel) => 'sha384-' + createHash('sha384').update(readFileSync(new URL(rel, import.meta.url))).digest('base64');
-  assert.equal(sri('../web/public/hop-home/hop-hero3d.js'), 'sha384-RRLiZqwHOXD8DslGjTvcOrBoULsadQxNqK/ma5MnPdv3stM7ua+5Dwnty9FurCZ2');
+  assert.equal(sri('../web/public/hop-home/hop-hero3d.js'), 'sha384-jks46eMaYf6sn1ojXScKsHuZ0e72rUS/LYgeG92ch4dSS4L98cXZQa2mwZCxqwZd');
   assert.equal(sri('../web/public/hop-home/home/filehop-light.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
   assert.equal(sri('../web/public/hop-home/hop-motion.js'), 'sha384-DvY+PIyNGgi1uLrJx/yTA/iSEC0iua7i0bxfSYTR3wize3FGuJHh7uVyiybCgIy9');
   assert.equal(sri('../web/public/hop-home/hop-bento.css'), 'sha384-bOrjStz51JNLCO3KWDRGFaSmFeaHih/n8b6zHe2Zap67oZNC8vUVLLBJwUTjKFJi');
-  assert.equal(sri('../web/public/hop-brand/hop-brand.css'), 'sha384-Oa0tnHfXJAtgFGyvqL2RKpFlLlw2Q9n03Jyjs7QpMBGZngNQ110SCRyu0bwjgJeY');
+  assert.equal(sri('../web/public/hop-brand/hop-brand.css'), 'sha384-ZlfcOPrd3O4mr3oM1oUKlm8jXGfSqy6eAg/f5MkNG1YigTXRJXi5gpSTO5MZYcvS');
   assert.equal(sri('../web/public/hop-brand/fonts/brand/filehop-name.woff2'), 'sha384-Fe8AUHRbf7P9J3YTQiisGXgdB7knIwB2Jkv/f4CbR/n5Ga4rEf9/gw+NWWooQnMp');
   assert.equal(sri('../web/public/hop-home/home/filehop-dark.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
+  assert.equal(sri('../web/public/hop-brand/fonts/brand/payhop-name.woff2'), 'sha384-qswotKGL1icifcrY2eYGAf8kZrPnKlmAnCIvGw0oDHYBFZYiqfiWim3QMGtg4WBV');
+  assert.ok(readFileSync(new URL('../web/public/hop-brand/hop-brand.css', import.meta.url), 'utf8').includes('.hop-name-payhop'), 'the PayHop name class is in hop-brand.css');
 });
 
 test('every category has at least one target', () => {
@@ -813,7 +815,7 @@ test('dashboard chrome follows the family spec', () => {
   assert.ok(dash.includes('{@render tools()}'), 'topbar uses the shared tools (add, language, theme, account)');
   const t0 = src.indexOf('{#snippet tools()}');
   const tools = src.slice(t0, src.indexOf('{/snippet}', t0));
-  assert.match(tools, /\{#if !dash\}\s*<button class="tbtn icon tsettings"/, 'the gear button is public-page only');
+  assert.ok(!tools.includes('tsettings'), 'no standalone gear button in the top bar (action, language, theme, account)');
   assert.ok(tools.includes('class="acct-item"') && tools.includes('nav.settings'), 'dashboard settings are in the account menu');
   assert.ok(!/class="hero/.test(dash), 'no marketing hero on the dashboard');
   assert.ok(dash.includes('{@render workspace()}') && dash.includes('class="dash-card"'), 'workspace and account card');
@@ -829,4 +831,13 @@ test('every string the dashboard adds exists in all locales', () => {
       assert.ok(typeof d[k] === 'string' && d[k].trim(), `${f} lacks ${k}`);
     }
   }
+});
+
+/* K-7: the sitemap lists the public pages only and robots.txt points to it. */
+test('sitemap.xml lists public pages only and robots.txt has the Sitemap line', () => {
+  const pub = (f) => readFileSync(new URL(`../web/public/${f}`, import.meta.url), 'utf8');
+  const urls = [...pub('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  assert.deepEqual(urls, ['https://file.hel.ink/', 'https://file.hel.ink/changelog']);
+  assert.match(pub('robots.txt'), /^Sitemap: https:\/\/file\.hel\.ink\/sitemap\.xml$/m);
+  assert.match(pub('robots.txt'), /^Disallow: \/dashboard$/m);
 });
