@@ -106,14 +106,46 @@ type changeRow struct {
 
 type changeLink struct{ Code, Name, URL string }
 
+type familyApp struct{ Slug, Name, URL, Mark string }
+
+// changeFamily is the family list of the footer, as in web/src/App.svelte (a test keeps both equal to the manifest).
+var changeFamily = []familyApp{
+	{"hub", "HOP ID", "https://hel.ink", "/hop-id-mark.png"},
+	{"linkhop", "LinkHop", "https://link.hel.ink", "/hop-marks/linkhop.svg"},
+	{"biohop", "BioHop", "https://bio.hel.ink", "/hop-marks/biohop.svg"},
+	{"pixelhop", "PixelHop", "https://pixel.hel.ink", "/hop-marks/pixelhop.svg"},
+	{"notehop", "NoteHop", "https://note.hel.ink", "/hop-marks/notehop.svg"},
+}
+
+// appStrings are the app's own dictionaries (web/src/lib/i18n), so the footer and the top bar say what the app says.
+func appStrings(lang string) map[string]string {
+	out := map[string]string{}
+	for _, l := range []string{"en", lang} {
+		b, err := web.I18n.ReadFile("src/lib/i18n/" + l + ".json")
+		if err != nil {
+			continue
+		}
+		var d map[string]string
+		if json.Unmarshal(b, &d) == nil {
+			for k, v := range d {
+				out[k] = v
+			}
+		}
+	}
+	return out
+}
+
 type changePage struct {
-	Lang, LangCode string
-	S              changeStrings
-	Rows           []changeRow
-	Page, Pages    int
-	PageLabel      string
-	Previous, Next string
-	Langs          []changeLink
+	T                 map[string]string
+	PartPre, PartPost string
+	Family            []familyApp
+	Lang, LangCode    string
+	S                 changeStrings
+	Rows              []changeRow
+	Page, Pages       int
+	PageLabel         string
+	Previous, Next    string
+	Langs             []changeLink
 }
 
 func changeURL(lang string, page int) string {
@@ -133,6 +165,9 @@ func buildChangePage(r *http.Request) changePage {
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	page = max(1, min(page, pages))
 	p := changePage{Lang: lang, S: s, Page: page, Pages: pages, LangCode: strings.ToUpper(strings.SplitN(lang, "-", 2)[0])}
+	p.T = appStrings(lang)
+	p.PartPre, p.PartPost, _ = strings.Cut(p.T["footer.part_of"], "{name}")
+	p.Family = changeFamily
 	p.PageLabel = fmt.Sprintf(s.PageOf, page, pages)
 	kinds := map[string]string{"tag": s.Release, "pr": s.PR, "commit": s.Commit}
 	for _, e := range all[(page-1)*changelogPerPage : min(page*changelogPerPage, len(all))] {

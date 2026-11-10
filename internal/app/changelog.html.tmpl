@@ -34,6 +34,7 @@
     <span class="hop-name hop-name-filehop">FileHop</span>
   </a>
   <span class="spacer"></span>
+  <a class="btn primary" href="/" id="add"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="tlabel">{{index .T "nav.add"}}</span></a>
   <details class="lang">
     <summary aria-label="{{.S.Language}}" title="{{.S.Language}}"><span>{{.LangCode}}</span></summary>
     <ul>
@@ -45,10 +46,10 @@
   <button class="icon" type="button" id="theme" aria-label="{{.S.Theme}}" title="{{.S.Theme}}">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
   </button>
+  <div id="acct" hidden data-in="{{index .T "account.signed_in_as"}}" data-hub="{{index .T "account.hop_id"}}" data-out="{{index .T "account.sign_out"}}" data-sign="{{index .T "account.sign_in"}}" data-menu="{{index .T "account.menu"}}"></div>
 </header>
 <main id="main">
   <div class="wrap">
-    <p class="eyebrow"><i></i>FileHop</p>
     <h1>{{.S.Title}}</h1>
     <p class="lead">{{.S.Lead}}</p>
     <ol class="log">
@@ -70,7 +71,35 @@
   </div>
 </main>
 <footer class="ft">
-  <a class="ft-part" href="https://hel.ink" rel="noopener"><img src="/hop-id-mark.png" alt="" width="20" height="20"><span>{{.S.PartOf}}</span></a>
+  <a class="ft-part" href="https://hel.ink" rel="noopener"><img src="/hop-id-mark.png" alt="" width="20" height="20"><span>{{.PartPre}}<b>Hop Easy Link</b>{{.PartPost}}</span></a>
+  <div class="ft-grid">
+    <div class="ft-col ft-brand">
+      <b><img src="/mark.svg" alt="" width="20" height="20"><span class="hop-name hop-name-filehop">FileHop</span></b>
+      <p>{{index .T "footer.note"}}</p>
+    </div>
+    <div class="ft-col">
+      <h2 class="ft-h">{{index .T "footer.support"}}</h2>
+      <nav aria-label="{{index .T "footer.support"}}">
+        <a href="/changelog" aria-current="page">{{index .T "footer.changelog"}}</a>
+        <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{{index .T "footer.source"}}</a>
+      </nav>
+    </div>
+    <div class="ft-col">
+      <h2 class="ft-h">{{index .T "footer.policies"}}</h2>
+      <nav aria-label="{{index .T "footer.policies"}}">
+        <a href="/#privacy">{{index .T "footer.privacy"}}</a>
+        <a href="https://hel.ink/terms" rel="noopener">{{index .T "footer.terms"}}</a>
+      </nav>
+    </div>
+    <div class="ft-col">
+      <h2 class="ft-h">{{index .T "footer.family"}}</h2>
+      <nav aria-label="{{index .T "footer.family"}}">
+        {{- range .Family}}
+        <a href="{{.URL}}" rel="noopener" data-app="{{.Slug}}"><img src="{{.Mark}}" alt="" width="16" height="16">{{.Name}}</a>
+        {{- end}}
+      </nav>
+    </div>
+  </div>
   <p class="ft-copy">© 2026 navi-crwn · MIT License</p>
 </footer>
 </body>

@@ -14,6 +14,9 @@ var dist embed.FS
 // Changelog is the snapshot of the repository history that /changelog shows
 // (scripts/build-changelog.py writes it; no GitHub call at run time).
 //
+//go:embed src/lib/i18n/*.json
+var I18n embed.FS
+
 //go:embed changelog.json
 var Changelog []byte
 
