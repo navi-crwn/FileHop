@@ -36,6 +36,12 @@
 
   /* ------------------------------------------------------------------ state */
 
+  /* /dashboard is the same app for someone signed in with HOP ID: the workspace
+     without the marketing page, inside the family's dashboard chrome. The server
+     only serves it to a verified session; this is the page's own check. */
+  const dash = typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/dashboard';
+  let navOpen = $state(false);
+
   let locale = $state(guessLocale());
   let settingsOpen = $state(false);
   let langOpen = $state(false);
@@ -108,7 +114,7 @@
   // The tab title follows too, so a bookmark made in Japanese does not read English.
   $effect(() => {
     void i18n.load(locale).then(() => {
-      document.title = i18n.t('app.title');
+      document.title = i18n.t(dash ? 'dash.title' : 'app.title');
     });
   });
 
@@ -169,6 +175,11 @@
     void loadAccount();
     const code = takeAuthError();
     if (code) showToast(i18n.t('auth.err_' + code));
+  });
+
+  // the dashboard is for a signed-in account: if the session is gone, go through the hub and come back
+  $effect(() => {
+    if (dash && account.ready && !account.signedIn && account.sso) location.replace('/auth/sso?next=%2Fdashboard');
   });
 
   // count the network requests this tab makes, so the claim is checkable
@@ -473,6 +484,7 @@
       if (document.querySelector('dialog.hop-dialog[open]')) return;
       settingsOpen = false;
       licensesOpen = false;
+      navOpen = false;
       dragging = false;
       closeAccountMenu();
       if (langOpen) { e.preventDefault(); closeLang(true); }
@@ -493,15 +505,7 @@
 
 <a class="skip" href="#main">{i18n.t('nav.skip')}</a>
 
-<div class="app">
-  <header class="topbar">
-    <span class="brand">
-      <img src="/mark.svg" alt="" width="26" height="26" />
-      <span class="hop-name hop-name-filehop">FileHop</span>
-    </span>
-
-    <span class="spacer"></span>
-
+{#snippet tools()}
     <button class="tbtn primary" type="button" onclick={pickFiles}>
       <Icon name="plus" size={17} /><span class="tlabel">{i18n.t('nav.add')}</span>
     </button>
@@ -534,9 +538,11 @@
       <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
     </button>
 
+    {#if !dash}
     <button class="tbtn icon tsettings" type="button" onclick={() => (settingsOpen = true)} aria-label={i18n.t('nav.settings')} title={i18n.t('nav.settings')}>
       <Icon name="gear" size={17} />
     </button>
+    {/if}
 
     {#if account.ready && account.signedIn}
       <details class="acct" bind:this={acctEl}>
@@ -546,6 +552,7 @@
         </summary>
         <div class="acct-menu">
           <p class="small muted">{i18n.t('account.signed_in_as')}<br /><strong>{account.email || account.name}</strong></p>
+          {#if dash}<button class="acct-item" type="button" onclick={() => { closeAccountMenu(); settingsOpen = true; }}><Icon name="gear" size={15} />{i18n.t('nav.settings')}</button>{/if}
           {#if account.hubUrl}<a href={account.hubUrl}>{i18n.t('account.hop_id')}</a>{/if}
           <a href={account.logoutUrl || '/auth/sso/logout'}>{i18n.t('account.sign_out')}</a>
         </div>
@@ -553,50 +560,9 @@
     {:else if account.ready && account.sso}
       <a class="tbtn" href="/auth/sso?next=%2F">{i18n.t('account.sign_in')}</a>
     {/if}
-  </header>
+{/snippet}
 
-  <main id="main">
-    <div class="wrap">
-      <section class="hero">
-        <div class="hero-copy">
-          <span class="eyebrow"><i></i>{i18n.t('hero.eyebrow')}</span>
-          <h1>{i18n.t('hero.h1_pre')}{#if heroBreak}<br />{:else}{' '}{/if}<em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
-          <p class="lead">{i18n.t('hero.lead')}</p>
-          <div class="cta">
-            <button class="tbtn secondary lg" type="button" onclick={pickFiles}>
-              <Icon name="upload" size={17} />{i18n.t('hero.cta')}
-            </button>
-            <button class="tbtn lg" type="button" onclick={() => (settingsOpen = true)}>
-              <Icon name="gear" size={17} />{i18n.t('nav.settings')}
-            </button>
-          </div>
-          <p class="proof"><Icon name="shield" size={15} />{i18n.t('hero.proof')}</p>
-        </div>
-
-        <div class="hero-side">
-        <figure class="hero-art" aria-hidden="true">
-          <picture><source srcset="/hop-home/home/filehop-dark.webp" media="(prefers-color-scheme: dark)"><img src="/hop-home/home/filehop-light.webp" alt="" width="200" height="200" /></picture>
-          <canvas data-hop-hero="filehop"></canvas>
-        </figure>
-        <div
-          class="zone"
-          class:over={dragging}
-          role="button"
-          tabindex="0"
-          aria-label="{i18n.t('drop.title')} — {i18n.t('drop.hint').replace('{kbd}', 'Ctrl/⌘ V')}"
-          onclick={pickFiles}
-          onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickFiles(); } }}
-        >
-          <div class="halo"></div>
-          <div class="zicon"><Icon name="upload" size={26} /></div>
-          <h2>{i18n.t('drop.title')}</h2>
-          <p>
-            {@html i18n.t('drop.hint').replace('{kbd}', '<kbd>Ctrl/⌘ V</kbd>')}
-          </p>
-        </div>
-        </div>
-      </section>
-
+{#snippet workspace()}
       <input
         bind:this={fileInput}
         class="filepicker"
@@ -670,6 +636,128 @@
           {/each}
         {/if}
       </section>
+{/snippet}
+
+{#snippet dropzone()}
+        <div
+          class="zone"
+          class:over={dragging}
+          role="button"
+          tabindex="0"
+          aria-label="{i18n.t('drop.title')} — {i18n.t('drop.hint').replace('{kbd}', 'Ctrl/⌘ V')}"
+          onclick={pickFiles}
+          onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickFiles(); } }}
+        >
+          <div class="halo"></div>
+          <div class="zicon"><Icon name="upload" size={26} /></div>
+          <h2>{i18n.t('drop.title')}</h2>
+          <p>
+            {@html i18n.t('drop.hint').replace('{kbd}', '<kbd>Ctrl/⌘ V</kbd>')}
+          </p>
+        </div>
+{/snippet}
+
+{#if dash}
+<div class="shell" class:open={navOpen}>
+  <aside class="shell-side" id="shell-side" aria-label="FileHop">
+    <a class="shell-brand" href="/dashboard">
+      <img src="/mark.svg" alt="" width="26" height="26" />
+      <span class="hop-name hop-name-filehop">FileHop</span>
+    </a>
+    <nav class="shell-nav" aria-label="FileHop">
+      <a href="/dashboard" aria-current="page"><Icon name="refresh" size={18} />{i18n.t('dash.convert')}</a>
+      <a href="/changelog"><Icon name="text" size={18} />{i18n.t('footer.changelog')}</a>
+    </nav>
+    <p class="shell-label">{i18n.t('footer.family')}</p>
+    <nav class="shell-nav" aria-label={i18n.t('footer.family')}>
+      {#each FAMILY as app (app.url)}
+        <a href={familyHref(app)} rel="noopener"><img src={app.mark} alt="" width="18" height="18" />{app.name}</a>
+      {/each}
+    </nav>
+    <div class="shell-side-foot">
+      <a href="/#privacy">{i18n.t('footer.privacy')}</a>
+      <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
+      <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
+      <button class="ft-link" type="button" onclick={() => (licensesOpen = true)}>{i18n.t('footer.licenses')}</button>
+    </div>
+  </aside>
+  {#if navOpen}<div class="shell-scrim" onclick={() => (navOpen = false)} role="presentation"></div>{/if}
+
+  <div class="shell-body">
+    <header class="topbar shell-top">
+      <button class="tbtn icon shell-burger" type="button" aria-label={i18n.t('dash.menu')} aria-controls="shell-side" aria-expanded={navOpen} onclick={() => (navOpen = !navOpen)}>
+        <Icon name={navOpen ? 'close' : 'menu'} size={17} />
+      </button>
+      <h1 class="shell-title">{i18n.t('dash.convert')}</h1>
+      <span class="spacer"></span>
+      {@render tools()}
+    </header>
+
+    <main id="main" class="shell-main">
+      <div class="dash-grid">
+        <div class="dash-work">
+          {@render dropzone()}
+          {@render workspace()}
+        </div>
+        <section class="dash-card" aria-labelledby="acc-h">
+          <h2 id="acc-h">{i18n.t('dash.account')}</h2>
+          {#if account.ready && account.signedIn}
+            <div class="acc-id">
+              <span class="dash-avatar" aria-hidden="true">{initials(account.name, account.email)}</span>
+              <div class="acc-who"><strong>{account.name || account.email}</strong>{#if account.name && account.email}<span class="small muted">{account.email}</span>{/if}</div>
+            </div>
+          {/if}
+          <p class="acc-note"><Icon name="shield" size={16} />{i18n.t('dash.never_uploaded')}</p>
+          <span class="counter"><Icon name="net" size={14} />{i18n.t('privacy.network', { n: networkCount })}</span>
+          {#if account.hubUrl}<a class="tbtn" href={account.hubUrl} rel="noopener">{i18n.t('account.hop_id')}</a>{/if}
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+{/if}
+
+{#if !dash}
+<div class="app">
+  <header class="topbar">
+    <span class="brand">
+      <img src="/mark.svg" alt="" width="26" height="26" />
+      <span class="hop-name hop-name-filehop">FileHop</span>
+    </span>
+
+    <span class="spacer"></span>
+
+    {@render tools()}
+  </header>
+
+  <main id="main">
+    <div class="wrap">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow"><i></i>{i18n.t('hero.eyebrow')}</span>
+          <h1>{i18n.t('hero.h1_pre')}{#if heroBreak}<br />{:else}{' '}{/if}<em class="acc">{i18n.t('hero.h1_accent')}</em></h1>
+          <p class="lead">{i18n.t('hero.lead')}</p>
+          <div class="cta">
+            <button class="tbtn secondary lg" type="button" onclick={pickFiles}>
+              <Icon name="upload" size={17} />{i18n.t('hero.cta')}
+            </button>
+            <button class="tbtn lg" type="button" onclick={() => (settingsOpen = true)}>
+              <Icon name="gear" size={17} />{i18n.t('nav.settings')}
+            </button>
+          </div>
+          <p class="proof"><Icon name="shield" size={15} />{i18n.t('hero.proof')}</p>
+        </div>
+
+        <div class="hero-side">
+        <figure class="hero-art" aria-hidden="true">
+          <picture><source srcset="/hop-home/home/filehop-dark.webp" media="(prefers-color-scheme: dark)"><img src="/hop-home/home/filehop-light.webp" alt="" width="200" height="200" /></picture>
+          <canvas data-hop-hero="filehop"></canvas>
+        </figure>
+        {@render dropzone()}
+        </div>
+      </section>
+
+      {@render workspace()}
 
       <section class="sec" aria-labelledby="how-h">
         <h2 id="how-h">{i18n.t('how.title')}</h2>
@@ -756,6 +844,7 @@
     </div>
   </main>
 </div>
+{/if}
 
 {#if dragging && dragCategory}
   <FormatRing

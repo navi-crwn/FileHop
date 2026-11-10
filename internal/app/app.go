@@ -68,6 +68,10 @@ func (a *App) Handler() http.Handler {
 	a.hopRoutes(m)
 
 	m.HandleFunc("GET /changelog", a.changelog)
+	m.HandleFunc("GET /dashboard", a.dashboard)
+	m.HandleFunc("GET /dashboard/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/dashboard", http.StatusMovedPermanently)
+	})
 
 	m.HandleFunc("GET /auth/sso", a.ssoStart)
 	m.HandleFunc("GET /auth/sso/callback", a.ssoCallback)

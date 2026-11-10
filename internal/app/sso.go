@@ -25,6 +25,13 @@ const (
 	sessionTTL    = 30 * 24 * time.Hour
 )
 
+// recheckAfter is how long the hub's word is trusted. A session older than
+// this is not shown as an account and does not open /dashboard until the
+// browser has been through the hub again, which costs nothing while the same
+// HOP ID is still signed in there and swaps the account if it is not. A var so
+// tests can move it.
+var recheckAfter = 5 * time.Minute
+
 // usedTickets remembers ticket ids until they expire, so each works once.
 type usedTickets struct {
 	sync.Mutex
@@ -65,7 +72,11 @@ func (a *App) ssoStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	state := randToken(32)
-	http.SetCookie(w, &http.Cookie{Name: ssoCookie, Value: state + "|" + url.QueryEscape(safeNext(r.FormValue("next"))),
+	next := ""
+	if n := r.FormValue("next"); n != "" {
+		next = safeNext(n)
+	}
+	http.SetCookie(w, &http.Cookie{Name: ssoCookie, Value: state + "|" + url.QueryEscape(next),
 		Path: "/auth/", HttpOnly: true, Secure: a.cfg.SecureCookies, SameSite: http.SameSiteLaxMode, MaxAge: 900})
 	q := url.Values{"state": {state}, "return_to": {a.cfg.BaseURL + "/auth/sso/callback"}}
 	http.Redirect(w, r, a.cfg.SSOURL+"/sso/"+url.PathEscape(a.cfg.SSOClient)+"?"+q.Encode(), http.StatusFound)
@@ -104,6 +115,14 @@ func (a *App) ssoCallback(w http.ResponseWriter, r *http.Request) {
 		a.authFail(w, r, "suspended")
 		return
 	}
+	// Whatever session this browser held belongs to whoever was signed in
+	// before; the hub has just vouched for someone, so that row ends here.
+	if c, err := r.Cookie(sessionCookie); err == nil && c.Value != "" {
+		if old, err := a.db.UserBySession(hashHex(c.Value)); err == nil && old.Sub != u.Sub {
+			log.Printf("sso: browser switched account, old session ended")
+		}
+		_ = a.db.DeleteSession(hashHex(c.Value))
+	}
 	tok := randToken(32)
 	if err := a.db.CreateSession(hashHex(tok), u.ID, sessionTTL); err != nil {
 		log.Printf("session: %v", err)
@@ -113,6 +132,9 @@ func (a *App) ssoCallback(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: sessionCookie, Value: tok, Path: "/", HttpOnly: true, Secure: a.cfg.SecureCookies,
 		SameSite: http.SameSiteLaxMode, MaxAge: int(sessionTTL.Seconds())})
 	http.SetCookie(w, &http.Cookie{Name: ssoCookie, Path: "/auth/", MaxAge: -1})
+	if next == "" {
+		next = "/dashboard"
+	}
 	http.Redirect(w, r, safeNext(next), http.StatusSeeOther)
 }
 
@@ -128,11 +150,48 @@ func (a *App) currentUser(r *http.Request) *db.User {
 	return u
 }
 
+// verifiedUser is the account to show: the session's, but only while the hub
+// has vouched for it recently. A stale session may belong to an account that
+// is no longer the one signed in at the hub (switched without signing out, or
+// signed out in another browser), so it counts as nobody until the next trip
+// through the hub.
+func (a *App) verifiedUser(r *http.Request) *db.User {
+	u := a.currentUser(r)
+	if u == nil {
+		return nil
+	}
+	c, _ := r.Cookie(sessionCookie)
+	at, err := a.db.SessionVerifiedAt(hashHex(c.Value))
+	if err != nil || time.Since(at) > recheckAfter {
+		return nil
+	}
+	return u
+}
+
+// dashboard is the signed-in workspace. Guests and stale sessions are sent
+// through the hub and come back here.
+func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
+	if !a.cfg.SSOEnabled() {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	if a.verifiedUser(r) == nil {
+		w.Header().Set("Cache-Control", "no-store")
+		http.Redirect(w, r, "/auth/sso?next="+url.QueryEscape("/dashboard"), http.StatusFound)
+		return
+	}
+	h := w.Header()
+	setAppHeaders(h)
+	h.Set("Content-Type", "text/html; charset=utf-8")
+	h.Set("Cache-Control", "no-store")
+	w.Write(a.index)
+}
+
 // apiMe tells the browser whether someone is signed in. It always answers 200
 // so a guest's console stays clean; sso:false means sign-in is not set up here.
 func (a *App) apiMe(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"sso": a.cfg.SSOEnabled(), "signed_in": false}
-	if u := a.currentUser(r); u != nil {
+	if u := a.verifiedUser(r); u != nil {
 		out["signed_in"] = true
 		out["name"] = u.Name
 		out["email"] = u.Email

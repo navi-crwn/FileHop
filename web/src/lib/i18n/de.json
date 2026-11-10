@@ -182,5 +182,10 @@
   "auth.err_expired": "Die Anmeldung hat zu lange gedauert oder wurde in einem anderen Browser begonnen. Bitte versuche es erneut.",
   "auth.err_invalid": "Dieser Anmeldelink ist nicht mehr gültig. Bitte versuche es erneut.",
   "auth.err_suspended": "Diese HOP ID ist gesperrt.",
-  "auth.err_failed": "Die Anmeldung ist bei uns fehlgeschlagen. Bitte versuche es gleich noch einmal."
+  "auth.err_failed": "Die Anmeldung ist bei uns fehlgeschlagen. Bitte versuche es gleich noch einmal.",
+  "dash.title": "Dashboard — FileHop",
+  "dash.convert": "Konvertieren",
+  "dash.menu": "Menü",
+  "dash.account": "Dein Konto",
+  "dash.never_uploaded": "Deine Dateien werden nie hochgeladen. Alles wird auf diesem Gerät konvertiert."
 }

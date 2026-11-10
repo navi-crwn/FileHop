@@ -3,7 +3,7 @@
 // Run with: node tools/unit.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -794,4 +794,39 @@ test('merge group: removing the merged result frees the folded members; removing
   q.remove(jobs[0]); // the result itself: b.pdf is a waiting PDF again, not an orphan
   assert.equal(jobs[1].status, 'queued');
   assert.equal(jobs[1].action, 'pdf:split', 'alone, it falls back to a target that works');
+});
+
+/* The dashboard (/dashboard) lives in App.svelte next to the public page. There is no DOM
+   library in this repository, so these read the component's source for what the family
+   chrome spec fixes: one list of HOP family apps without FileHop itself, no separate gear
+   button in the dashboard topbar (settings sit in the account menu), and every string the
+   dashboard uses present in all nine languages. */
+test('dashboard chrome follows the family spec', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const start = src.indexOf('<div class="shell"');
+  const end = src.indexOf('<div class="app">');
+  assert.ok(start > 0 && end > start, 'dashboard block found');
+  const dash = src.slice(start, src.indexOf('</main>', start));
+  assert.ok(dash.includes('class="shell-side"') && dash.includes('class="topbar shell-top"'), 'sidebar and topbar exist');
+  assert.ok(dash.includes('{#each FAMILY as app'), 'the HOP family list is in the sidebar');
+  assert.ok(!src.includes("slug: 'filehop'"), 'FileHop is not in its own family list');
+  assert.ok(dash.includes('{@render tools()}'), 'topbar uses the shared tools (add, language, theme, account)');
+  const t0 = src.indexOf('{#snippet tools()}');
+  const tools = src.slice(t0, src.indexOf('{/snippet}', t0));
+  assert.match(tools, /\{#if !dash\}\s*<button class="tbtn icon tsettings"/, 'the gear button is public-page only');
+  assert.ok(tools.includes('class="acct-item"') && tools.includes('nav.settings'), 'dashboard settings are in the account menu');
+  assert.ok(!/class="hero/.test(dash), 'no marketing hero on the dashboard');
+  assert.ok(dash.includes('{@render workspace()}') && dash.includes('class="dash-card"'), 'workspace and account card');
+});
+
+test('every string the dashboard adds exists in all locales', () => {
+  const dir = new URL('../web/src/lib/i18n/', import.meta.url);
+  const files = readdirSync(dir).filter((x) => x.endsWith('.json'));
+  assert.equal(files.length, 9);
+  for (const f of files) {
+    const d = JSON.parse(readFileSync(new URL(f, dir), 'utf8'));
+    for (const k of ['dash.title', 'dash.convert', 'dash.menu', 'dash.account', 'dash.never_uploaded']) {
+      assert.ok(typeof d[k] === 'string' && d[k].trim(), `${f} lacks ${k}`);
+    }
+  }
 });

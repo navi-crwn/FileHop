@@ -818,3 +818,67 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 /* resting style = the final frame; with reduced motion no scene moves */
 @media (prefers-reduced-motion: reduce) { .sc * { animation: none !important; } .sc-img .a, .sc-data .a, .sc-text .a { opacity: 0; } }
 
+
+/* ---------- /dashboard (signed in with HOP ID) ----------
+   The family's dashboard chrome: a floating sidebar (this app's menu, then the HOP family), a topbar of
+   primary action · language · theme · account, and the same converter workspace as the home page.
+   Frames use --line-2 so the edge reads against the page in both themes. */
+.shell { --side: 264px; min-height: 100vh; }
+.shell-side {
+  position: fixed; inset: 12px auto 12px 12px; width: calc(var(--side) - 12px); z-index: 60;
+  display: flex; flex-direction: column; padding: 8px 10px 10px; overflow-y: auto; overscroll-behavior: contain;
+  border: 1px solid var(--line-2); border-radius: 24px; background: var(--panel); box-shadow: var(--shadow);
+  transition: transform .28s cubic-bezier(.2, .8, .2, 1), visibility .28s;
+}
+.shell-brand { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 10px; font-weight: 750; font-size: 1.1rem; letter-spacing: -.02em; color: var(--text); text-decoration: none; }
+.shell-brand img { width: 26px; height: 26px; display: block; }
+.shell-nav { display: grid; gap: 2px; margin-bottom: 6px; }
+.shell-nav a { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; border-radius: 12px; color: var(--muted); font-size: 14.5px; font-weight: 550; text-decoration: none; transition: background-color .15s, color .15s; }
+.shell-nav a svg { width: 18px; height: 18px; flex: none; }
+.shell-nav a img { width: 18px; height: 18px; flex: none; border-radius: 5px; object-fit: contain; }
+.shell-nav a:hover { background: var(--panel-2); color: var(--text); }
+.shell-nav a[aria-current="page"] { background: var(--panel-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+.shell-nav a[aria-current="page"] svg { color: var(--amber-soft); }
+.shell-label { margin: 14px 12px 6px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.shell-side-foot { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: auto 0 0; padding: 12px 12px 4px; border-top: 1px solid var(--line-2); font-size: 12.5px; }
+.shell-side-foot a, .shell-side-foot .ft-link { color: var(--muted); font-size: 12.5px; text-decoration: none; }
+.shell-side-foot a:hover, .shell-side-foot .ft-link:hover { color: var(--text); }
+.shell-body { margin-inline-start: var(--side); min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }
+.shell-top { top: 12px; margin: 12px 12px 0; padding: 0 10px; height: 56px; border: 1px solid var(--line-2); border-radius: 18px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
+.shell-burger { display: none; }
+.shell-main { flex: 1; padding: 18px 12px 28px; min-width: 0; }
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; max-width: 1180px; }
+.dash-work { min-width: 0; }
+.dash-work .zone { padding: 26px 22px 22px; }
+.dash-work .queue { margin-top: 22px; }
+.dash-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px;
+  border: 1px solid var(--line-2); border-radius: var(--hop-card-radius); background: var(--panel);
+}
+.dash-card h2 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.acc-id { display: flex; align-items: center; gap: 12px; min-width: 0; max-width: 100%; }
+.acc-who { display: grid; min-width: 0; }
+.acc-who strong, .acc-who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-avatar { display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--amber); color: var(--on-accent); font: 600 14px/1 var(--mono); }
+.acc-note { display: flex; gap: 8px; margin: 0; font-size: 13.5px; color: var(--muted); }
+.acc-note svg { flex: none; margin-top: 2px; color: var(--green); }
+.acct-menu button.acct-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.acct-menu button.acct-item:hover, .acct-menu button.acct-item:focus-visible { background: var(--soft, rgb(127 127 127 / 0.12)); }
+.shell-scrim { position: fixed; inset: 0; z-index: 55; background: rgba(2, 6, 23, .55); }
+@media (max-width: 1100px) { .dash-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1023px) {
+  .shell { --side: 0px; }
+  .shell-side { width: min(300px, calc(100vw - 24px)); transform: translateX(calc(-100% - 24px)); visibility: hidden; }
+  .shell.open .shell-side { transform: none; visibility: visible; }
+  .shell-burger { display: inline-flex; }
+  .shell-body { margin-inline-start: 0; }
+}
+@media (max-width: 639px) {
+  .shell-top { margin: 8px 8px 0; padding: 0 8px; gap: 6px; }
+  .shell-main { padding: 12px 8px 24px; }
+  .shell-top .tbtn.primary { width: var(--hop-ctl-h); padding: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .shell-side { transition: none; } }
+
+.shell-title { margin: 0 0 0 4px; font-size: 15px; font-weight: 700; letter-spacing: 0; }
+@media (max-width: 639px) { .shell-title { display: none; } }

@@ -182,5 +182,10 @@
   "auth.err_expired": "The sign-in took too long or started in another browser. Please try again.",
   "auth.err_invalid": "This sign-in link is not valid any more. Please try again.",
   "auth.err_suspended": "This HOP ID is suspended.",
-  "auth.err_failed": "Signing in failed on our side. Please try again in a moment."
+  "auth.err_failed": "Signing in failed on our side. Please try again in a moment.",
+  "dash.title": "Dashboard — FileHop",
+  "dash.convert": "Convert",
+  "dash.menu": "Menu",
+  "dash.account": "Your account",
+  "dash.never_uploaded": "Your files are never uploaded. Everything is converted on this device."
 }

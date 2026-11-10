@@ -182,5 +182,10 @@
   "auth.err_expired": "La connexion a pris trop de temps ou a commencé dans un autre navigateur. Réessayez.",
   "auth.err_invalid": "Ce lien de connexion n’est plus valide. Réessayez.",
   "auth.err_suspended": "Ce HOP ID est suspendu.",
-  "auth.err_failed": "La connexion a échoué de notre côté. Réessayez dans un instant."
+  "auth.err_failed": "La connexion a échoué de notre côté. Réessayez dans un instant.",
+  "dash.title": "Tableau de bord — FileHop",
+  "dash.convert": "Convertir",
+  "dash.menu": "Menu",
+  "dash.account": "Votre compte",
+  "dash.never_uploaded": "Vos fichiers ne sont jamais envoyés. Tout est converti sur cet appareil."
 }

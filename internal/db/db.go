@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS sessions (
   hash       TEXT PRIMARY KEY,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  expires_at INTEGER NOT NULL
+  expires_at INTEGER NOT NULL,
+  verified_at INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS sessions_user ON sessions(user_id);
 CREATE TABLE IF NOT EXISTS events (
@@ -66,6 +67,15 @@ func Open(path string) (*DB, error) {
 	if _, err := s.Exec(schema); err != nil {
 		s.Close()
 		return nil, fmt.Errorf("schema: %w", err)
+	}
+	// A database made before verified_at existed: add the column once. Sessions
+	// from before count as never verified, so the first visit re-checks them.
+	var has int
+	if err := s.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'verified_at'`).Scan(&has); err == nil && has == 0 {
+		if _, err := s.Exec(`ALTER TABLE sessions ADD COLUMN verified_at INTEGER NOT NULL DEFAULT 0`); err != nil {
+			s.Close()
+			return nil, fmt.Errorf("migrate: %w", err)
+		}
 	}
 	return &DB{sql: s}, nil
 }
@@ -131,9 +141,20 @@ func mustTouch(res sql.Result, err error) error {
 // ---- sessions ----
 
 func (d *DB) CreateSession(hash string, userID int64, ttl time.Duration) error {
-	_, err := d.sql.Exec(`INSERT INTO sessions (hash, user_id, expires_at) VALUES (?, ?, ?)`,
-		hash, userID, time.Now().Add(ttl).Unix())
+	_, err := d.sql.Exec(`INSERT INTO sessions (hash, user_id, expires_at, verified_at) VALUES (?, ?, ?, ?)`,
+		hash, userID, time.Now().Add(ttl).Unix(), time.Now().Unix())
 	return err
+}
+
+// SessionVerifiedAt is when the hub last vouched for this session: the moment
+// its ticket was accepted (0 for a session older than the column).
+func (d *DB) SessionVerifiedAt(hash string) (time.Time, error) {
+	var at int64
+	err := d.sql.QueryRow(`SELECT verified_at FROM sessions WHERE hash = ? AND expires_at > ?`, hash, time.Now().Unix()).Scan(&at)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Unix(at, 0), nil
 }
 
 // UserBySession returns the account behind a live session.

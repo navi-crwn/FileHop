@@ -182,5 +182,10 @@
   "auth.err_expired": "ログインに時間がかかりすぎたか、別のブラウザで開始されました。もう一度お試しください。",
   "auth.err_invalid": "このログインリンクはもう有効ではありません。もう一度お試しください。",
   "auth.err_suspended": "この HOP ID は停止されています。",
-  "auth.err_failed": "こちら側でログインに失敗しました。しばらくしてからもう一度お試しください。"
+  "auth.err_failed": "こちら側でログインに失敗しました。しばらくしてからもう一度お試しください。",
+  "dash.title": "ダッシュボード — FileHop",
+  "dash.convert": "変換",
+  "dash.menu": "メニュー",
+  "dash.account": "アカウント",
+  "dash.never_uploaded": "ファイルはアップロードされません。変換はすべてこのデバイス上で行われます。"
 }
