@@ -45,6 +45,8 @@
   "job.retry": "再試行",
   "job.retry_wait": "別の結合が実行中です。完了してから再試行してください。",
   "job.cancel": "キャンセル",
+  "job.cancel_file": "{name} をキャンセル",
+  "job.remove_file": "{name} を削除",
   "job.target": "変換先",
   "job.run": "変換",
   "job.saved": "{pct}% 小さくなりました",

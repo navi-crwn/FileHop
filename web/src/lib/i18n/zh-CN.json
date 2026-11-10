@@ -45,6 +45,8 @@
   "job.retry": "重试",
   "job.retry_wait": "另一个合并正在进行。完成后再重试。",
   "job.cancel": "取消",
+  "job.cancel_file": "取消 {name}",
+  "job.remove_file": "移除 {name}",
   "job.target": "转换为",
   "job.run": "转换",
   "job.saved": "小了 {pct}%",

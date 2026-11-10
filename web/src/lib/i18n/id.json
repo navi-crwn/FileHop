@@ -45,6 +45,8 @@
   "job.retry": "Coba lagi",
   "job.retry_wait": "Merge lain sedang berjalan. Coba lagi setelah selesai.",
   "job.cancel": "Batalkan",
+  "job.cancel_file": "Batalkan {name}",
+  "job.remove_file": "Hapus {name}",
   "job.target": "Konversi ke",
   "job.run": "Konversi",
   "job.saved": "{pct}% lebih kecil",

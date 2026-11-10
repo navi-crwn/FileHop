@@ -45,6 +45,8 @@
   "job.retry": "Nochmal versuchen",
   "job.retry_wait": "Eine andere Zusammenführung läuft gerade. Versuche es nochmal, wenn sie fertig ist.",
   "job.cancel": "Abbrechen",
+  "job.cancel_file": "{name} abbrechen",
+  "job.remove_file": "{name} entfernen",
   "job.target": "Konvertieren zu",
   "job.run": "Konvertieren",
   "job.saved": "{pct}% kleiner",

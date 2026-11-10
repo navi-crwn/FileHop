@@ -426,7 +426,7 @@ test('an earlier queued joiner cannot displace the running merge or hide Cancel'
   assert.deepEqual(pool.calls[0].payload.group.map(f => f.name), ['b.pdf', 'c.pdf']);
   assert.equal(actions.mergeCarrier(q.jobs), jobs[1], 'running carrier wins globally over earlier queued A');
   assert.equal(actions.isAbsorbed(jobs[1], q.jobs), false);
-  assert.deepEqual(cardButtons(jobs[1], q.jobs), [en['job.cancel']], 'running B exposes Cancel');
+  assert.deepEqual(cardButtons(jobs[1], q.jobs), [], 'running B has no text button; its X cancels');
   assert.equal(actions.isAbsorbed(jobs[2], q.jobs), true, 'C is already absorbed by running B');
   await q.runOne(jobs[0]);
   assert.equal(pool.calls.length, 1, 'A cannot start a concurrent second merge');
@@ -450,7 +450,7 @@ test('bulk Merge selection preserves completed result ownership and Download', a
   assert.equal(jobs[0].status, 'done');
   assert.equal(jobs[0].result, result, 'same-action bulk selection does not clear the result');
   assert.equal(jobs[0].result.name, 'finished.pdf');
-  assert.deepEqual(cardButtons(jobs[0], q.jobs), [en['job.download'], en['job.remove']]);
+  assert.deepEqual(cardButtons(jobs[0], q.jobs), [en['job.download']]);
   q.setActionForCategory('pdf', 'pdf:split'); // another target: the chip must do something
   assert.equal(jobs[0].action, 'pdf:split');
   assert.equal(jobs[0].status, 'queued', 'a different bulk target re-queues the finished card');
@@ -473,7 +473,7 @@ test('a failed carrier beside a queued member exposes error and Retry in the rea
   } });
   assert.match(body, /class="err"/, 'the error remains visible');
   assert.match(body, /err\.worker_crash|Worker crashed|worker/i, 'the error text remains visible');
-  assert.deepEqual(cardButtons(jobs[0], q.jobs), [en['job.retry'], ''], 'Retry and icon-only Remove remain available');
+  assert.deepEqual(cardButtons(jobs[0], q.jobs), [en['job.retry']], 'Retry remains available; Remove is the row X');
 });
 
 test('completion uses the execution action, not mutable card state', async () => {
@@ -533,7 +533,7 @@ test('a failed carrier exposes a queued member, and that member\'s success folds
   assert.equal(jobs[0].error, undefined, 'its old error no longer holds');
   assert.equal(jobs[1].result.name, 'after-error.pdf');
   assert.equal(actions.isAbsorbed(jobs[1], q.jobs), false);
-  assert.deepEqual(cardButtons(jobs[0], q.jobs), [en['job.remove']], 'nothing left to retry on the folded card');
+  assert.deepEqual(cardButtons(jobs[0], q.jobs), [], 'nothing left to retry on the folded card');
   assert.equal(pool.calls.length, 2, 'the group was merged once after the failure');
 });
 
@@ -596,7 +596,7 @@ test('SSR Retry is disabled with a visible hint while B runs, then B\'s result f
   } });
   assert.ok(!/retry-wait-/.test(after), 'the hint is gone once no merge runs');
   assert.ok(!/class="err"/.test(after), 'and so is the old error');
-  assert.deepEqual(cardButtons(jobs[0], q.jobs), [en['job.remove']]);
+  assert.deepEqual(cardButtons(jobs[0], q.jobs), []);
   assert.equal(pool.calls.length, 2, 'no third merge');
 });
 
@@ -651,7 +651,7 @@ test('a merge stopped while it ran can be tried again and joins the same PDFs', 
   await stopped;
   assert.equal(jobs[0].status, 'canceled');
   assert.equal(actions.isAbsorbed(jobs[0], q.jobs), false, 'the stopped card is not shown as folded into a merge');
-  assert.deepEqual(cardButtons(jobs[0], q.jobs), [en['job.retry'], ''], 'Retry and icon-only Remove');
+  assert.deepEqual(cardButtons(jobs[0], q.jobs), [en['job.retry']], 'Retry; Remove is the row X');
   const again = q.runOne(jobs[0]);
   assert.equal(pool.calls.length, 2, 'Retry starts the merge again');
   assert.deepEqual(pool.calls[1].payload.group.map(f => f.name), ['a.pdf', 'b.pdf']);
@@ -704,4 +704,94 @@ test('the changelog scripts list FileHop and the snapshot is FileHop only', () =
   const snap = JSON.parse(readFileSync(new URL('../web/changelog.json', import.meta.url), 'utf8'));
   assert.deepEqual(Object.keys(snap.sources), ['FileHop']);
   assert.ok(snap.entries.length > 0 && snap.entries.every(e => e.repo === 'FileHop'));
+});
+
+/* The X at the end of every row (owner request): one button per row, last in the card, with the file name in
+   its label. A running file is stopped (other files keep running); anything else leaves the list. */
+function rowX(job, jobs) {
+  const noop = () => {};
+  const { body } = render(JobCard, { props: {
+    job, pdfCount: jobs.length, absorbed: actions.isAbsorbed(job, jobs),
+    onAction: noop, onOpt: noop, onRun: noop, onCancel: noop, onRemove: noop, onDownload: noop
+  } });
+  const all = [...body.matchAll(/<button\b([^>]*)>/g)].map(m => m[1]);
+  const x = all.filter(a => /data-rm/.test(a));
+  assert.equal(x.length, 1, 'exactly one X per row');
+  assert.ok(/data-rm/.test(all[all.length - 1]), 'the X is the last control of the card');
+  return x[0].match(/aria-label="([^"]*)"/)[1];
+}
+const label = (key, name) => en[key].replace('{name}', name);
+
+test('every state has one X with the file name: Cancel while running, Remove otherwise', async () => {
+  const { q, jobs } = await queueWith(['a.pdf', 'b.pdf', 'c.pdf']);
+  assert.equal(rowX(jobs[0], q.jobs), label('job.remove_file', 'a.pdf'), 'queued');
+  const run = q.runOne(jobs[1]);
+  assert.equal(rowX(jobs[1], q.jobs), label('job.cancel_file', 'b.pdf'), 'running');
+  q.cancel(jobs[1]); await run;
+  assert.equal(jobs[1].status, 'canceled');
+  assert.equal(rowX(jobs[1], q.jobs), label('job.remove_file', 'b.pdf'), 'stopped');
+  jobs[2].status = 'done'; jobs[2].result = mergedResult('c-out.pdf');
+  assert.equal(rowX(jobs[2], q.jobs), label('job.remove_file', 'c.pdf'), 'done');
+  jobs[2].status = 'error'; jobs[2].error = 'cannot_decode';
+  assert.equal(rowX(jobs[2], q.jobs), label('job.remove_file', 'c.pdf'), 'failed');
+});
+
+test('X on a queued file removes only it, before anything is processed', async () => {
+  const { pool, q, jobs } = await queueWith(['a.pdf', 'b.pdf', 'c.pdf']);
+  q.remove(jobs[1]);
+  assert.deepEqual(q.jobs.map(j => j.name), ['a.pdf', 'c.pdf']);
+  assert.equal(pool.calls.length, 0, 'nothing was started');
+});
+
+test('X on a running file stops that file only; the others keep running', async () => {
+  const { pool, q, jobs } = await queueWith(['a.pdf', 'b.pdf']);
+  const ra = q.runOne(jobs[0]);
+  const rb = q.runOne(jobs[1]);
+  assert.equal(pool.calls.length, 2);
+  q.cancel(jobs[0]);
+  await ra;
+  assert.equal(jobs[0].status, 'canceled');
+  assert.equal(jobs[1].status, 'running', 'the other file is untouched');
+  pool.calls[1].resolve(mergedResult('b-out.pdf'));
+  await rb;
+  assert.equal(jobs[1].status, 'done');
+});
+
+test('removing a finished file leaves the others and their results alone', async () => {
+  const { pool, q, jobs } = await queueWith(['a.pdf', 'b.pdf']);
+  const ra = q.runOne(jobs[0]);
+  pool.calls[0].resolve(mergedResult('a-out.pdf'));
+  await ra;
+  const kept = jobs[0].result;
+  q.remove(jobs[1]);
+  assert.deepEqual(q.jobs.map(j => j.name), ['a.pdf']);
+  assert.equal(jobs[0].status, 'done');
+  assert.equal(jobs[0].result, kept);
+});
+
+test('merge group: removing a member keeps the group sound', async () => {
+  const { pool, q, jobs } = await queueWith(['a.pdf', 'b.pdf', 'c.pdf']);
+  for (const j of jobs) q.setAction(j, 'pdf:merge');
+  q.remove(jobs[0]); // the carrier: the next queued PDF takes over
+  assert.equal(actions.mergeCarrier(q.jobs), jobs[1]);
+  assert.deepEqual(q.groupFor(jobs[1]).map(f => f.name), ['b.pdf', 'c.pdf']);
+  q.remove(jobs[2]); // one member left: it goes back to a target that works alone
+  assert.equal(jobs[1].action, 'pdf:split');
+  assert.equal(jobs[1].status, 'queued');
+  assert.equal(pool.calls.length, 0);
+});
+
+test('merge group: removing the merged result frees the folded members; removing a folded member keeps the result', async () => {
+  const { pool, q, jobs } = await queueWith(['a.pdf', 'b.pdf', 'c.pdf']);
+  for (const j of jobs) q.setAction(j, 'pdf:merge');
+  const run = q.runOne(jobs[0]);
+  pool.calls[0].resolve(mergedResult());
+  await run;
+  assert.deepEqual(jobs.map(j => j.status), ['done', 'merged', 'merged']);
+  q.remove(jobs[2]); // a folded member: the result stays
+  assert.equal(jobs[0].status, 'done');
+  assert.ok(jobs[0].result);
+  q.remove(jobs[0]); // the result itself: b.pdf is a waiting PDF again, not an orphan
+  assert.equal(jobs[1].status, 'queued');
+  assert.equal(jobs[1].action, 'pdf:split', 'alone, it falls back to a target that works');
 });

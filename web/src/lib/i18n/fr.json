@@ -45,6 +45,8 @@
   "job.retry": "Réessayer",
   "job.retry_wait": "Une autre fusion est en cours. Réessayez quand elle sera terminée.",
   "job.cancel": "Annuler",
+  "job.cancel_file": "Annuler {name}",
+  "job.remove_file": "Retirer {name}",
   "job.target": "Convertir en",
   "job.run": "Convertir",
   "job.saved": "{pct}% plus léger",
