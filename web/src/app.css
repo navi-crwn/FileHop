@@ -595,7 +595,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
   .card { grid-template-columns: 38px minmax(0, 1fr); }
   .card .side { grid-column: 1 / -1; justify-content: flex-start; max-width: none; }
   .topbar { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
-  .brand .word { display: none; }
+  .brand .hop-name { display: none; }
 }
 
 /* phones: one row, as the family chrome has it (primary action, language, theme, account).

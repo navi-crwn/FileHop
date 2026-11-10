@@ -127,6 +127,8 @@ test('the vendored 3D engine and FileHop tile are byte-identical to hop-assets v
   assert.equal(sri('../web/public/hop-home/home/filehop-light.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
   assert.equal(sri('../web/public/hop-home/hop-motion.js'), 'sha384-DvY+PIyNGgi1uLrJx/yTA/iSEC0iua7i0bxfSYTR3wize3FGuJHh7uVyiybCgIy9');
   assert.equal(sri('../web/public/hop-home/hop-bento.css'), 'sha384-TM9TeCB0nSXTrjGeJpPiD92LM8OIy3VuxTn8MeGzHtzYobIbmsKCw+D6BE+hsG3J');
+  assert.equal(sri('../web/public/hop-brand/hop-brand.css'), 'sha384-Oa0tnHfXJAtgFGyvqL2RKpFlLlw2Q9n03Jyjs7QpMBGZngNQ110SCRyu0bwjgJeY');
+  assert.equal(sri('../web/public/hop-brand/fonts/brand/filehop-name.woff2'), 'sha384-Fe8AUHRbf7P9J3YTQiisGXgdB7knIwB2Jkv/f4CbR/n5Ga4rEf9/gw+NWWooQnMp');
   assert.equal(sri('../web/public/hop-home/home/filehop-dark.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
 });
 

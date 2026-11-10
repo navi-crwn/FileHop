@@ -5,6 +5,7 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 ## [Unreleased]
 
 ### Changed
+- The header and footer show the mark and the app name as real text in the app's own typeface (hop-assets v7 brand fonts: name-only subsets, vendored byte-identical, SIL OFL).
 - The formats section is one bento that fills whole rows, with a small scene in each box that runs only while it is on screen; the 3D engine, the motion script and the bento stylesheet are vendored copies of hop-assets v7 (pinned by hash in a test).
 - The top bar uses the family language menu (a short code such as EN that opens a list with the native name and the code, Escape, outside click and arrow keys) and the settings button is always shown, the same size as the theme button.
 - The footer has the same structure as the other apps (the app, Support, Policies, HOP family with each app's mark, then the copyright line), and the hero shows FileHop's own 3D mark (v6 engine and WebP, vendored byte-identical).

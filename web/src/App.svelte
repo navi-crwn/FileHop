@@ -484,7 +484,7 @@
   <header class="topbar">
     <span class="brand">
       <img src="/mark.svg" alt="" width="26" height="26" />
-      <span class="word"><b>File</b><span>Hop</span></span>
+      <span class="hop-name hop-name-filehop">FileHop</span>
     </span>
 
     <span class="spacer"></span>
@@ -711,7 +711,7 @@
         </a>
         <div class="ft-grid">
           <div class="ft-col ft-brand">
-            <b><img src="/mark.svg" alt="" width="20" height="20" />FileHop</b>
+            <b><img src="/mark.svg" alt="" width="20" height="20" /><span class="hop-name hop-name-filehop">FileHop</span></b>
             <p>{i18n.t('footer.note')}</p>
           </div>
           <div class="ft-col">
