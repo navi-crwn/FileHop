@@ -126,7 +126,7 @@ test('the vendored 3D engine and FileHop tile are byte-identical to hop-assets v
   assert.equal(sri('../web/public/hop-home/hop-hero3d.js'), 'sha384-jks46eMaYf6sn1ojXScKsHuZ0e72rUS/LYgeG92ch4dSS4L98cXZQa2mwZCxqwZd');
   assert.equal(sri('../web/public/hop-home/home/filehop-light.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
   assert.equal(sri('../web/public/hop-home/hop-motion.js'), 'sha384-DvY+PIyNGgi1uLrJx/yTA/iSEC0iua7i0bxfSYTR3wize3FGuJHh7uVyiybCgIy9');
-  assert.equal(sri('../web/public/hop-home/hop-bento.css'), 'sha384-bOrjStz51JNLCO3KWDRGFaSmFeaHih/n8b6zHe2Zap67oZNC8vUVLLBJwUTjKFJi');
+  assert.equal(sri('../web/public/hop-home/hop-bento.css'), 'sha384-VQTSy6AyvXkz95G0y5qnYl3Y5/VCLRvE4V/kPPS5FulMFcc89uHn4I+NzXsfuAAT');
   assert.equal(sri('../web/public/hop-brand/hop-brand.css'), 'sha384-ZlfcOPrd3O4mr3oM1oUKlm8jXGfSqy6eAg/f5MkNG1YigTXRJXi5gpSTO5MZYcvS');
   assert.equal(sri('../web/public/hop-brand/fonts/brand/filehop-name.woff2'), 'sha384-Fe8AUHRbf7P9J3YTQiisGXgdB7knIwB2Jkv/f4CbR/n5Ga4rEf9/gw+NWWooQnMp');
   assert.equal(sri('../web/public/hop-home/home/filehop-dark.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
@@ -840,4 +840,16 @@ test('sitemap.xml lists public pages only and robots.txt has the Sitemap line', 
   assert.deepEqual(urls, ['https://file.hel.ink/', 'https://file.hel.ink/changelog']);
   assert.match(pub('robots.txt'), /^Sitemap: https:\/\/file\.hel\.ink\/sitemap\.xml$/m);
   assert.match(pub('robots.txt'), /^Disallow: \/dashboard$/m);
+});
+
+/* Settings stay reachable without a gear in the top bar: a footer item for everyone (guests included)
+   and an item in the account menu for people signed in. */
+test('settings are reachable by guests (footer) and by signed-in people (account menu), not by a top-bar gear', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const foot = src.slice(src.indexOf('<footer'), src.indexOf('</footer>'));
+  assert.match(foot, /<button class="ft-link" type="button" data-settings onclick=\{\(\) => \(settingsOpen = true\)\}>\{i18n\.t\('nav\.settings'\)\}<\/button>/);
+  assert.ok(!/\{#if account/.test(foot), 'the footer item is not behind a sign-in check');
+  const t0 = src.indexOf('{#snippet tools()}');
+  const menu = src.slice(src.indexOf('<div class="acct-menu">', t0), src.indexOf('</details>', t0));
+  assert.ok(menu.includes('settingsOpen = true') && menu.includes("nav.settings") && !/\{#if dash\}/.test(menu), 'account menu item, on every page');
 });

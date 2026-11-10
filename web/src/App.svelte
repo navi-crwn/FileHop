@@ -820,6 +820,7 @@
             <nav aria-label={i18n.t('footer.support')}>
               <a href="/changelog">{i18n.t('footer.changelog')}</a>
               <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
+              <button class="ft-link" type="button" data-settings onclick={() => (settingsOpen = true)}>{i18n.t('nav.settings')}</button>
             </nav>
           </div>
           <div class="ft-col">

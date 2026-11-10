@@ -136,6 +136,7 @@ func main() {
 		issue(w, r, r.FormValue("return_to"), r.FormValue("state"), r.FormValue("sub"), r.FormValue("name"), r.FormValue("email"), r.FormValue("status"))
 	})
 	// The real hub ends its own session, then walks every app's logout path in turn.
+	m.HandleFunc("GET /up", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 	m.HandleFunc("GET /logout", func(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{Name: "stub_acct", Path: "/", MaxAge: -1})
 		http.Redirect(w, r, app+"/auth/sso/logout?next="+url.QueryEscape(self+"/?out=signed+out+everywhere"), http.StatusFound)

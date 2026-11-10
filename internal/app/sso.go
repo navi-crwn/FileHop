@@ -212,7 +212,13 @@ func (a *App) sessionState(r *http.Request) (*db.User, bool) {
 	}
 	c, _ := r.Cookie(sessionCookie)
 	at, err := a.db.SessionVerifiedAt(hashHex(c.Value))
-	return u, err == nil && time.Since(at) <= recheckAfter
+	fresh := err == nil && time.Since(at) <= recheckAfter
+	if !fresh && a.cfg.SSOEnabled() && !a.hubUp() {
+		// Family rule: with the hub unreachable the app's own session stays trusted. Nobody is
+		// redirected, signed out or turned into a guest; the re-check happens once the hub is back.
+		fresh = true
+	}
+	return u, fresh
 }
 
 // dashboard is the signed-in workspace. Guests and stale sessions are sent
@@ -226,7 +232,7 @@ func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		switch {
 		case !a.hubUp():
-			// no way to sign in or re-check while the hub is down: say so rather than send the browser there
+			// no session here and no way to sign in while the hub is down: say so rather than send the browser there
 			http.Redirect(w, r, "/?auth=hub", http.StatusFound)
 		case r.URL.Query().Get("_rc") != "":
 			// just back from the hub and still no readable session: say so, do not go round again
@@ -251,8 +257,8 @@ func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
 func (a *App) apiMe(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{"sso": a.cfg.SSOEnabled(), "signed_in": false}
 	if u, fresh := a.sessionState(r); u != nil && !fresh {
-		// The page may re-check once, quietly, through the hub, but never when the hub is down:
-		// the browser would be sent to its own error page. Then the page simply acts as a guest.
+		// The page may re-check once, quietly, through the hub. With the hub down sessionState
+		// trusts the session instead, so this branch only runs while the hub answers.
 		if a.cfg.SSOEnabled() && a.hubUp() {
 			out["stale"] = true
 		}
