@@ -246,6 +246,32 @@ const scenarios = {
     await p.close();
   },
 
+  async lostreveal(b) {
+    // the answerer's (A's) first reveal never reaches B: the pairing must still complete
+    const drop = () => {
+      const o = RTCDataChannel.prototype.send; let dropped = false;
+      RTCDataChannel.prototype.send = function (d) { if (!dropped && typeof d === 'string' && d.includes('"reveal"')) { dropped = true; return; } return o.call(this, d); };
+    };
+    const p = await pair(b, { initA: drop });
+    check('with the first reveal lost, both screens still show the same number', p.sas[0] === p.sas[1], p.sas.join(' / '));
+    await p.close();
+  },
+
+  async revealnoise(b) {
+    const keep = () => {
+      const o = RTCPeerConnection.prototype.createDataChannel;
+      RTCPeerConnection.prototype.createDataChannel = function (...a) { const dc = o.apply(this, a); window.__dc = dc; window.__msgs = []; dc.addEventListener('message', (e) => window.__msgs.push(e.data)); return dc; };
+    };
+    const p = await pair(b, { initB: keep }); // both pressed Match
+    const before = await p.B.page.evaluate(() => window.__msgs.length);
+    await p.B.page.evaluate(() => { for (let i = 0; i < 3; i++) window.__dc.send(JSON.stringify({ t: 'reveal', n: '00' })); });
+    await new Promise((r) => setTimeout(r, 1500));
+    const after = await p.B.page.evaluate(() => window.__msgs.length);
+    check('after both matched, extra reveals produce no traffic back', after === before, `${before} -> ${after}`);
+    check('the connection is still fine', (await p.A.page.$('#error')) === null && (await p.B.page.$('#error')) === null);
+    await p.close();
+  },
+
   async nomatch(b) {
     const p = await pair(b, { match: false });
     await p.A.page.click('#sas-ok');

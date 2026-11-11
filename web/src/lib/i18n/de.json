@@ -106,7 +106,7 @@
   "presets.delete": "Löschen",
   "presets.saved": "Gespeichert",
   "privacy.title": "Was diese Seite sendet",
-  "privacy.body": "Nichts, außer was du selbst mit der optionalen Schaltfläche „In PixelHop speichern“ sendest. Dateien werden mit der File API geöffnet, in diesem Tab dekodiert und kodiert und über eine Blob-URL zurückgegeben. Es gibt keine Umwandlung auf dem Server und keine Warteschlange, und ein Konto ist nicht nötig. Wenn du dich mit der HOP ID anmeldest, speichert der Server nur deine Sitzung, niemals eine Datei. Die einzige Ausnahme ist die optionale Schaltfläche „In PixelHop speichern“: Wenn du sie drückst, wird genau diese eine Datei über den Server von FileHop an deine PixelHop-Bibliothek gesendet, und FileHop behält sie nicht.",
+  "privacy.body": "Nichts, außer was du selbst mit der optionalen Schaltfläche „In PixelHop speichern“ sendest. Dateien werden mit der File API geöffnet, in diesem Tab dekodiert und kodiert und über eine Blob-URL zurückgegeben. Es gibt keine Umwandlung auf dem Server und keine Warteschlange, und ein Konto ist nicht nötig. Wenn du dich mit der HOP ID anmeldest, speichert der Server nur deine Sitzung, niemals eine Datei.",
   "privacy.network": "Netzwerkanfragen seit dem Öffnen dieses Tabs: {n}",
   "privacy.network_note": "Schriften, Symbole und Code kommen aus derselben Quelle.",
   "privacy.cleared": "Warteschlange und Speicher geleert",

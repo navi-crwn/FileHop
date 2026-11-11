@@ -212,6 +212,24 @@ test('offer ids: short plain ids, each used once', () => {
   for (const bad of ['', 'used1', '__proto__', 'A1', 'a-b', 'a b', '0123456789abcdefg', 'é', 7, null, undefined, {}, ['a']]) assert.equal(P.validOfferId(bad, seen), false, String(bad));
 });
 
+test('reveal answers: only plain repeats, bounded, never to an answer, never after Match', () => {
+  assert.equal(P.shouldAnswerReveal(false, false, 0), true, 'a repeat before the other side matched');
+  assert.equal(P.shouldAnswerReveal(true, false, 0), false, 'an answer is never answered');
+  assert.equal(P.shouldAnswerReveal(false, true, 0), false, 'the other side pressed Match: it has our reveal');
+  assert.equal(P.shouldAnswerReveal(false, false, P.MAX_REVEAL_ANSWERS), false, 'bounded');
+  // two devices, ping-pong: however many repeats are in flight, the exchange ends
+  let traffic = 0;
+  const dev = () => ({ answered: 0 });
+  const a = dev(), b = dev();
+  const queue = [[b, false], [b, false], [a, false], [a, false]]; // extra plain repeats in flight to both
+  while (queue.length && traffic < 1000) {
+    const [to, isAnswer] = queue.shift();
+    if (P.shouldAnswerReveal(isAnswer, false, to.answered)) { to.answered++; traffic++; queue.push([to === a ? b : a, true]); }
+  }
+  assert.ok(traffic <= 2 * P.MAX_REVEAL_ANSWERS, 'traffic ' + traffic);
+  assert.equal(queue.length, 0);
+});
+
 test('nonces are 128 random bits', () => {
   const a = P.newNonce(), b = P.newNonce();
   assert.match(a, /^[0-9a-f]{32}$/);

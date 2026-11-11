@@ -51,6 +51,9 @@ test('saveToPixelHop sends one same-origin call with the marker header and maps 
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', html(413)), { ok: false, error: 'too_large' });
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', html(503)), { ok: false, error: 'busy' });
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', html(502)), { ok: false, error: 'failed' });
+  // a name cut at 200 characters never splits an emoji (which would make encodeURIComponent throw)
+  await P.saveToPixelHop(new Blob(['x']), 'x'.repeat(199) + '😀', fake(200, { ok: true, page_url: 'https://pixel.hel.ink/x' }));
+  assert.ok(decodeURIComponent(seen.init.headers['X-FileHop-Name']).endsWith('😀'));
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', async () => { throw new Error('offline'); }), { ok: false, error: 'failed' });
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', async () => ({ ok: false, status: 502, json: async () => { throw new Error('html'); } })), { ok: false, error: 'failed' });
 });

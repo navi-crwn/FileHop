@@ -106,7 +106,7 @@
   "presets.delete": "Hapus",
   "presets.saved": "Tersimpan",
   "privacy.title": "Apa yang dikirim halaman ini",
-  "privacy.body": "Tidak ada, kecuali yang Anda kirim sendiri lewat tombol opsional “Simpan ke PixelHop”. File dibuka dengan File API, didekode dan dikodekan di tab ini, lalu dikembalikan lewat blob URL. Tidak ada konversi di server, tidak ada antrean, dan tidak perlu akun. Jika Anda masuk dengan HOP ID, server hanya menyimpan sesi Anda, tidak pernah file. Satu-satunya pengecualian adalah tombol opsional “Simpan ke PixelHop”: saat Anda menekannya, satu berkas itu dikirim lewat server FileHop ke pustaka PixelHop Anda, dan FileHop tidak menyimpannya.",
+  "privacy.body": "Tidak ada, kecuali yang Anda kirim sendiri lewat tombol opsional “Simpan ke PixelHop”. File dibuka dengan File API, didekode dan dikodekan di tab ini, lalu dikembalikan lewat blob URL. Tidak ada konversi di server, tidak ada antrean, dan tidak perlu akun. Jika Anda masuk dengan HOP ID, server hanya menyimpan sesi Anda, tidak pernah file.",
   "privacy.network": "Permintaan jaringan sejak tab ini dibuka: {n}",
   "privacy.network_note": "Font, ikon, dan kode datang dari origin yang sama.",
   "privacy.cleared": "Antrean dan memori dibersihkan",

@@ -64,6 +64,18 @@ export function sanitizeFileName(raw: unknown, fallback = 'file'): string {
   return s || fallback;
 }
 
+/** Most answers a device gives to the other's repeated reveals in one session. */
+export const MAX_REVEAL_ANSWERS = 3;
+
+/**
+ * Should a device answer an incoming `reveal` with its own? Only a plain repeat (the other side has not
+ * seen ours yet) and only while the other side has not pressed "Match" (which proves it has). An answer
+ * is marked and is never answered itself, so a message can never bounce back and forth.
+ */
+export function shouldAnswerReveal(isAnswer: boolean, peerMatched: boolean, answered: number): boolean {
+  return !isAnswer && !peerMatched && answered < MAX_REVEAL_ANSWERS;
+}
+
 /** An offer id from the other device: short, plain, and not used before in this session. */
 export function validOfferId(id: unknown, seen: ReadonlySet<string>): id is string {
   return typeof id === 'string' && /^[a-z0-9]{1,16}$/.test(id) && !seen.has(id);

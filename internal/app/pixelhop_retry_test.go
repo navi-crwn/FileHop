@@ -120,3 +120,13 @@ func TestPixelSaveMakesOneUpstreamCallAtATime(t *testing.T) {
 		t.Fatalf("calls to PixelHop must not overlap, peak %d", peak)
 	}
 }
+
+func TestPixelSaveTreatsAnHTML408AsABodyTimeout(t *testing.T) {
+	pixelRetryPause = time.Millisecond
+	srv, f, c := pixelAppWith(t, func(base string) []scriptStep {
+		return []scriptStep{{408, "<html>408 Request Time-out</html>"}, {201, okReply(base)}}
+	})
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 200 || m["ok"] != true || len(f.seen) != 2 {
+		t.Fatalf("nginx's own 408 is retried once: %d %v (calls %d)", code, m, len(f.seen))
+	}
+}

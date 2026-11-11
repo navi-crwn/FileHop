@@ -106,7 +106,7 @@
   "presets.delete": "Delete",
   "presets.saved": "Saved",
   "privacy.title": "What this page sends",
-  "privacy.body": "Nothing, except what you choose to send yourself with the optional “Save to PixelHop” button. Files are opened with the File API, decoded and encoded in this tab, and handed back through a blob URL. There is no server-side conversion and no queue, and no account is needed. If you sign in with HOP ID, the server keeps only your session, never a file. The one exception is the optional “Save to PixelHop” button: when you press it, that one file is sent through FileHop’s server to your PixelHop library, and FileHop does not keep it.",
+  "privacy.body": "Nothing, except what you choose to send yourself with the optional “Save to PixelHop” button. Files are opened with the File API, decoded and encoded in this tab, and handed back through a blob URL. There is no server-side conversion and no queue, and no account is needed. If you sign in with HOP ID, the server keeps only your session, never a file.",
   "privacy.network": "Network requests since this tab opened: {n}",
   "privacy.network_note": "Fonts, icons and code come from this same origin.",
   "privacy.cleared": "Queue and memory cleared",

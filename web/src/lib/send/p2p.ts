@@ -14,7 +14,7 @@
 import { createSHA256 } from 'hash-wasm';
 import {
   CHUNK, READ, LOW, CONNECT_MS, gate, ackDue, sanitizeFileName, fingerprintOf, newNonce, commitOf,
-  revealMatches, verificationNumber, routeOf, validOfferId, type Route
+  revealMatches, verificationNumber, routeOf, validOfferId, shouldAnswerReveal, type Route
 } from './pure';
 
 export type { Route };
@@ -68,6 +68,7 @@ export class Session {
   private timer = 0;
   private verifyTimer = 0;
   private revealTimer = 0;
+  private revealAnswers = 0;
   private nonce = '';
   private myFp = '';
   private myCommit = '';
@@ -274,15 +275,27 @@ export class Session {
   }
 
   // The other device's nonce must open the commitment it made before it saw our description.
-  private async reveal(n: unknown) {
-    if (this.revealed) { this.say({ t: 'reveal', n: this.nonce }); return; } // a repeat: the other side may have missed ours
-    if (this.sasShown) return;
+  // Only the first reveal is ever processed: `revealed` is set before anything is awaited, and a later
+  // one (a repeat, an answer, a late one) returns before it can touch the fingerprint, the number or the
+  // phase, so the number shown cannot be replaced or changed afterwards. A plain repeat may be answered
+  // (marked `re`, a bounded number of times, never once the other side pressed "Match"); an answer is
+  // never answered, so nothing can bounce back and forth.
+  private async reveal(n: unknown, isAnswer = false) {
+    if (this.revealed) {
+      if (shouldAnswerReveal(isAnswer, this.peerOk, this.revealAnswers)) {
+        this.revealAnswers++;
+        this.say({ t: 'reveal', n: this.nonce, re: 1 });
+      }
+      return;
+    }
     this.revealed = true;
     const pc = this.pc!;
     const remoteFp = fingerprintOf(pc.currentRemoteDescription?.sdp);
     const localFp = fingerprintOf(pc.currentLocalDescription?.sdp);
     if (!remoteFp || localFp !== this.myFp || !(await revealMatches(this.peerCommit, remoteFp, String(n)))) return this.fail('commit_mismatch');
-    this.h.sas(await verificationNumber(localFp, remoteFp, this.code));
+    const number = await verificationNumber(localFp, remoteFp, this.code);
+    if (this.closed || this.sasShown) return;
+    this.h.sas(number);
     this.sasShown = true;
     clearTimeout(this.verifyTimer);
     clearInterval(this.revealTimer);
@@ -362,7 +375,7 @@ export class Session {
   // ---------- control messages ----------
   private async control(m: any) {
     switch (m.t) {
-      case 'reveal': this.note('rx:reveal'); return this.reveal(m.n);
+      case 'reveal': this.note(m.re === 1 ? 'rx:reveal(answer)' : 'rx:reveal'); return this.reveal(m.n, m.re === 1);
       case 'ok': this.peerOk = true; return this.maybeReady();
     }
     // Everything below is for after both people pressed "Match".

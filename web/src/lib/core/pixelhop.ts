@@ -31,7 +31,7 @@ export async function saveToPixelHop(blob: Blob, name: string, fetcher: typeof f
     const res = await fetcher('/api/v1/pixelhop/save', {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'X-Requested-With': 'filehop', 'X-FileHop-Name': encodeURIComponent(name.slice(0, 200)), 'Content-Type': 'application/octet-stream' },
+      headers: { 'X-Requested-With': 'filehop', 'X-FileHop-Name': encodeURIComponent(Array.from(name).slice(0, 200).join('')), 'Content-Type': 'application/octet-stream' },
       body: blob
     });
     const j = await res.json().catch(() => null);

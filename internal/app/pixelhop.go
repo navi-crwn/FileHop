@@ -322,6 +322,9 @@ func (a *App) pixelCall(parent context.Context, actor, pathQ string, body []byte
 	}
 	defer res.Body.Close()
 	if json.NewDecoder(io.LimitReader(res.Body, 64<<10)).Decode(&env) != nil {
+		if res.StatusCode == http.StatusRequestTimeout { // nginx's own HTML 408 in front of PixelHop
+			return res.StatusCode, pixelEnv{Error: "body_timeout"}, nil
+		}
 		return 0, env, errors.New("unreadable answer")
 	}
 	return res.StatusCode, env, nil
