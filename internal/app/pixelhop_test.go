@@ -59,6 +59,7 @@ func okReply(base string) string {
 }
 
 func pixelApp(t *testing.T) (*App, *httptest.Server, *fakePixel, *http.Client) {
+	pixelRetryPause = time.Millisecond
 	a, srv := newTestApp(t, true)
 	f := newFakePixel(t)
 	a.cfg.PixelHopURL, a.cfg.PixelHopSecret = f.srv.URL, pixelSecret
@@ -202,6 +203,8 @@ func TestPixelSaveMapsEachUpstreamErrorWithoutEchoingIt(t *testing.T) {
 		{403, "blocked_file", 502, "failed"},
 		{500, "store_failed", 502, "failed"},
 		{401, "bad_signature", 502, "failed"},
+		{503, "busy", 503, "busy"},
+		{408, "body_timeout", 503, "busy"},
 	} {
 		f.status, f.reply = tc.status, `{"ok":false,"error":"`+tc.code+`","message":"SECRET upstream words"}`
 		code, m := save(t, c, srv, tinyPNG, "", nil)

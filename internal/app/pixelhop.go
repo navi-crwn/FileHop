@@ -33,6 +33,7 @@ const (
 
 // pixelGate bounds the memory the feature can use: a few bodies at once, and one save per person.
 type pixelGate struct {
+	up    sync.Mutex // one upstream call at a time
 	mu    sync.Mutex
 	busy  map[string]bool
 	slots int
@@ -231,40 +232,22 @@ func (a *App) pixelSave(w http.ResponseWriter, r *http.Request) {
 	if name := pixelName(r); name != "" {
 		pathQ += "?name=" + url.QueryEscape(name)
 	}
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, a.cfg.PixelHopURL+pathQ, bytes.NewReader(body))
+	// One upstream call at a time from this server: all of FileHop's calls reach PixelHop from one
+	// address, and PixelHop allows one unverified body in flight per address.
+	a.px.up.Lock()
+	status, env, err := a.pixelCall(r.Context(), u.Sub, pathQ, body)
+	if err == nil && pixelRetryable(status, env.Error) {
+		// PixelHop was busy or did not get the body in time: once more, after a short pause, signed afresh
+		// (new nonce and timestamp: a nonce works only once)
+		time.Sleep(pixelRetryPause)
+		status, env, err = a.pixelCall(r.Context(), u.Sub, pathQ, body)
+	}
+	a.px.up.Unlock()
 	if err != nil {
 		pixelFail(w, http.StatusBadGateway, "failed")
 		return
 	}
-	for k, v := range hop.Headers(a.cfg.SSOClient, a.cfg.PixelHopSecret, u.Sub, http.MethodPost, pathQ, body) {
-		req.Header[k] = v
-	}
-	req.Header.Set("Content-Type", "application/octet-stream")
-	ctx, cancel := context.WithTimeout(req.Context(), pixelTimeout)
-	defer cancel()
-	client := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	res, err := client.Do(req.WithContext(ctx))
-	if err != nil {
-		pixelFail(w, http.StatusBadGateway, "failed")
-		return
-	}
-	defer res.Body.Close()
-	var env struct {
-		OK    bool   `json:"ok"`
-		Error string `json:"error"`
-		Data  struct {
-			PageURL   string `json:"page_url"`
-			URL       string `json:"url"`
-			Thumb     string `json:"thumb_url"`
-			Bytes     int64  `json:"bytes"`
-			Duplicate bool   `json:"duplicate"`
-		} `json:"data"`
-	}
-	if json.NewDecoder(io.LimitReader(res.Body, 64<<10)).Decode(&env) != nil {
-		pixelFail(w, http.StatusBadGateway, "failed")
-		return
-	}
-	if (res.StatusCode == http.StatusCreated || res.StatusCode == http.StatusOK) && env.OK {
+	if (status == http.StatusCreated || status == http.StatusOK) && env.OK {
 		// only addresses on PixelHop itself are passed on to the page
 		own := func(s string) string {
 			if strings.HasPrefix(s, a.cfg.PixelHopURL+"/") {
@@ -293,7 +276,53 @@ func (a *App) pixelSave(w http.ResponseWriter, r *http.Request) {
 		pixelFail(w, http.StatusUnsupportedMediaType, "unsupported_type")
 	case "rate_limited":
 		pixelFail(w, http.StatusTooManyRequests, "rate_limited")
+	case "busy", "body_timeout": // still so after the retry
+		pixelFail(w, http.StatusServiceUnavailable, "busy")
 	default:
 		pixelFail(w, http.StatusBadGateway, "failed")
 	}
+}
+
+var pixelRetryPause = 500 * time.Millisecond
+
+// pixelRetryable: 503 busy (PixelHop has a body from this address in flight) and 408 body_timeout.
+func pixelRetryable(status int, code string) bool {
+	return (status == http.StatusServiceUnavailable && code == "busy") || (status == http.StatusRequestTimeout && code == "body_timeout")
+}
+
+type pixelEnv struct {
+	OK    bool   `json:"ok"`
+	Error string `json:"error"`
+	Data  struct {
+		PageURL   string `json:"page_url"`
+		URL       string `json:"url"`
+		Thumb     string `json:"thumb_url"`
+		Bytes     int64  `json:"bytes"`
+		Duplicate bool   `json:"duplicate"`
+	} `json:"data"`
+}
+
+// pixelCall makes one signed POST /hop/media. Every call is signed anew: new nonce, new timestamp.
+func (a *App) pixelCall(parent context.Context, actor, pathQ string, body []byte) (int, pixelEnv, error) {
+	var env pixelEnv
+	ctx, cancel := context.WithTimeout(parent, pixelTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.cfg.PixelHopURL+pathQ, bytes.NewReader(body))
+	if err != nil {
+		return 0, env, err
+	}
+	for k, v := range hop.Headers(a.cfg.SSOClient, a.cfg.PixelHopSecret, actor, http.MethodPost, pathQ, body) {
+		req.Header[k] = v
+	}
+	req.Header.Set("Content-Type", "application/octet-stream")
+	client := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	res, err := client.Do(req)
+	if err != nil {
+		return 0, env, err
+	}
+	defer res.Body.Close()
+	if json.NewDecoder(io.LimitReader(res.Body, 64<<10)).Decode(&env) != nil {
+		return 0, env, errors.New("unreadable answer")
+	}
+	return res.StatusCode, env, nil
 }
