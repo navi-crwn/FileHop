@@ -29,6 +29,8 @@ type Config struct {
 	SSOClient     string   // the slug the hub knows this app by
 	HopClients    []string // apps that may call /hop/* (imperium, helink)
 	SecureCookies bool
+	TrustProxy    bool     // read the visitor address from X-Forwarded-For (behind nginx)
+	StunURLs      []string // ICE: STUN servers for /send, from the environment
 }
 
 func (c Config) SSOEnabled() bool { return c.SSOURL != "" && len(c.SSOSecret) >= 32 }
@@ -42,6 +44,7 @@ type App struct {
 	nonces  hop.Nonces
 	started time.Time
 	hubUp   func() bool // is the hub reachable (cached); replaced in tests
+	send    sendHub
 }
 
 // New builds the handler. static is the built browser app (web/dist).
@@ -81,6 +84,9 @@ func (a *App) Handler() http.Handler {
 	m.HandleFunc("GET /auth/sso/logout", a.ssoLogout)
 	m.HandleFunc("GET /api/v1/me", a.apiMe)
 	m.HandleFunc("POST /api/v1/logout", a.apiLogout)
+	m.HandleFunc("POST /api/send/room", a.sendNewRoom)
+	m.HandleFunc("GET /api/send/config", a.sendConfig)
+	m.HandleFunc("GET /api/send/signal", a.sendSignal)
 	m.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not_found"})
 	})

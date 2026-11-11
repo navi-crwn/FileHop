@@ -67,6 +67,8 @@ func main() {
 		SSOClient:     env("FILEHOP_SSO_CLIENT", "filehop"),
 		HopClients:    list("FILEHOP_HOP_CLIENTS", "imperium,helink"),
 		SecureCookies: secure,
+		TrustProxy:    env("FILEHOP_TRUST_PROXY", "") == "1",
+		StunURLs:      list("FILEHOP_STUN_URLS", ""),
 	}
 	if cfg.SSOURL != "" && !cfg.SSOEnabled() {
 		log.Fatal("FILEHOP_SSO_URL is set but FILEHOP_SSO_SECRET is shorter than 32 characters")

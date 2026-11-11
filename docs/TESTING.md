@@ -3,13 +3,23 @@
 How the converter was checked, so a later change can be checked the same way.
 
 ```bash
-npm test             # 17 unit checks: detection, targets, page ranges, CSV typing, archive guards
+npm test             # unit checks: detection, targets, page ranges, CSV typing, archive guards; then /send (tools/send.test.mjs): flow control, hash vectors, file names, pairing vectors
 npm run lint:i18n    # 9 locales: same keys, same {placeholders}, no Arabic
 npm run check        # svelte-check
 go test ./...        # server: headers, routes, sign-in, tickets, account events, /hop/* signatures
 npm run fixtures     # testdata/: real PNG, JPEG, 3-page PDF, CSV, JSON, YAML, MD, ZIP and hostile files
 npm run matrix -- http://localhost:8095   # 22 conversions in Chromium, WebKit and Firefox
 ```
+
+## /send (peer to peer)
+
+```bash
+node tools/send.test.mjs          # also part of npm test: flow control, hash vectors, file names, pairing vectors
+go test ./internal/app -run Send  # signalling: rooms, seal, rate limits, expiry, TrustProxy, per-device limit, commitment order
+CHROME=/path/to/chrome bash tools/send-e2e.sh --size 128   # two headless Chromium: transfer, corrupt byte, cancel, data before Match, forged offer
+```
+
+The browser script needs Go, node and a Chromium; it starts a throwaway server on 127.0.0.1 and installs `playwright-core` into a temporary folder. What it cannot cover: the native save dialog (File System Access), networks that need STUN or TURN, mobile browsers, Firefox, Safari, and files of 1 GiB and more. Those are checked by hand on real devices.
 
 ## Checked by hand, 2026-11-08 (Chromium 152, production build)
 

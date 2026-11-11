@@ -10,7 +10,7 @@
     "dev": "npm run dev -w web",
     "build": "npm run build -w web",
     "check": "npm run check -w web",
-    "test": "node tools/unit.test.mjs",
+    "test": "node tools/unit.test.mjs && node tools/send.test.mjs",
     "lint:i18n": "node tools/check-i18n.mjs",
     "fixtures": "node tools/make-fixtures.mjs && node tools/make-hostile.mjs",
     "fixtures:dist": "node tools/copy-fixtures.mjs",
