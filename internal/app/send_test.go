@@ -105,19 +105,72 @@ func TestSendRoomRelaysBetweenTwoAndRefusesAThird(t *testing.T) {
 	}
 }
 
-func TestSendUnknownCodeIsMeteredPerAddress(t *testing.T) {
-	_, srv := newTestApp(t, false)
-	var last websocket.StatusCode
-	for i := 0; i < sendJoinFails+2; i++ {
-		c := sendWS(t, srv.URL, "")
-		wsSend(t, c, map[string]any{"t": "join", "code": "000000"})
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		_, _, err := c.Read(ctx)
-		cancel()
-		last = websocket.CloseStatus(err)
+func TestSendWrongCodesBlockTheAddressEvenForTheRightCode(t *testing.T) {
+	a, srv := newTestApp(t, false)
+	a.cfg.TrustProxy = true
+	code := newCode(t, srv.URL) // a waiting room
+	dial := func(ip string) *websocket.Conn {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		c, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(srv.URL, "http")+"/api/send/signal",
+			&websocket.DialOptions{HTTPHeader: http.Header{"X-Forwarded-For": {ip}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { c.CloseNow() })
+		return c
 	}
-	if last != 4429 {
-		t.Fatalf("after %d wrong codes the address should be limited (4429), got %d", sendJoinFails+2, last)
+	closeOf := func(c *websocket.Conn) websocket.StatusCode {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		_, _, err := c.Read(ctx)
+		return websocket.CloseStatus(err)
+	}
+	// the attacker spends its wrong tries: refused as unknown until the limit
+	for i := 0; i < sendJoinFails; i++ {
+		c := dial("198.51.100.66")
+		wsSend(t, c, map[string]any{"t": "join", "code": "000000"})
+		if got := closeOf(c); got != 4404 {
+			t.Fatalf("try %d: wrong code should close 4404, got %d", i, got)
+		}
+	}
+	// now even the CORRECT code from that address is refused, and the room is untouched
+	c := dial("198.51.100.66")
+	wsSend(t, c, map[string]any{"t": "join", "code": code})
+	if got := closeOf(c); got != 4429 {
+		t.Fatalf("the right code from a limited address must be refused (4429), got %d", got)
+	}
+	// another address still gets in, so the real receiver is not locked out
+	d := dial("198.51.100.77")
+	wsSend(t, d, map[string]any{"t": "join", "code": code})
+	if m := wsRead(t, d); m["t"] != "hello" {
+		t.Fatalf("another address must be able to join: %v", m)
+	}
+}
+
+func TestSendSocketUpgradesArePerAddressLimited(t *testing.T) {
+	a, srv := newTestApp(t, false)
+	a.cfg.TrustProxy = true
+	get := func(ip string) int {
+		req, _ := http.NewRequest("GET", srv.URL+"/api/send/signal", nil)
+		req.Header.Set("X-Forwarded-For", ip)
+		res, err := http.DefaultClient.Do(req) // not an upgrade: only the count matters here
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res.StatusCode
+	}
+	for i := 0; i < sendUpgrades; i++ {
+		if get("203.0.113.5") == http.StatusTooManyRequests {
+			t.Fatalf("request %d is under the cap", i)
+		}
+	}
+	if get("203.0.113.5") != http.StatusTooManyRequests {
+		t.Fatal("past the cap the address gets 429")
+	}
+	if get("203.0.113.6") == http.StatusTooManyRequests {
+		t.Fatal("another address is unaffected")
 	}
 }
 

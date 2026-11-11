@@ -232,6 +232,31 @@ const scenarios = {
     await p.close();
   },
 
+  async limit(b) {
+    // a scanner spends its wrong tries, then guesses right: it must still be refused, and the real receiver gets in
+    const A = await device(b[0]), S = await device(b[1]), R = await device(b[1]);
+    await A.page.goto(`${base}/send`);
+    await A.page.click('#start');
+    await A.page.waitForSelector('#room-code');
+    const code = (await A.page.textContent('#room-code')).replace(/\s/g, '');
+    await S.page.goto(`${base}/send`);
+    const tryJoin = (page, c) => page.evaluate((cc) => new Promise((res) => {
+      const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/api/send/signal');
+      ws.onopen = () => ws.send(JSON.stringify({ t: 'join', code: cc }));
+      ws.onmessage = (e) => { if (JSON.parse(e.data).t === 'hello') { res('joined'); ws.close(); } };
+      ws.onclose = (e) => res(String(e.code));
+    }), c);
+    const codes = [];
+    for (let i = 0; i < 10; i++) codes.push(await tryJoin(S.page, '000000'));
+    check('ten wrong codes from one address are told "unknown"', codes.every((c) => c === '4404'), codes.join(','));
+    const after = await tryJoin(S.page, code);
+    check('then the CORRECT code from that address is refused (4429)', after === '4429', after);
+    await R.page.goto(`${base}/send`);
+    const rj = await tryJoin(R.page, code);
+    check('another address still joins the waiting room', rj === 'joined', rj);
+    await Promise.all([A, S, R].map((d) => d.ctx.close()));
+  },
+
   async rooms(b) {
     const A = await device(b[0]), B = await device(b[1]);
     await A.page.goto(`${base}/send`);

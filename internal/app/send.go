@@ -26,7 +26,8 @@ const (
 	sendRoomTTL   = 10 * time.Minute
 	sendMaxRooms  = 5000
 	sendMakePerHr = 10 // rooms one address may open per hour
-	sendJoinFails = 10 // wrong codes one address may try per minute
+	sendJoinFails = 10 // wrong codes one address may try per minute; past that even the right code is refused
+	sendUpgrades  = 30 // signalling sockets one address may open per minute (a person opens one or two)
 	sendMsgRate   = 20 // signalling messages per second per connection
 
 	// Largest single file a sender may offer. The limit follows the sender and the
@@ -82,6 +83,14 @@ func (h *sendHub) allow(key string, max int, every time.Duration) bool {
 	}
 	w.n++
 	return w.n <= max
+}
+
+// over reports whether key has already used up max in the current window, without counting a try.
+func (h *sendHub) over(key string, max int, every time.Duration) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	w := h.win[key]
+	return w != nil && h.clock().Sub(w.start) <= every && w.n >= max
 }
 
 // gcLocked drops expired rooms and stale rate windows; the caller holds mu.
@@ -281,6 +290,10 @@ func (a *App) sendConfig(w http.ResponseWriter, r *http.Request) {
 // the code is not in the URL so it never reaches access logs.
 func (a *App) sendSignal(w http.ResponseWriter, r *http.Request) {
 	ip := a.clientIP(r)
+	if !a.send.allow("ws"+ip, sendUpgrades, time.Minute) {
+		http.Error(w, "rate_limited", http.StatusTooManyRequests)
+		return
+	}
 	rc := http.NewResponseController(w)
 	rc.SetReadDeadline(time.Time{})
 	rc.SetWriteDeadline(time.Time{})
@@ -301,13 +314,17 @@ func (a *App) sendSignal(w http.ResponseWriter, r *http.Request) {
 		c.Close(websocket.StatusPolicyViolation, "join")
 		return
 	}
+	// Guessing codes is the attack here. An address that has used up its wrong tries is refused before
+	// the join is even attempted, so a lucky guess does not get in after the limit is reached.
+	if a.send.over("jf"+ip, sendJoinFails, time.Minute) {
+		c.Close(websocket.StatusCode(4429), "rate_limited")
+		return
+	}
 	p := &sendPeer{id: randToken(9), max: a.sendMax(r), out: make(chan []byte, 64), cancel: cancel}
 	why := a.send.join(j.Code, p)
 	if why != "" {
-		// Guessing codes is the attack here: wrong tries are metered per address.
-		if why == "unknown" && !a.send.allow("jf"+ip, sendJoinFails, time.Minute) {
-			c.Close(websocket.StatusCode(4429), "rate_limited")
-			return
+		if why == "unknown" {
+			a.send.allow("jf"+ip, sendJoinFails, time.Minute) // count the wrong try
 		}
 		c.Close(websocket.StatusCode(4404), why)
 		return

@@ -138,6 +138,11 @@ test('sanitizeFileName table', () => {
     ['console.txt', 'console.txt'],
     ['é.txt', 'é.txt'], // NFC: e + combining acute becomes é
     ['日本語のファイル.txt', '日本語のファイル.txt'],
+    ['so­ft͏hyᅟᅠp᠎en.txt', 'softhypen.txt'],
+    ['a⁠b⁡c⁢d⁣e⁤f.txt', 'abcdef.txt'],
+    ['xㅤyﾠz.txt', 'xyz.txt'],
+    ['v︀️w.txt', 'vw.txt'],
+    ['t󠁁󠁿g.txt', 'tg.txt'],
     ['😀.png', '😀.png']
   ];
   for (const [input, want] of cases) assert.equal(P.sanitizeFileName(input), want, JSON.stringify(input));
@@ -199,6 +204,12 @@ test('verification number has fixed vectors and does not depend on who is "local
   assert.equal(await P.verificationNumber(FP_A, FP_B, '000000'), '473 632');
   assert.notEqual(await P.verificationNumber(FP_A, 'DE:AD:BE:EF', '123456'), '868 017'); // a third party's certificate
   for (let i = 0; i < 50; i++) assert.match(await P.verificationNumber(FP_A, randomBytes(4).toString('hex'), '123456'), /^\d{3} \d{3}$/);
+});
+
+test('offer ids: short plain ids, each used once', () => {
+  const seen = new Set(['used1']);
+  for (const ok of ['a', 'abc123', '0123456789abcdef']) assert.equal(P.validOfferId(ok, seen), true, ok);
+  for (const bad of ['', 'used1', '__proto__', 'A1', 'a-b', 'a b', '0123456789abcdefg', 'é', 7, null, undefined, {}, ['a']]) assert.equal(P.validOfferId(bad, seen), false, String(bad));
 });
 
 test('nonces are 128 random bits', () => {

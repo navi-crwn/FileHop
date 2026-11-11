@@ -14,7 +14,7 @@
 import { createSHA256 } from 'hash-wasm';
 import {
   CHUNK, READ, LOW, CONNECT_MS, gate, ackDue, sanitizeFileName, fingerprintOf, newNonce, commitOf,
-  revealMatches, verificationNumber, routeOf, type Route
+  revealMatches, verificationNumber, routeOf, validOfferId, type Route
 } from './pure';
 
 export type { Route };
@@ -79,6 +79,7 @@ export class Session {
   private kinds = { local: [] as string[], remote: [] as string[] };
   private waiters = new Map<string, (m: Json) => void>();
   private cancelled = new Set<string>();
+  private seenIds = new Set<string>(); // offer ids the other device has used
   private acked = new Map<string, number>();
   private worker: Worker | null = null;
   private incoming: { id: string; name: string; size: number; got: number; acked: number; t0: number; sha: string; endSize: number; peerOk: boolean } | null = null;
@@ -299,7 +300,8 @@ export class Session {
     this.closed = true;
     clearTimeout(this.timer);
     this.wake?.();
-    this.worker?.terminate();
+    if (this.incoming) this.abortIncoming('cancelled'); // tells the worker to clean up, then ends it
+    else this.endWorker();
     try { this.dc?.close(); } catch { /* */ }
     try { this.pc?.close(); } catch { /* */ }
     try { this.ws?.close(); } catch { /* */ }
@@ -319,7 +321,7 @@ export class Session {
       `events ${this.trail.join(' > ')}`,
       `candidates local[${this.kinds.local.join(',') || '-'}] remote[${this.kinds.remote.join(',') || '-'}]`
     ].join('; '));
-    this.worker?.postMessage({ t: 'abort' });
+    if (this.incoming) this.abortIncoming('connection_lost'); // worker cleans up, row is finished
     try { this.dc?.close(); } catch { /* */ }
     try { pc?.close(); } catch { /* */ }
     try { this.ws?.close(); } catch { /* */ }
@@ -349,7 +351,9 @@ export class Session {
     switch (m.t) {
       case 'offer': {
         const size = Number(m.size);
-        const id = String(m.id);
+        if (!validOfferId(m.id, this.seenIds)) return this.say({ t: 'reject', id: 'x', why: 'bad_id' });
+        const id: string = m.id;
+        this.seenIds.add(id);
         if (!Number.isFinite(size) || size < 0 || size > this.peerMax) return this.say({ t: 'reject', id, why: 'too_big' });
         if (this.incoming) return this.say({ t: 'reject', id, why: 'busy' });
         this.h.offer({ id, name: sanitizeFileName(m.name, this.fallbackName), size, mime: String(m.mime ?? '') });

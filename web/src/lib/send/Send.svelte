@@ -44,6 +44,7 @@
     progress: (p: Progress) => { rows[p.id] = { ...rows[p.id], ...p, state: rows[p.id]?.state ?? 'run' }; },
     finished: (f: Finished) => {
       const prev = rows[f.id] ?? { id: f.id, dir: f.dir, name: f.name, size: f.size, done: f.size, bytesPerSec: 0 };
+      if (prev.url) URL.revokeObjectURL(prev.url);
       const url = f.file && f.ok ? URL.createObjectURL(f.file) : undefined;
       rows[f.id] = { ...prev, state: f.ok ? 'done' : 'failed', res: f, url };
     }
@@ -57,7 +58,10 @@
     const m = location.hash.match(/^#(\d{6})$/);
     if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     if (m) { typed = m[1]; void session.join(m[1]); }
-    return () => session.leave();
+    return () => {
+      session.leave();
+      for (const r of Object.values(rows)) if (r.url) URL.revokeObjectURL(r.url); // the received files are released with the page
+    };
   });
 
   async function pick(e: Event) {

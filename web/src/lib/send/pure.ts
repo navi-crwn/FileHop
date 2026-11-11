@@ -38,7 +38,11 @@ export function ackDue(written: number, lastAcked: number): boolean {
 
 const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
 // C0 and C1 controls, bidi controls (incl. U+061C), line/paragraph separators, zero-width characters
-const INVISIBLE = new RegExp('[\u0000-\u001F\u007F-\u009F\u061C\u200B-\u200F\u2028\u2029\u202A-\u202E\u2066-\u2069\uFEFF]', 'g');
+const INVISIBLE = new RegExp(
+  '[\u0000-\u001F\u007F-\u009F\u00AD\u034F\u061C\u115F\u1160\u180E\u200B-\u200F\u2028\u2029\u202A-\u202E' +
+    '\u2060-\u2064\u2066-\u2069\u3164\uFE00-\uFE0F\uFEFF\uFFA0\u{E0000}-\u{E007F}]',
+  'gu'
+);
 
 /**
  * A name from the other device is never trusted. It is only ever shown and used as a suggested
@@ -58,6 +62,11 @@ export function sanitizeFileName(raw: unknown, fallback = 'file'): string {
     s = chars.slice(0, NAME_MAX - ext.length).join('').replace(/[. ]+$/g, '') + ext.join('');
   }
   return s || fallback;
+}
+
+/** An offer id from the other device: short, plain, and not used before in this session. */
+export function validOfferId(id: unknown, seen: ReadonlySet<string>): id is string {
+  return typeof id === 'string' && /^[a-z0-9]{1,16}$/.test(id) && !seen.has(id);
 }
 
 // ---------------------------------------------------------------- pairing
