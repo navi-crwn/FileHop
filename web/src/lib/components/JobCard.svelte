@@ -5,6 +5,8 @@
   import type { Job } from '../core/types';
   import { fmtSize } from '../util/format';
   import { looksLikePages } from '../core/pages';
+  import { account } from '../account.svelte';
+  import { canSaveToPixelHop, saveToPixelHop, saveErrorKey } from '../core/pixelhop';
 
   interface Props {
     job: Job;
@@ -25,6 +27,18 @@
   }
 
   let { job, pdfCount, absorbed = false, mergeBusy = false, mergeNames = [], onAction, onOpt, onRun, onCancel, onRemove, onDownload }: Props = $props();
+
+  // Save to PixelHop: the one place a result leaves the browser, so it asks first and says so.
+  let px = $state<'idle' | 'confirm' | 'sending' | 'done' | 'error'>('idle');
+  let pxLink = $state('');
+  let pxDup = $state(false);
+  let pxErr = $state('failed');
+  async function sendToPixel() {
+    if (!job.result) return;
+    px = 'sending';
+    const r = await saveToPixelHop(job.result.blob, job.result.name);
+    if (r.ok) { pxLink = r.pageUrl; pxDup = r.duplicate; px = 'done'; } else { pxErr = r.error; px = 'error'; }
+  }
   let copied = $state(false);
 
   // While another card is building the group's merge, this card's retry waits:
@@ -237,6 +251,29 @@
           <span class="muted">{job.result.listing.length} entries</span>
         {/if}
       </div>
+      {#if account.signedIn && account.pixelhop && canSaveToPixelHop(job.result, account.pixelhop.max)}
+        <div class="px" data-state={px}>
+          {#if px === 'idle'}
+            <button class="mini secondary save-px" type="button" onclick={() => (px = 'confirm')}><Icon name="upload" size={14} />{i18n.t('save.action')}</button>
+          {:else if px === 'confirm'}
+            <p class="muted small px-note">{i18n.t('save.notice')}</p>
+            <span class="px-row">
+              <button class="mini secondary save-px-go" type="button" onclick={sendToPixel}>{i18n.t('save.confirm')}</button>
+              <button class="mini" type="button" onclick={() => (px = 'idle')}>{i18n.t('save.cancel')}</button>
+            </span>
+          {:else if px === 'sending'}
+            <span class="muted small" aria-live="polite">{i18n.t('save.sending')}</span>
+          {:else if px === 'done'}
+            <span class="small ok-text" aria-live="polite">{i18n.t(pxDup ? 'save.duplicate' : 'save.done')} <a class="px-link" href={pxLink} target="_blank" rel="noopener">{i18n.t('save.open')}</a></span>
+          {:else}
+            <p class="err px-err" role="alert"><Icon name="alert" size={15} /><span>{i18n.t(saveErrorKey(pxErr), { max: fmtSize(account.pixelhop.max) })}</span></p>
+            <span class="px-row">
+              {#if pxErr === 'no_account'}<a class="mini secondary" href={account.pixelhop.url} target="_blank" rel="noopener">{i18n.t('save.open_pixelhop')}</a>{/if}
+              <button class="mini" type="button" onclick={() => (px = 'confirm')}>{i18n.t('job.retry')}</button>
+            </span>
+          {/if}
+        </div>
+      {/if}
     {:else if job.status === 'error'}
       <p class="err"><Icon name="alert" size={15} /><span>{errText}</span></p>
     {/if}
@@ -273,6 +310,12 @@
 </article>
 
 <style>
+  .px { margin-top: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .px-note { margin: 0; max-width: 52ch; }
+  .px-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .px-err { margin: 0; }
+  .ok-text { color: var(--green); }
+  .px-link { color: inherit; text-decoration: underline; }
   .card .side :global(svg) { flex: none; }
   .merge-list {
     margin: 2px 0 0;

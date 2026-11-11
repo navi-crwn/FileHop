@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -67,6 +68,18 @@ func main() {
 		SSOClient:     env("FILEHOP_SSO_CLIENT", "filehop"),
 		HopClients:    list("FILEHOP_HOP_CLIENTS", "imperium,helink"),
 		SecureCookies: secure,
+		TrustProxy:    env("FILEHOP_TRUST_PROXY", "") == "1",
+		StunURLs:      list("FILEHOP_STUN_URLS", ""),
+	}
+	// "Save to PixelHop" is off unless FileHop holds its own secret for PixelHop's store.
+	if cfg.PixelHopSecret = env("FILEHOP_PIXELHOP_SECRET", ""); cfg.PixelHopSecret != "" {
+		if len(cfg.PixelHopSecret) < 32 || cfg.PixelHopSecret == cfg.SSOSecret {
+			log.Fatal("FILEHOP_PIXELHOP_SECRET must be 32+ characters and different from FILEHOP_SSO_SECRET")
+		}
+		cfg.PixelHopURL = strings.TrimRight(env("FILEHOP_PIXELHOP_URL", app.PixelHopURLFor(cfg.SSOURL)), "/")
+		if mb, err := strconv.Atoi(env("FILEHOP_PIXELHOP_MAX_MB", "20")); err == nil && mb > 0 {
+			cfg.PixelHopMaxBytes = int64(mb) << 20
+		}
 	}
 	if cfg.SSOURL != "" && !cfg.SSOEnabled() {
 		log.Fatal("FILEHOP_SSO_URL is set but FILEHOP_SSO_SECRET is shorter than 32 characters")

@@ -41,6 +41,9 @@
      without the marketing page, inside the family's dashboard chrome. The server
      only serves it to a verified session; this is the page's own check. */
   const dash = typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/dashboard';
+  /* /send is the other half of the app: a file straight from one device to another. It sits in the
+     same chrome as the dashboard, but needs no account, so guests get it too. */
+  const sendPage = typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/send';
   let navOpen = $state(false);
 
   let locale = $state(guessLocale());
@@ -115,7 +118,7 @@
   // The tab title follows too, so a bookmark made in Japanese does not read English.
   $effect(() => {
     void i18n.load(locale).then(() => {
-      document.title = i18n.t(dash ? 'dash.title' : 'app.title');
+      document.title = i18n.t(dash ? 'dash.title' : sendPage ? 'send.title' : 'app.title');
     });
   });
 
@@ -512,9 +515,13 @@
 <a class="skip" href="#main">{i18n.t('nav.skip')}</a>
 
 {#snippet tools()}
+    {#if sendPage}
+      <a class="tbtn primary" href="/"><Icon name="refresh" size={17} /><span class="tlabel">{i18n.t('send.convert')}</span></a>
+    {:else}
     <button class="tbtn primary" type="button" onclick={pickFiles}>
       <Icon name="plus" size={17} /><span class="tlabel">{i18n.t('nav.add')}</span>
     </button>
+    {/if}
 
     <div class="lang">
       <button
@@ -657,15 +664,16 @@
         </div>
 {/snippet}
 
-{#if dash}
+{#if dash || sendPage}
 <div class="shell" class:open={navOpen}>
   <aside class="shell-side" id="shell-side" aria-label="FileHop">
-    <a class="shell-brand" href="/dashboard">
+    <a class="shell-brand" href={dash ? '/dashboard' : '/'}>
       <img src="/mark.svg" alt="" width="26" height="26" />
       <span class="hop-name hop-name-filehop">FileHop</span>
     </a>
     <nav class="shell-nav" aria-label="FileHop">
-      <a href="/dashboard" aria-current="page"><Icon name="refresh" size={18} />{i18n.t('dash.convert')}</a>
+      <a href={dash ? '/dashboard' : '/'} aria-current={dash ? 'page' : undefined}><Icon name="refresh" size={18} />{i18n.t('dash.convert')}</a>
+      <a href="/send" aria-current={sendPage ? 'page' : undefined}><Icon name="upload" size={18} />{i18n.t('send.nav')}</a>
       <a href="/changelog"><Icon name="text" size={18} />{i18n.t('footer.changelog')}</a>
     </nav>
     <p class="shell-label">{i18n.t('footer.family')}</p>
@@ -688,12 +696,15 @@
       <button class="tbtn icon shell-burger" type="button" aria-label={i18n.t('dash.menu')} aria-controls="shell-side" aria-expanded={navOpen} onclick={() => (navOpen = !navOpen)}>
         <Icon name={navOpen ? 'close' : 'menu'} size={17} />
       </button>
-      <h1 class="shell-title">{i18n.t('dash.convert')}</h1>
+      {#if sendPage}<p class="shell-title">{i18n.t('send.nav')}</p>{:else}<h1 class="shell-title">{i18n.t('dash.convert')}</h1>{/if}
       <span class="spacer"></span>
       {@render tools()}
     </header>
 
     <main id="main" class="shell-main">
+      {#if sendPage}
+        {#await import('./lib/send/Send.svelte') then m}<m.default />{/await}
+      {:else}
       <div class="dash-grid">
         <div class="dash-work">
           {@render dropzone()}
@@ -712,12 +723,13 @@
           {#if account.hubUrl}<a class="tbtn" href={account.hubUrl} rel="noopener">{i18n.t('account.hop_id')}</a>{/if}
         </section>
       </div>
+      {/if}
     </main>
   </div>
 </div>
 {/if}
 
-{#if !dash}
+{#if !dash && !sendPage}
 <div class="app">
   <header class="topbar">
     <span class="brand">
@@ -818,6 +830,7 @@
           <div class="ft-col">
             <h2 class="ft-h">{i18n.t('footer.support')}</h2>
             <nav aria-label={i18n.t('footer.support')}>
+              <a href="/send">{i18n.t('send.footer_link')}</a>
               <a href="/changelog">{i18n.t('footer.changelog')}</a>
               <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
               <button class="ft-link" type="button" data-settings onclick={() => (settingsOpen = true)}>{i18n.t('nav.settings')}</button>
