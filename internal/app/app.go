@@ -22,15 +22,18 @@ import (
 )
 
 type Config struct {
-	Version       string
-	BaseURL       string   // https://file.hel.ink, no trailing slash
-	SSOURL        string   // https://hub.hel.ink; empty turns sign-in and /hop/* off
-	SSOSecret     string   // this app's secret in the hub registry (HOP_SSO_SECRET_FILEHOP there)
-	SSOClient     string   // the slug the hub knows this app by
-	HopClients    []string // apps that may call /hop/* (imperium, helink)
-	SecureCookies bool
-	TrustProxy    bool     // read the visitor address from X-Forwarded-For (behind nginx)
-	StunURLs      []string // ICE: STUN servers for /send, from the environment
+	Version          string
+	BaseURL          string   // https://file.hel.ink, no trailing slash
+	SSOURL           string   // https://hub.hel.ink; empty turns sign-in and /hop/* off
+	SSOSecret        string   // this app's secret in the hub registry (HOP_SSO_SECRET_FILEHOP there)
+	SSOClient        string   // the slug the hub knows this app by
+	HopClients       []string // apps that may call /hop/* (imperium, helink)
+	SecureCookies    bool
+	TrustProxy       bool     // read the visitor address from X-Forwarded-For (behind nginx)
+	StunURLs         []string // ICE: STUN servers for /send, from the environment
+	PixelHopURL      string   // https://pixel.<family domain>; with the secret below turns "Save to PixelHop" on
+	PixelHopSecret   string   // FileHop's own secret for PixelHop's store (32+ characters, never the SSO secret)
+	PixelHopMaxBytes int64    // largest file forwarded; 0 means PixelHop's 20 MB default
 }
 
 func (c Config) SSOEnabled() bool { return c.SSOURL != "" && len(c.SSOSecret) >= 32 }
@@ -84,6 +87,7 @@ func (a *App) Handler() http.Handler {
 	m.HandleFunc("GET /auth/sso/logout", a.ssoLogout)
 	m.HandleFunc("GET /api/v1/me", a.apiMe)
 	m.HandleFunc("POST /api/v1/logout", a.apiLogout)
+	m.HandleFunc("POST /api/v1/pixelhop/save", a.pixelSave)
 	m.HandleFunc("POST /api/send/room", a.sendNewRoom)
 	m.HandleFunc("GET /api/send/config", a.sendConfig)
 	m.HandleFunc("GET /api/send/signal", a.sendSignal)

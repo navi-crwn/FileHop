@@ -14,6 +14,8 @@ export interface Account {
   email: string;
   hubUrl: string;
   logoutUrl: string;
+  /** "Save to PixelHop" is available: PixelHop's address and the largest file it takes; null when off */
+  pixelhop: { url: string; max: number } | null;
 }
 
 export const account: Account = $state({
@@ -24,7 +26,8 @@ export const account: Account = $state({
   name: '',
   email: '',
   hubUrl: '',
-  logoutUrl: ''
+  logoutUrl: '',
+  pixelhop: null
 });
 
 export async function loadAccount(): Promise<void> {
@@ -39,6 +42,8 @@ export async function loadAccount(): Promise<void> {
     account.email = typeof me.email === 'string' ? me.email : '';
     account.hubUrl = typeof me.hub_url === 'string' ? me.hub_url : '';
     account.logoutUrl = typeof me.logout_url === 'string' ? me.logout_url : '';
+    const px = me.pixelhop;
+    account.pixelhop = account.signedIn && px && typeof px.url === 'string' && typeof px.max === 'number' ? { url: px.url, max: px.max } : null;
   } catch {
     /* offline or no server: stay a guest */
   } finally {
