@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -228,5 +229,42 @@ func TestSendRoomIsSealedOnceTwoDevicesHaveJoined(t *testing.T) {
 	_, _, err := c.Read(ctx)
 	if websocket.CloseStatus(err) != 4404 {
 		t.Fatalf("a sealed room must refuse newcomers, got %v", err)
+	}
+}
+
+func TestSendParallelGuessesFromOneAddressAreStillLimited(t *testing.T) {
+	a, srv := newTestApp(t, false)
+	a.cfg.TrustProxy = true
+	var mu sync.Mutex
+	reachedJoin, refused := 0, 0
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ { // 20 sockets opened at the same moment, all guessing
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			c, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(srv.URL, "http")+"/api/send/signal",
+				&websocket.DialOptions{HTTPHeader: http.Header{"X-Forwarded-For": {"198.51.100.99"}}})
+			if err != nil {
+				return
+			}
+			defer c.CloseNow()
+			b, _ := json.Marshal(map[string]any{"t": "join", "code": "000000"})
+			c.Write(ctx, websocket.MessageText, b)
+			_, _, err = c.Read(ctx)
+			mu.Lock()
+			defer mu.Unlock()
+			switch websocket.CloseStatus(err) {
+			case 4404:
+				reachedJoin++
+			case 4429:
+				refused++
+			}
+		}()
+	}
+	wg.Wait()
+	if reachedJoin > sendJoinFails || reachedJoin+refused != 20 {
+		t.Fatalf("at most %d guesses may reach the join, got %d (refused %d)", sendJoinFails, reachedJoin, refused)
 	}
 }

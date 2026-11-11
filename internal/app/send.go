@@ -85,12 +85,20 @@ func (h *sendHub) allow(key string, max int, every time.Duration) bool {
 	return w.n <= max
 }
 
-// over reports whether key has already used up max in the current window, without counting a try.
-func (h *sendHub) over(key string, max int, every time.Duration) bool {
+// reserve counts one try for key and reports whether it fits in max for the current window, in one
+// locked step: sockets opened at the same moment cannot all pass a check before any of them is counted.
+// A try that turns out not to be a failure is given back with release.
+func (h *sendHub) reserve(key string, max int, every time.Duration) bool {
+	return h.allow(key, max, every)
+}
+
+// release gives back a try that reserve counted (a join that succeeded was not a wrong guess).
+func (h *sendHub) release(key string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	w := h.win[key]
-	return w != nil && h.clock().Sub(w.start) <= every && w.n >= max
+	if w := h.win[key]; w != nil && w.n > 0 {
+		w.n--
+	}
 }
 
 // gcLocked drops expired rooms and stale rate windows; the caller holds mu.
@@ -316,16 +324,18 @@ func (a *App) sendSignal(w http.ResponseWriter, r *http.Request) {
 	}
 	// Guessing codes is the attack here. An address that has used up its wrong tries is refused before
 	// the join is even attempted, so a lucky guess does not get in after the limit is reached.
-	if a.send.over("jf"+ip, sendJoinFails, time.Minute) {
+	// The try is counted before the join and given back if it was not a wrong guess, so many sockets at
+	// once cannot get more than the intended number of guesses.
+	if !a.send.reserve("jf"+ip, sendJoinFails, time.Minute) {
 		c.Close(websocket.StatusCode(4429), "rate_limited")
 		return
 	}
 	p := &sendPeer{id: randToken(9), max: a.sendMax(r), out: make(chan []byte, 64), cancel: cancel}
 	why := a.send.join(j.Code, p)
+	if why != "unknown" {
+		a.send.release("jf" + ip) // joined, or a full room: not a wrong guess
+	}
 	if why != "" {
-		if why == "unknown" {
-			a.send.allow("jf"+ip, sendJoinFails, time.Minute) // count the wrong try
-		}
 		c.Close(websocket.StatusCode(4404), why)
 		return
 	}
