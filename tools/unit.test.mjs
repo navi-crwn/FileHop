@@ -292,6 +292,10 @@ export const actionLabel = (def) => def.labelKey ? i18n.t(def.labelKey) : def.la
 `);
 writeFileSync(join(dir, 'format-stub.mjs'), 'export const fmtSize = (n) => `${n} B`;');
 writeFileSync(join(dir, 'pages-stub.mjs'), 'export const looksLikePages = () => true;');
+// the account store (a mutable object the tests flip) and the real Save to PixelHop helpers
+writeFileSync(join(dir, 'account-stub.mjs'), 'export const account = { signedIn: false, pixelhop: null };');
+writeFileSync(join(dir, 'pixelhop.mjs'), ts.transpileModule(readFileSync(new URL('../web/src/lib/core/pixelhop.ts', import.meta.url), 'utf8'),
+  { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
 for (const name of ['Icon', 'JobCard']) {
   const url = new URL(`../web/src/lib/components/${name}.svelte`, import.meta.url);
   const compiled = compile(readFileSync(url, 'utf8'), { filename: `${name}.svelte`, generate: 'server' });
@@ -301,9 +305,30 @@ for (const name of ['Icon', 'JobCard']) {
     .replace("from '../i18n/index.svelte'", "from './i18n-stub.mjs'")
     .replace("from '../core/actions'", "from './actions.mjs'")
     .replace("from '../util/format'", "from './format-stub.mjs'")
-    .replace("from '../core/pages'", "from './pages-stub.mjs'"));
+    .replace("from '../core/pages'", "from './pages-stub.mjs'")
+    .replace("from '../account.svelte'", "from './account-stub.mjs'")
+    .replace("from '../core/pixelhop'", "from './pixelhop.mjs'"));
 }
 const { default: JobCard } = await import('file://' + join(dir, 'JobCard.mjs').replace(/\\/g, '/'));
+const { account: accountStub } = await import('file://' + join(dir, 'account-stub.mjs').replace(/\\/g, '/'));
+test('Save to PixelHop shows only for a signed-in person, when it is on, on a result PixelHop takes', () => {
+  const noop = () => {};
+  const job = (name, type, size) => ({ id: 'j', file: new File(['x'], 'in.jpg'), name: 'in.jpg', size: 10, det: { mime: 'image/jpeg' }, action: 'webp', opts: {}, status: 'done', progress: 1,
+    result: { blob: new Blob(['x'], { type }), name, size, saving: 0 } });
+  const html = (j) => render(JobCard, { props: { job: j, pdfCount: 0, onAction: noop, onOpt: noop, onRun: noop, onCancel: noop, onRemove: noop, onDownload: noop } }).body;
+  const png = job('in.png', 'image/png', 1000);
+  assert.ok(!html(png).includes('save-px'), 'a guest has no action');
+  accountStub.signedIn = true;
+  assert.ok(!html(png).includes('save-px'), 'switched off on the server: no action');
+  accountStub.pixelhop = { url: 'https://pixel.example.org', max: 20 << 20 };
+  const on = html(png);
+  assert.ok(on.includes('save-px') && on.includes('Save to PixelHop'), 'signed in, on, a PNG: the action');
+  assert.ok(!on.includes(en['save.notice']), 'the confirmation sentence appears once the action is pressed, not before');
+  assert.ok(!html(job('in.json', 'application/json', 1000)).includes('save-px'), 'a JSON result is not offered');
+  assert.ok(!html(job('in.png', 'image/png', 21 << 20)).includes('save-px'), 'over the cap is not offered');
+  accountStub.signedIn = false; accountStub.pixelhop = null;
+});
+
 function cardButtons(job, jobs) {
   const noop = () => {};
   const { body } = render(JobCard, { props: {
