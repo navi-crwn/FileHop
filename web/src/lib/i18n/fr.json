@@ -279,5 +279,6 @@
   "save.err_rate_limited": "Trop d’enregistrements. Attendez une minute et réessayez.",
   "save.err_not_signed_in": "Reconnectez-vous pour enregistrer dans PixelHop.",
   "save.err_failed": "Impossible d’enregistrer dans PixelHop. FileHop n’a rien conservé.",
-  "save.err_busy": "FileHop est occupé à enregistrer d’autres fichiers. Réessayez dans un instant."
+  "save.err_busy": "FileHop est occupé à enregistrer d’autres fichiers. Réessayez dans un instant.",
+  "send.err_handshake_stalled": "Les deux appareils se sont connectés mais n’ont pas terminé la vérification mutuelle. Recommencez."
 }

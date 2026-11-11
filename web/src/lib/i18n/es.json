@@ -279,5 +279,6 @@
   "save.err_rate_limited": "Demasiados guardados. Espera un minuto e inténtalo de nuevo.",
   "save.err_not_signed_in": "Inicia sesión de nuevo para guardar en PixelHop.",
   "save.err_failed": "No se pudo guardar en PixelHop. FileHop no conservó nada.",
-  "save.err_busy": "FileHop está ocupado guardando otros archivos. Inténtalo de nuevo en un momento."
+  "save.err_busy": "FileHop está ocupado guardando otros archivos. Inténtalo de nuevo en un momento.",
+  "send.err_handshake_stalled": "Los dos dispositivos se conectaron, pero no terminaron de comprobarse entre sí. Empieza de nuevo."
 }

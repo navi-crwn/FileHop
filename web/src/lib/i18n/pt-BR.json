@@ -279,5 +279,6 @@
   "save.err_rate_limited": "Muitos salvamentos. Aguarde um minuto e tente de novo.",
   "save.err_not_signed_in": "Entre novamente para salvar no PixelHop.",
   "save.err_failed": "Não foi possível salvar no PixelHop. O FileHop não guardou nada.",
-  "save.err_busy": "O FileHop está ocupado salvando outros arquivos. Tente de novo em instantes."
+  "save.err_busy": "O FileHop está ocupado salvando outros arquivos. Tente de novo em instantes.",
+  "send.err_handshake_stalled": "Os dois dispositivos se conectaram, mas não concluíram a verificação mútua. Comece de novo."
 }

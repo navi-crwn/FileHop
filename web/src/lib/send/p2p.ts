@@ -66,6 +66,8 @@ export class Session {
   private roomAt = 0;
   private early: RTCIceCandidateInit[] = [];
   private timer = 0;
+  private verifyTimer = 0;
+  private revealTimer = 0;
   private nonce = '';
   private myFp = '';
   private myCommit = '';
@@ -248,8 +250,17 @@ export class Session {
     dc.onopen = async () => {
       this.note('dc:open');
       clearTimeout(this.timer);
+      // connected, but the pairing check must finish too: never leave the person looking at "Connecting"
+      this.verifyTimer = window.setTimeout(() => { if (!this.sasShown) this.fail('handshake_stalled'); }, 10000);
       this.ws?.close(); // the server is not needed any more
+      // The first message a device sends on a fresh channel is sometimes not delivered (seen with the
+      // answerer's reveal in Chromium, about one pairing in thirty). Reveal is idempotent, so it is sent
+      // again until our own number is shown; a device that receives a repeat answers with its own.
       this.say({ t: 'reveal', n: this.nonce });
+      this.revealTimer = window.setInterval(() => {
+        if (this.sasShown || this.closed) clearInterval(this.revealTimer);
+        else this.say({ t: 'reveal', n: this.nonce });
+      }, 700);
       this.h.route(await this.routeKind());
     };
     dc.onclose = () => { this.note('dc:close'); this.dropped(); };
@@ -264,7 +275,8 @@ export class Session {
 
   // The other device's nonce must open the commitment it made before it saw our description.
   private async reveal(n: unknown) {
-    if (this.revealed || this.sasShown) return;
+    if (this.revealed) { this.say({ t: 'reveal', n: this.nonce }); return; } // a repeat: the other side may have missed ours
+    if (this.sasShown) return;
     this.revealed = true;
     const pc = this.pc!;
     const remoteFp = fingerprintOf(pc.currentRemoteDescription?.sdp);
@@ -272,6 +284,9 @@ export class Session {
     if (!remoteFp || localFp !== this.myFp || !(await revealMatches(this.peerCommit, remoteFp, String(n)))) return this.fail('commit_mismatch');
     this.h.sas(await verificationNumber(localFp, remoteFp, this.code));
     this.sasShown = true;
+    clearTimeout(this.verifyTimer);
+    clearInterval(this.revealTimer);
+    this.note('sas');
     this.h.phase('verify');
   }
 
@@ -299,6 +314,8 @@ export class Session {
   leave() {
     this.closed = true;
     clearTimeout(this.timer);
+    clearTimeout(this.verifyTimer);
+    clearInterval(this.revealTimer);
     this.wake?.();
     if (this.incoming) this.abortIncoming('cancelled'); // tells the worker to clean up, then ends it
     else this.endWorker();
@@ -312,6 +329,8 @@ export class Session {
     if (this.closed) return;
     this.closed = true;
     clearTimeout(this.timer);
+    clearTimeout(this.verifyTimer);
+    clearInterval(this.revealTimer);
     this.wake?.();
     const pc = this.pc;
     this.h.diag([
@@ -343,7 +362,7 @@ export class Session {
   // ---------- control messages ----------
   private async control(m: any) {
     switch (m.t) {
-      case 'reveal': return this.reveal(m.n);
+      case 'reveal': this.note('rx:reveal'); return this.reveal(m.n);
       case 'ok': this.peerOk = true; return this.maybeReady();
     }
     // Everything below is for after both people pressed "Match".

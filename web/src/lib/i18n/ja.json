@@ -279,5 +279,6 @@
   "save.err_rate_limited": "保存の回数が多すぎます。1分ほど待ってからやり直してください。",
   "save.err_not_signed_in": "PixelHop に保存するには、もう一度ログインしてください。",
   "save.err_failed": "PixelHop に保存できませんでした。FileHop には何も残っていません。",
-  "save.err_busy": "FileHop は他のファイルを保存中です。少し待ってからやり直してください。"
+  "save.err_busy": "FileHop は他のファイルを保存中です。少し待ってからやり直してください。",
+  "send.err_handshake_stalled": "2台は接続しましたが、相互の確認が完了しませんでした。最初からやり直してください。"
 }

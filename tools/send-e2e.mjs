@@ -55,7 +55,7 @@ const launch = () => chromium.launch({
 
 // Rooms are limited to 10 per hour per visitor address. The test server runs with
 // FILEHOP_TRUST_PROXY=1 and every device presents its own address, like visitors behind a proxy.
-let nextAddr = 1;
+let nextAddr = Number(process.env.E2E_ADDR_BASE || 1); // a loop of runs gives each its own range
 /** A page for one device. `init` runs in the page before the app does. */
 async function device(browser, init) {
   const n = nextAddr++;
@@ -64,6 +64,24 @@ async function device(browser, init) {
   const problems = [];
   page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) problems.push(m.text()); });
   page.on('pageerror', (e) => problems.push('pageerror: ' + e.message));
+  await page.addInitScript(() => {
+    const L = (window.__log = []); const t0 = performance.now();
+    const log = (s) => L.push(Math.round(performance.now() - t0) + 'ms ' + s);
+    const PC = window.RTCPeerConnection;
+    window.RTCPeerConnection = class extends PC {
+      constructor(...a) {
+        super(...a); log('pc:new');
+        this.addEventListener('connectionstatechange', () => log('pc:' + this.connectionState));
+        this.addEventListener('iceconnectionstatechange', () => log('ice:' + this.iceConnectionState));
+        this.addEventListener('datachannel', () => log('pc:datachannel'));
+      }
+    };
+    for (const k of ['generateCertificate']) window.RTCPeerConnection[k] = PC[k].bind(PC);
+    const WS = window.WebSocket;
+    window.WebSocket = class extends WS {
+      constructor(...a) { super(...a); this.addEventListener('message', (e) => { try { log('ws:' + JSON.parse(e.data).t); } catch {} }); this.addEventListener('close', (e) => log('ws:close ' + e.code)); }
+    };
+  });
   if (init) await page.addInitScript(init);
   return { ctx, page, problems };
 }
@@ -80,7 +98,12 @@ async function pair(browsers, { initA, initB, store = 'opfs', match = true } = {
   await B.page.fill('#code-in', code);
   await B.page.click('#join');
   // either the numbers appear on both screens or the page shows an error (with its technical detail)
-  await Promise.all([A, B].map((d) => d.page.waitForSelector('#sas, #error', { timeout: 40000 })));
+  try {
+    await Promise.all([A, B].map((d) => d.page.waitForSelector('#sas, #error', { timeout: 40000 })));
+  } catch (e) {
+    const dump = await Promise.all([A, B].map((d) => d.page.evaluate(() => ({ log: window.__log, text: (document.querySelector('.send')?.innerText ?? '').replace(/s+/g, ' ').slice(180, 520) })).catch(() => null)));
+    throw new Error('pairing stalled: ' + JSON.stringify(dump) + ' console A: ' + A.problems.join(' | ') + ' B: ' + B.problems.join(' | '));
+  }
   const failed = await Promise.all([A, B].map((d) => d.page.$('#error')));
   if (failed[0] || failed[1]) {
     const info = await Promise.all([A, B].map((d) => d.page.evaluate(() => ({ why: document.querySelector('#error')?.getAttribute('data-reason'), tech: document.querySelector('.tech code')?.textContent }))));

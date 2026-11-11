@@ -90,7 +90,7 @@
     const k = alias[r ?? ''] ?? r ?? '';
     return t('send.why_' + (known.includes(k) ? k : 'other'));
   };
-  const ERRORS = ['no_direct', 'room_unknown', 'room_full', 'room_expired', 'rate_limited', 'signal_lost', 'connection_lost', 'busy', 'protocol', 'commit_mismatch', 'unsupported'];
+  const ERRORS = ['no_direct', 'room_unknown', 'room_full', 'room_expired', 'rate_limited', 'signal_lost', 'connection_lost', 'busy', 'protocol', 'commit_mismatch', 'handshake_stalled', 'unsupported'];
   const errText = (r: string) => t('send.err_' + (ERRORS.includes(r) ? r : 'signal_lost'));
   const routeText = (r: Route) => (r === 'host' ? t('send.route_host') : r === 'relay' ? t('send.route_relay') : r === 'unknown' ? '' : t('send.route_srflx'));
   const grouped = (c: string) => (c.length === 6 ? c.slice(0, 3) + ' ' + c.slice(3) : c);

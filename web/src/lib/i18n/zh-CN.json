@@ -279,5 +279,6 @@
   "save.err_rate_limited": "保存太频繁。请等一分钟再试。",
   "save.err_not_signed_in": "请重新登录后再保存到 PixelHop。",
   "save.err_failed": "无法保存到 PixelHop。FileHop 没有保留任何内容。",
-  "save.err_busy": "FileHop 正忙于保存其他文件，请稍后再试。"
+  "save.err_busy": "FileHop 正忙于保存其他文件，请稍后再试。",
+  "send.err_handshake_stalled": "两台设备已连接，但没有完成互相核对。请重新开始。"
 }
