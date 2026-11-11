@@ -1,9 +1,72 @@
 {
   "schema": 1,
   "sources": {
-    "FileHop": "f5fa9bbb202d2b26b0592348c2521ee1ceb95110"
+    "FileHop": "52c6d328f468dad574a1d425d320cc1a3275232e"
   },
   "entries": [
+    {
+      "kind": "commit",
+      "date": "2026-11-10T23:45:38+07:00",
+      "title": "Merge pull request #14: Add a signed-in /dashboard and re-check stale HOP ID sessions with a silent hub round trip",
+      "url": "https://github.com/navi-crwn/FileHop/commit/52c6d328f468dad574a1d425d320cc1a3275232e",
+      "id": "52c6d328",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "pr",
+      "date": "2026-11-10T16:45:38Z",
+      "title": "Add a signed-in /dashboard and re-check stale HOP ID sessions with a silent hub round trip",
+      "url": "https://github.com/navi-crwn/FileHop/pull/14",
+      "id": "#14",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T17:28:46+01:00",
+      "title": "Check the changelog page for the eyebrow element, not the word",
+      "url": "https://github.com/navi-crwn/FileHop/commit/2921b4e3496f654ac4173a5cdd4a73189d5fa830",
+      "id": "2921b4e3",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T17:25:28+01:00",
+      "title": "Rebuild the changelog snapshot",
+      "url": "https://github.com/navi-crwn/FileHop/commit/6d579bd513bd7e53421331a0e5198b6b74842587",
+      "id": "6d579bd5",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T16:44:40+01:00",
+      "title": "Keep the quiet re-check from dropping work or depending on a down hub",
+      "url": "https://github.com/navi-crwn/FileHop/commit/2accb24da4586851a130302cae585d7ec81e3fef",
+      "id": "2accb24d",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T16:39:09+01:00",
+      "title": "Re-check a stale session with a silent hub round trip",
+      "url": "https://github.com/navi-crwn/FileHop/commit/87864fdc3e1501a4ed05ccb15234713c15cca847",
+      "id": "87864fdc",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
+    {
+      "kind": "commit",
+      "date": "2026-11-10T16:25:39+01:00",
+      "title": "Add a signed-in dashboard and stop showing a stale HOP ID account",
+      "url": "https://github.com/navi-crwn/FileHop/commit/e06460ed46f9b54b600b6199d87ab0c387963475",
+      "id": "e06460ed",
+      "app": "FileHop",
+      "repo": "FileHop"
+    },
     {
       "kind": "pr",
       "date": "2026-11-10T15:12:28Z",

@@ -115,6 +115,7 @@ var changeFamily = []familyApp{
 	{"biohop", "BioHop", "https://bio.hel.ink", "/hop-marks/biohop.svg"},
 	{"pixelhop", "PixelHop", "https://pixel.hel.ink", "/hop-marks/pixelhop.svg"},
 	{"notehop", "NoteHop", "https://note.hel.ink", "/hop-marks/notehop.svg"},
+	{"payhop", "PayHop", "https://pay.hel.ink", "/hop-marks/payhop.svg"},
 }
 
 // appStrings are the app's own dictionaries (web/src/lib/i18n), so the footer and the top bar say what the app says.
