@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/navi-crwn/FileHop/internal/hop"
@@ -25,7 +27,92 @@ const (
 	pixelPerMinute  = 20       // saves one person may start per minute
 	pixelTimeout    = 40 * time.Second
 	pixelNameMax    = 200
+	pixelSlots      = 4                // files held in memory at once, across everyone
+	pixelReadTime   = 60 * time.Second // the whole body must arrive within this
 )
+
+// pixelGate bounds the memory the feature can use: a few bodies at once, and one save per person.
+type pixelGate struct {
+	mu    sync.Mutex
+	busy  map[string]bool
+	slots int
+}
+
+// enter returns "" when who may go ahead, "person" when they already have a save running and
+// "full" when every slot is taken. A successful enter must be paired with leave.
+func (g *pixelGate) enter(who string) string {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.busy == nil {
+		g.busy = map[string]bool{}
+	}
+	switch {
+	case g.busy[who]:
+		return "person"
+	case g.slots >= pixelSlots:
+		return "full"
+	}
+	g.busy[who] = true
+	g.slots++
+	return ""
+}
+
+func (g *pixelGate) leave(who string) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	delete(g.busy, who)
+	g.slots--
+}
+
+// readPixelBody reads the whole body into one buffer sized from Content-Length (grown by append only
+// when the length is not known). A body over max is *http.MaxBytesError; anything else is a broken read.
+func readPixelBody(w http.ResponseWriter, r *http.Request, max int64) ([]byte, error) {
+	rc := http.NewResponseController(w)
+	_ = rc.SetReadDeadline(time.Now().Add(pixelReadTime))
+	body := http.MaxBytesReader(w, r.Body, max)
+	if n := r.ContentLength; n > 0 && n <= max {
+		buf := make([]byte, n)
+		if _, err := io.ReadFull(body, buf); err != nil {
+			return nil, err
+		}
+		// Content-Length promised exactly n bytes; one more would be a mismatch the server refuses itself
+		return buf, nil
+	}
+	return io.ReadAll(body)
+}
+
+// bodyErrorCode tells "too big" from "the read broke" (a dropped connection, a timeout).
+func bodyErrorCode(err error) (int, string) {
+	var tooBig *http.MaxBytesError
+	if errors.As(err, &tooBig) {
+		return http.StatusRequestEntityTooLarge, "too_large"
+	}
+	return http.StatusBadRequest, "failed"
+}
+
+// pixelName is the file name the page sent in X-FileHop-Name (percent-encoded, so it never appears in
+// this app's own request line): decoded, cleaned of control characters and cut to 200 characters.
+func pixelName(r *http.Request) string {
+	raw := r.Header.Get("X-FileHop-Name")
+	if raw == "" || len(raw) > 4*pixelNameMax*3 {
+		return ""
+	}
+	dec, err := url.PathUnescape(raw)
+	if err != nil {
+		return ""
+	}
+	var out []rune
+	for _, c := range strings.TrimSpace(dec) {
+		if c < 0x20 || c == 0x7f || (c >= 0x80 && c < 0xa0) {
+			continue
+		}
+		out = append(out, c)
+		if len(out) == pixelNameMax {
+			break
+		}
+	}
+	return string(out)
+}
 
 // PixelHopURLFor is the address of PixelHop in the family the hub belongs to: pixel.<the hub's
 // parent domain>, so no second host has to be configured. Empty for a local hub.
@@ -97,7 +184,7 @@ func pixelFail(w http.ResponseWriter, status int, code string) {
 	writeJSON(w, status, map[string]any{"ok": false, "error": code})
 }
 
-// POST /api/v1/pixelhop/save?name=...  (body: the raw file)
+// POST /api/v1/pixelhop/save  (body: the raw file; its name in the X-FileHop-Name header, percent-encoded)
 func (a *App) pixelSave(w http.ResponseWriter, r *http.Request) {
 	if !a.pixelEnabled() {
 		http.NotFound(w, r)
@@ -123,22 +210,26 @@ func (a *App) pixelSave(w http.ResponseWriter, r *http.Request) {
 		pixelFail(w, http.StatusRequestEntityTooLarge, "too_large")
 		return
 	}
-	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, max))
+	// one save per person and a handful in all, so the memory held for bodies has a ceiling
+	if why := a.px.enter(u.Sub); why != "" {
+		pixelFail(w, map[string]int{"person": http.StatusTooManyRequests, "full": http.StatusServiceUnavailable}[why], "busy")
+		return
+	}
+	defer a.px.leave(u.Sub)
+	body, err := readPixelBody(w, r, max)
 	if err != nil {
-		pixelFail(w, http.StatusRequestEntityTooLarge, "too_large")
+		st, code := bodyErrorCode(err)
+		pixelFail(w, st, code)
 		return
 	}
 	if len(body) == 0 || sniffPixelType(body) == "" {
 		pixelFail(w, http.StatusUnsupportedMediaType, "unsupported_type")
 		return
 	}
-	name := []rune(strings.TrimSpace(r.URL.Query().Get("name")))
-	if len(name) > pixelNameMax {
-		name = name[:pixelNameMax]
-	}
+	// PixelHop's request line carries the name (it is part of the signed path); this app's own does not.
 	pathQ := "/hop/media"
-	if len(name) > 0 {
-		pathQ += "?name=" + url.QueryEscape(string(name))
+	if name := pixelName(r); name != "" {
+		pathQ += "?name=" + url.QueryEscape(name)
 	}
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, a.cfg.PixelHopURL+pathQ, bytes.NewReader(body))
 	if err != nil {

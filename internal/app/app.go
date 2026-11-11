@@ -48,6 +48,7 @@ type App struct {
 	started time.Time
 	hubUp   func() bool // is the hub reachable (cached); replaced in tests
 	send    sendHub
+	px      pixelGate
 }
 
 // New builds the handler. static is the built browser app (web/dist).

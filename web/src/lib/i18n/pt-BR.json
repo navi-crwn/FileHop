@@ -106,7 +106,7 @@
   "presets.delete": "Excluir",
   "presets.saved": "Salvo",
   "privacy.title": "O que esta página envia",
-  "privacy.body": "Nada. Os arquivos são abertos com a File API, decodificados e codificados nesta aba e devolvidos por uma URL blob. Não há conversão no servidor nem fila, e nenhuma conta é necessária. Se você entrar com o HOP ID, o servidor guarda só a sua sessão, nunca um arquivo. A única exceção é o botão opcional “Salvar no PixelHop”: ao apertá-lo, esse único arquivo é enviado pelo servidor do FileHop para a sua biblioteca do PixelHop, e o FileHop não o guarda.",
+  "privacy.body": "Nada, exceto o que você mesmo enviar pelo botão opcional “Salvar no PixelHop”. Os arquivos são abertos com a File API, decodificados e codificados nesta aba e devolvidos por uma URL blob. Não há conversão no servidor nem fila, e nenhuma conta é necessária. Se você entrar com o HOP ID, o servidor guarda só a sua sessão, nunca um arquivo. A única exceção é o botão opcional “Salvar no PixelHop”: ao apertá-lo, esse único arquivo é enviado pelo servidor do FileHop para a sua biblioteca do PixelHop, e o FileHop não o guarda.",
   "privacy.network": "Requisições de rede desde que esta aba abriu: {n}",
   "privacy.network_note": "Fontes, ícones e código vêm desta mesma origem.",
   "privacy.cleared": "Fila e memória limpas",
@@ -171,7 +171,7 @@
   "err.archive_unsafe_path": "O compactado contém um caminho que aponta para fora dele (../). Recusado.",
   "err.archive_bad_zip": "Esse arquivo não é um ZIP ou GZIP legível.",
   "err.svg_needs_main_thread": "Este SVG precisa ser renderizado na página, o que não está disponível agora. Recarregue e tente de novo.",
-  "toast.added": "{n} arquivos adicionados",
+  "toast.added": "Arquivos adicionados: {n}",
   "toast.limit": "A fila comporta 50 arquivos por vez. {added} de {total} foram adicionados; converta ou limpe este lote primeiro.",
   "licenses.no_agpl": "A leitura de PDF usa pdf.js, não MuPDF. Não há nenhum motor AGPL nesta versão.",
   "account.menu": "Conta",
@@ -278,5 +278,6 @@
   "save.err_unsupported_type": "O PixelHop não aceita este tipo de arquivo.",
   "save.err_rate_limited": "Muitos salvamentos. Aguarde um minuto e tente de novo.",
   "save.err_not_signed_in": "Entre novamente para salvar no PixelHop.",
-  "save.err_failed": "Não foi possível salvar no PixelHop. O FileHop não guardou nada."
+  "save.err_failed": "Não foi possível salvar no PixelHop. O FileHop não guardou nada.",
+  "save.err_busy": "O FileHop está ocupado salvando outros arquivos. Tente de novo em instantes."
 }

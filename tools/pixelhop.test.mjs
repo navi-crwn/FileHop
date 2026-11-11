@@ -30,7 +30,7 @@ test('only kinds PixelHop takes, within the size cap, qualify', () => {
 });
 
 test('every server error code has a translated message; anything else is a plain failure', () => {
-  for (const c of ['no_account', 'quota_exceeded', 'too_large', 'unsupported_type', 'rate_limited', 'not_signed_in']) assert.equal(P.saveErrorKey(c), 'save.err_' + c);
+  for (const c of ['no_account', 'quota_exceeded', 'too_large', 'unsupported_type', 'rate_limited', 'not_signed_in', 'busy']) assert.equal(P.saveErrorKey(c), 'save.err_' + c);
   for (const c of ['csrf', 'failed', 'store_failed', '<script>', undefined, 5, null]) assert.equal(P.saveErrorKey(c), 'save.err_failed');
 });
 
@@ -39,12 +39,18 @@ test('saveToPixelHop sends one same-origin call with the marker header and maps 
   const fake = (status, body) => async (url, init) => { seen = { url, init }; return { ok: status < 300, status, json: async () => body }; };
   const ok = await P.saveToPixelHop(new Blob(['x']), 'a b.png', fake(200, { ok: true, page_url: 'https://pixel.hel.ink/x', duplicate: true }));
   assert.deepEqual(ok, { ok: true, pageUrl: 'https://pixel.hel.ink/x', duplicate: true });
-  assert.equal(seen.url, '/api/v1/pixelhop/save?name=a%20b.png');
+  assert.equal(seen.url, '/api/v1/pixelhop/save');
+  assert.equal(seen.init.headers['X-FileHop-Name'], 'a%20b.png');
   assert.equal(seen.init.method, 'POST');
   assert.equal(seen.init.credentials, 'same-origin');
   assert.equal(seen.init.headers['X-Requested-With'], 'filehop');
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(409, { ok: false, error: 'no_account' })), { ok: false, error: 'no_account' });
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(200, { ok: true, page_url: 'javascript:alert(1)' })), { ok: false, error: 'failed' });
+  // a proxy's own HTML 413 / 503 is still understood
+  const html = (status) => async () => ({ ok: false, status, json: async () => { throw new Error('html'); } });
+  assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', html(413)), { ok: false, error: 'too_large' });
+  assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', html(503)), { ok: false, error: 'busy' });
+  assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', html(502)), { ok: false, error: 'failed' });
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', async () => { throw new Error('offline'); }), { ok: false, error: 'failed' });
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', async () => ({ ok: false, status: 502, json: async () => { throw new Error('html'); } })), { ok: false, error: 'failed' });
 });

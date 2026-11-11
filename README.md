@@ -54,7 +54,7 @@ Tested on 2026-11-08 in Chromium 158, Firefox 159 and the WebKit engine (22 conv
 
 - The app's own files (HTML, scripts, fonts). Every request is same-origin; the page loads nothing from any other site.
 - If you sign in with HOP ID: your HOP ID number, name and email, and a session cookie. Signing out, or being signed out by the hub, deletes the session.
-- Never a file, a file name, or a conversion result, except the one you send yourself with "Save to PixelHop" (only when it is switched on and you are signed in): that file is held in memory for the length of the call, signed as you, forwarded to PixelHop and forgotten; it is never written to disk or logged.
+- Never a file, a file name, or a conversion result, except the one you send yourself with "Save to PixelHop" (only when it is switched on and you are signed in): that file is held in memory for the length of the call, signed as you, forwarded to PixelHop and forgotten; it is never written to disk or logged by FileHop. (PixelHop's request line carries the file name, because the name is part of the signed path; FileHop's own request carries it in a header, not in the address.)
 - On `/send` (a file straight from one device to another): a short-lived six-digit room code, the two devices' session descriptions for a few seconds while they connect, and their IP addresses. After that the devices talk directly and the server is out of the path; the file, its name and its size never reach it. The file travels encrypted between the two browsers, and FileHop does not scan it.
 
 The page runs cross-origin isolated (`Cross-Origin-Embedder-Policy: require-corp`) with a strict Content Security Policy: no inline scripts, no `eval`, no third-party hosts.

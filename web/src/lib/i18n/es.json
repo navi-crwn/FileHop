@@ -106,7 +106,7 @@
   "presets.delete": "Eliminar",
   "presets.saved": "Guardado",
   "privacy.title": "Qué envía esta página",
-  "privacy.body": "Nada. Los archivos se abren con la File API, se decodifican y codifican en esta pestaña y se devuelven mediante una URL blob. No hay conversión en el servidor ni cola, y no hace falta una cuenta. Si inicias sesión con HOP ID, el servidor solo guarda tu sesión, nunca un archivo. La única excepción es el botón opcional «Guardar en PixelHop»: al pulsarlo, ese único archivo se envía a través del servidor de FileHop a tu biblioteca de PixelHop, y FileHop no lo conserva.",
+  "privacy.body": "Nada, salvo lo que tú mismo envíes con el botón opcional «Guardar en PixelHop». Los archivos se abren con la File API, se decodifican y codifican en esta pestaña y se devuelven mediante una URL blob. No hay conversión en el servidor ni cola, y no hace falta una cuenta. Si inicias sesión con HOP ID, el servidor solo guarda tu sesión, nunca un archivo. La única excepción es el botón opcional «Guardar en PixelHop»: al pulsarlo, ese único archivo se envía a través del servidor de FileHop a tu biblioteca de PixelHop, y FileHop no lo conserva.",
   "privacy.network": "Peticiones de red desde que se abrió esta pestaña: {n}",
   "privacy.network_note": "Las fuentes, los iconos y el código vienen de este mismo origen.",
   "privacy.cleared": "Cola y memoria vaciadas",
@@ -171,7 +171,7 @@
   "err.archive_unsafe_path": "El comprimido contiene una ruta que apunta fuera de sí mismo (../). Rechazado.",
   "err.archive_bad_zip": "Ese archivo no es un ZIP o GZIP legible.",
   "err.svg_needs_main_thread": "Este SVG debe renderizarse en la página, que no está disponible ahora. Recarga e inténtalo de nuevo.",
-  "toast.added": "{n} archivos añadidos",
+  "toast.added": "Archivos añadidos: {n}",
   "toast.limit": "La cola admite 50 archivos a la vez. Se añadieron {added} de {total}; convierte o vacía este lote primero.",
   "licenses.no_agpl": "La lectura de PDF usa pdf.js, no MuPDF. En esta compilación no hay ningún motor AGPL.",
   "account.menu": "Cuenta",
@@ -278,5 +278,6 @@
   "save.err_unsupported_type": "PixelHop no acepta este tipo de archivo.",
   "save.err_rate_limited": "Demasiados guardados. Espera un minuto e inténtalo de nuevo.",
   "save.err_not_signed_in": "Inicia sesión de nuevo para guardar en PixelHop.",
-  "save.err_failed": "No se pudo guardar en PixelHop. FileHop no conservó nada."
+  "save.err_failed": "No se pudo guardar en PixelHop. FileHop no conservó nada.",
+  "save.err_busy": "FileHop está ocupado guardando otros archivos. Inténtalo de nuevo en un momento."
 }

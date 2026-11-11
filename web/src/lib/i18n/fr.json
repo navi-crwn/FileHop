@@ -106,7 +106,7 @@
   "presets.delete": "Supprimer",
   "presets.saved": "Enregistré",
   "privacy.title": "Ce que cette page envoie",
-  "privacy.body": "Rien. Les fichiers sont ouverts avec la File API, décodés et encodés dans cet onglet, puis rendus via une URL blob. Il n’y a ni conversion côté serveur ni file d’attente, et aucun compte n’est nécessaire. Si vous vous connectez avec HOP ID, le serveur ne garde que votre session, jamais un fichier. La seule exception est le bouton facultatif « Enregistrer dans PixelHop » : quand vous l’appuyez, ce seul fichier est envoyé via le serveur de FileHop vers votre bibliothèque PixelHop, et FileHop ne le conserve pas.",
+  "privacy.body": "Rien, sauf ce que vous envoyez vous-même avec le bouton facultatif « Enregistrer dans PixelHop ». Les fichiers sont ouverts avec la File API, décodés et encodés dans cet onglet, puis rendus via une URL blob. Il n’y a ni conversion côté serveur ni file d’attente, et aucun compte n’est nécessaire. Si vous vous connectez avec HOP ID, le serveur ne garde que votre session, jamais un fichier. La seule exception est le bouton facultatif « Enregistrer dans PixelHop » : quand vous l’appuyez, ce seul fichier est envoyé via le serveur de FileHop vers votre bibliothèque PixelHop, et FileHop ne le conserve pas.",
   "privacy.network": "Requêtes réseau depuis l'ouverture de cet onglet : {n}",
   "privacy.network_note": "Les polices, les icônes et le code viennent de cette même origine.",
   "privacy.cleared": "File d'attente et mémoire vidées",
@@ -171,7 +171,7 @@
   "err.archive_unsafe_path": "L'archive contient un chemin qui pointe en dehors d'elle-même (../). Refusé.",
   "err.archive_bad_zip": "Ce fichier n'est pas une archive ZIP ou GZIP lisible.",
   "err.svg_needs_main_thread": "Ce SVG doit être rendu dans la page, ce qui n'est pas disponible. Rechargez et réessayez.",
-  "toast.added": "{n} fichiers ajoutés",
+  "toast.added": "Fichiers ajoutés : {n}",
   "toast.limit": "La file contient 50 fichiers à la fois. {added} sur {total} ajoutés ; convertissez ou videz ce lot d'abord.",
   "licenses.no_agpl": "La lecture des PDF utilise pdf.js, pas MuPDF. Aucun moteur AGPL n'est présent dans cette version.",
   "account.menu": "Compte",
@@ -278,5 +278,6 @@
   "save.err_unsupported_type": "PixelHop n’accepte pas ce type de fichier.",
   "save.err_rate_limited": "Trop d’enregistrements. Attendez une minute et réessayez.",
   "save.err_not_signed_in": "Reconnectez-vous pour enregistrer dans PixelHop.",
-  "save.err_failed": "Impossible d’enregistrer dans PixelHop. FileHop n’a rien conservé."
+  "save.err_failed": "Impossible d’enregistrer dans PixelHop. FileHop n’a rien conservé.",
+  "save.err_busy": "FileHop est occupé à enregistrer d’autres fichiers. Réessayez dans un instant."
 }

@@ -3,9 +3,11 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync"
 	"testing"
@@ -89,7 +91,7 @@ func save(t *testing.T, c *http.Client, srv *httptest.Server, body []byte, q str
 
 func TestPixelSaveForwardsSignedAsTheMember(t *testing.T) {
 	_, srv, f, c := pixelApp(t)
-	code, m := save(t, c, srv, tinyPNG, "?name="+"holiday%20%C3%A9.png", nil)
+	code, m := save(t, c, srv, tinyPNG, "", map[string]string{"X-FileHop-Name": "holiday%20%C3%A9.png"})
 	if code != 200 || m["ok"] != true || !strings.HasPrefix(m["page_url"].(string), f.srv.URL) {
 		t.Fatalf("save: %d %v", code, m)
 	}
@@ -245,5 +247,109 @@ func TestPixelHopURLIsDerivedFromTheHub(t *testing.T) {
 		if got := PixelHopURLFor(in); got != want {
 			t.Fatalf("%q: %q want %q", in, got, want)
 		}
+	}
+}
+
+func TestPixelNameTravelsInAHeaderNotTheQuery(t *testing.T) {
+	_, srv, f, c := pixelApp(t)
+	hdr := map[string]string{"X-FileHop-Name": "a%00b%0A%C2%85c%20d.png"} // control characters are dropped
+	if code, _ := save(t, c, srv, tinyPNG, "?name=ignored.png", hdr); code != 200 {
+		t.Fatal(code)
+	}
+	if f.path != "/hop/media?name=abc+d.png" {
+		t.Fatalf("path sent upstream: %q", f.path)
+	}
+	for _, bad := range []string{"%zz", strings.Repeat("a", 5000)} { // not valid, or absurdly long: no name, still saved
+		if code, _ := save(t, c, srv, tinyPNG, "", map[string]string{"X-FileHop-Name": bad}); code != 200 || f.path != "/hop/media" {
+			t.Fatalf("bad name %.10q: %d %q", bad, code, f.path)
+		}
+	}
+	long := strings.Repeat("é", 400)
+	save(t, c, srv, tinyPNG, "", map[string]string{"X-FileHop-Name": url.PathEscape(long)})
+	if got := f.path[len("/hop/media?name="):]; len([]rune(mustUnescape(t, got))) != pixelNameMax {
+		t.Fatalf("name cut to %d characters, got %d", pixelNameMax, len([]rune(mustUnescape(t, got))))
+	}
+}
+
+func mustUnescape(t *testing.T, s string) string {
+	u, err := url.QueryUnescape(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return u
+}
+
+func TestPixelGateBoundsMemoryAndOneSavePerPerson(t *testing.T) {
+	var g pixelGate
+	if g.enter("a") != "" || g.enter("a") != "person" {
+		t.Fatal("one save per person")
+	}
+	for _, who := range []string{"b", "c", "d"} {
+		if g.enter(who) != "" {
+			t.Fatalf("slot for %s", who)
+		}
+	}
+	if g.enter("e") != "full" {
+		t.Fatalf("only %d bodies at a time", pixelSlots)
+	}
+	g.leave("a")
+	if g.enter("e") != "" {
+		t.Fatal("a slot comes back when a save ends")
+	}
+}
+
+func TestPixelSaveAnswersBusyWhenSlotsOrPersonAreTaken(t *testing.T) {
+	a, srv, f, c := pixelApp(t)
+	for _, who := range []string{"x1", "x2", "x3", "x4"} {
+		a.px.enter(who)
+	}
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 503 || m["error"] != "busy" || f.calls != 0 {
+		t.Fatalf("all slots taken: %d %v", code, m)
+	}
+	for _, who := range []string{"x1", "x2", "x3", "x4"} {
+		a.px.leave(who)
+	}
+	a.px.enter("101") // this person already has one running
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 429 || m["error"] != "busy" {
+		t.Fatalf("one save per person: %d %v", code, m)
+	}
+	a.px.leave("101")
+	if code, _ := save(t, c, srv, tinyPNG, "", nil); code != 200 {
+		t.Fatalf("after: %d", code)
+	}
+}
+
+type brokenBody struct{ n int }
+
+func (b *brokenBody) Read(p []byte) (int, error) {
+	if b.n <= 0 {
+		return 0, errors.New("connection reset")
+	}
+	k := copy(p, make([]byte, min(len(p), b.n)))
+	b.n -= k
+	return k, nil
+}
+
+func TestPixelBodyErrorsAreToldApart(t *testing.T) {
+	rec := httptest.NewRecorder()
+	// a body over the cap is "too large"
+	r := httptest.NewRequest("POST", "/", bytes.NewReader(make([]byte, 100)))
+	r.ContentLength = -1
+	_, err := readPixelBody(rec, r, 10)
+	if st, code := bodyErrorCode(err); st != 413 || code != "too_large" {
+		t.Fatalf("over the cap: %d %s (%v)", st, code, err)
+	}
+	// a read that breaks half way (dropped connection, timeout) is not "too large"
+	r = httptest.NewRequest("POST", "/", &brokenBody{n: 5})
+	r.ContentLength = 50
+	_, err = readPixelBody(rec, r, 1000)
+	if st, code := bodyErrorCode(err); st != 400 || code != "failed" {
+		t.Fatalf("broken read: %d %s (%v)", st, code, err)
+	}
+	// and a normal body is read once into a buffer of its own size
+	r = httptest.NewRequest("POST", "/", bytes.NewReader(tinyPNG))
+	r.ContentLength = int64(len(tinyPNG))
+	if b, err := readPixelBody(rec, r, 1000); err != nil || !bytes.Equal(b, tinyPNG) || cap(b) != len(tinyPNG) {
+		t.Fatalf("normal read: %v cap=%d", err, cap(b))
 	}
 }

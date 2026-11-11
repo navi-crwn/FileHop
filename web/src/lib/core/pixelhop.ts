@@ -15,7 +15,7 @@ export function canSaveToPixelHop(r: { name: string; size: number; blob: { type:
   return MIMES.has(r.blob.type) || (!r.blob.type && ext in TYPES);
 }
 
-const KNOWN = ['no_account', 'quota_exceeded', 'too_large', 'unsupported_type', 'rate_limited', 'not_signed_in'];
+const KNOWN = ['no_account', 'quota_exceeded', 'too_large', 'unsupported_type', 'rate_limited', 'not_signed_in', 'busy'];
 
 /** The translation key for an error code from the server; anything unknown is a plain failure. */
 export function saveErrorKey(code: unknown): string {
@@ -27,17 +27,20 @@ export type SaveResult = { ok: true; pageUrl: string; duplicate: boolean } | { o
 /** Sends one result file through FileHop's server to the member's PixelHop library. */
 export async function saveToPixelHop(blob: Blob, name: string, fetcher: typeof fetch = fetch): Promise<SaveResult> {
   try {
-    const res = await fetcher('/api/v1/pixelhop/save?name=' + encodeURIComponent(name.slice(0, 200)), {
+    // the name goes in a header, not the address, so it never shows in an access log of this app
+    const res = await fetcher('/api/v1/pixelhop/save', {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'X-Requested-With': 'filehop', 'Content-Type': 'application/octet-stream' },
+      headers: { 'X-Requested-With': 'filehop', 'X-FileHop-Name': encodeURIComponent(name.slice(0, 200)), 'Content-Type': 'application/octet-stream' },
       body: blob
     });
     const j = await res.json().catch(() => null);
     if (res.ok && j?.ok === true && typeof j.page_url === 'string' && j.page_url.startsWith('https://')) {
       return { ok: true, pageUrl: j.page_url, duplicate: j.duplicate === true };
     }
-    return { ok: false, error: typeof j?.error === 'string' ? j.error : 'failed' };
+    if (typeof j?.error === 'string') return { ok: false, error: j.error };
+    // an answer that is not ours (a proxy's HTML page): 413 can only mean too large, 503 only busy
+    return { ok: false, error: res.status === 413 ? 'too_large' : res.status === 503 ? 'busy' : 'failed' };
   } catch {
     return { ok: false, error: 'failed' };
   }

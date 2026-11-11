@@ -106,7 +106,7 @@
   "presets.delete": "Hapus",
   "presets.saved": "Tersimpan",
   "privacy.title": "Apa yang dikirim halaman ini",
-  "privacy.body": "Tidak ada. File dibuka dengan File API, didekode dan dikodekan di tab ini, lalu dikembalikan lewat blob URL. Tidak ada konversi di server, tidak ada antrean, dan tidak perlu akun. Jika Anda masuk dengan HOP ID, server hanya menyimpan sesi Anda, tidak pernah file. Satu-satunya pengecualian adalah tombol opsional “Simpan ke PixelHop”: saat Anda menekannya, satu berkas itu dikirim lewat server FileHop ke pustaka PixelHop Anda, dan FileHop tidak menyimpannya.",
+  "privacy.body": "Tidak ada, kecuali yang Anda kirim sendiri lewat tombol opsional “Simpan ke PixelHop”. File dibuka dengan File API, didekode dan dikodekan di tab ini, lalu dikembalikan lewat blob URL. Tidak ada konversi di server, tidak ada antrean, dan tidak perlu akun. Jika Anda masuk dengan HOP ID, server hanya menyimpan sesi Anda, tidak pernah file. Satu-satunya pengecualian adalah tombol opsional “Simpan ke PixelHop”: saat Anda menekannya, satu berkas itu dikirim lewat server FileHop ke pustaka PixelHop Anda, dan FileHop tidak menyimpannya.",
   "privacy.network": "Permintaan jaringan sejak tab ini dibuka: {n}",
   "privacy.network_note": "Font, ikon, dan kode datang dari origin yang sama.",
   "privacy.cleared": "Antrean dan memori dibersihkan",
@@ -278,5 +278,6 @@
   "save.err_unsupported_type": "PixelHop tidak menerima jenis berkas ini.",
   "save.err_rate_limited": "Terlalu banyak penyimpanan. Tunggu semenit lalu coba lagi.",
   "save.err_not_signed_in": "Masuk lagi untuk menyimpan ke PixelHop.",
-  "save.err_failed": "Gagal menyimpan ke PixelHop. FileHop tidak menyimpan apa pun."
+  "save.err_failed": "Gagal menyimpan ke PixelHop. FileHop tidak menyimpan apa pun.",
+  "save.err_busy": "FileHop sedang sibuk menyimpan berkas lain. Coba lagi sebentar lagi."
 }
