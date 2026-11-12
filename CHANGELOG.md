@@ -4,6 +4,17 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-12
+
+### Fixed
+- "Save to PixelHop" reported a failure although PixelHop had stored the file. PixelHop answers with addresses on its link host (`p.hel.ink`), and FileHop only accepted addresses on the host it calls (`pixel.hel.ink`). A stored file (201, or 200 with `ok`) is now always reported as saved. An address from PixelHop is passed on to the page when it is exactly the configured PixelHop address, exactly the host in the new optional `FILEHOP_PIXELHOP_LINK_URL`, or a plain https address on the hub's parent domain (lower case, no port, no trailing dot, no user name, not a number); otherwise the link opens PixelHop itself. Pressing the button again for the same file shows "Already in your PixelHop library": PixelHop keeps one copy per member.
+- `/send`: the code of a device that left is dead at once. A room is removed when its only device leaves before anyone joined, so an old QR code (a reloaded page, "Leave" then "Start") says the room does not exist instead of leaving the second device waiting with the old code on screen. Joining a room with nobody in it says the other device already left. A new `#code` opened while the page is on `/send` (a second scan in the same tab or installed app) starts over with it, asking first during a pairing or a transfer. Too many new codes from one network says it is per hour and how to go on.
+- `/send`: when several files were received one after another, receiving the next one deleted the earlier ones from the browser's private storage, so their Save links failed ("download failed"). Each page now keeps its own received files until it is closed; only leftovers of closed pages are removed.
+
+### Changed
+- The theme and the language follow the family cookies `hop_theme` and `hop_lang`, shared by every HOP app on hel.ink: a choice made in one app is the choice in the others. The old `hop-theme` / `hop-lang` keys are still read (after the cookies) and kept up to date. `/changelog` follows `?lang=`, then the cookie, then the browser.
+- `/` and `/send` are served with the page's first view already drawn (the app's own markup, words, fonts and colours, in the visitor's theme and language), so the page is readable at once and by search engines; the app takes its place without anything moving. Without scripts, the page says that FileHop needs JavaScript. Pages vary on `Cookie` and `Accept-Language`.
+
 ## [1.2.0] - 2026-11-12
 
 ### Added
