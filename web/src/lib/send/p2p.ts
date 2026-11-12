@@ -111,8 +111,8 @@ export class Session {
     const j = await r.json();
     this.ttlMs = (j.ttl ?? 600) * 1000;
     this.roomAt = Date.now();
-    this.code = j.code;
-    this.h.code(j.code);
+    this.code = j.code; // shown once this device is in the room (hello): a code on screen before that
+    // could be entered by the other device into a room that is still empty
     await this.open(j.code);
   }
 
@@ -138,6 +138,7 @@ export class Session {
       this.note('ws:' + m.t);
       if (m.t === 'hello') {
         this.me = m.id;
+        if (!this.joining) this.h.code(this.code);
         if (typeof m.max === 'number') this.maxBytes = m.max;
         const other = m.peers?.[0];
         if (other) {

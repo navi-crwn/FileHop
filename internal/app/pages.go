@@ -24,19 +24,22 @@ place.
 
 The words are the app's own dictionaries (web/src/lib/i18n); nothing is
 written here. A crawler, which sends no cookie, gets English; a visitor gets
-the language the app is about to show (pageLang).
+the language the app is about to show (pageLang). The whole page, head
+included, is in that one language; the answer varies on Cookie and
+Accept-Language and is private, so no shared cache hands one visitor's
+language to another (KONTRAK-SEO-BAHASA, FileHop).
 */
 
 type publicPage struct {
 	Path  string
 	Title string // <title> and og:title
-	Desc  string // description; "" keeps the one written in index.html
+	Desc  string // description and og:description
 	View  string // its first view in firstview.html.tmpl
 	App   bool   // carries the WebApplication description (the home page)
 }
 
 var publicPages = []publicPage{
-	{Path: "/", Title: "app.title", View: "home", App: true},
+	{Path: "/", Title: "app.title", Desc: "app.description", View: "home", App: true},
 	{Path: "/send", Title: "send.title", Desc: "send.lead", View: "send"},
 }
 
@@ -88,6 +91,10 @@ func firstViewIcon(name string, size int) template.HTML {
 // that component. The first rule keeps the app unseen while it is mounted behind the first view (main.ts).
 const pageStyle = `<style>#root>.hop-static~*{display:none}` +
 	`@media (scripting:none){.hop-static .hs-js{display:none}}` +
+	// without scripts the top bar has no controls, so it shows the name (the app hides it on small screens
+	// to make room for its buttons); on /send, where the side bar is a drawer below 1024 px, the logo too
+	`.hs-bar-brand{display:none}@media (scripting:none){.hop-static .brand .hop-name{display:inline}}` +
+	`@media (scripting:none) and (max-width:1023px){.hop-static .hs-bar-brand{display:inline-flex}}` +
 	`.hs-nojs{margin:0;font-weight:600}` +
 	`.hs-sun{display:contents}.hs-moon{display:none}` +
 	`:root[data-theme="light"] .hs-sun{display:none}:root[data-theme="light"] .hs-moon{display:contents}` +
@@ -108,6 +115,7 @@ var (
 	pageOGTitleRe = regexp.MustCompile(`<meta property="og:title" content="[^"]*">`)
 	pageOGDescRe  = regexp.MustCompile(`<meta property="og:description" content="[^"]*">`)
 	pageOGURLRe   = regexp.MustCompile(`<meta property="og:url" content="[^"]*">`)
+	pageOGAltRe   = regexp.MustCompile(`<meta property="og:image:alt" content="[^"]*">`)
 	pageSiteRe    = regexp.MustCompile(`<meta property="og:site_name" content="([^"]*)">`)
 	pageCanonRe   = regexp.MustCompile(`<link rel="canonical" href="[^"]*">`)
 	pageOriginRe  = regexp.MustCompile(`<(?:link rel="canonical" href|meta property="og:url" content)="(https?://[^/"]+)/?">`)
@@ -140,6 +148,7 @@ func renderPage(index []byte, origin string, p publicPage, lang string, dict map
 	if t := text(p.Title); t != "" {
 		b = pageTitleRe.ReplaceAllLiteral(b, []byte("<title>"+t+"</title>"))
 		b = pageOGTitleRe.ReplaceAllLiteral(b, []byte(`<meta property="og:title" content="`+t+`">`))
+		b = pageOGAltRe.ReplaceAllLiteral(b, []byte(`<meta property="og:image:alt" content="`+t+`">`))
 	}
 	if d := text(p.Desc); p.Desc != "" && d != "" {
 		b = pageDescRe.ReplaceAllLiteral(b, []byte(`<meta name="description" content="`+d+`">`))

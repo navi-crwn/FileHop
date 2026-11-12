@@ -30,7 +30,7 @@ test('only kinds PixelHop takes, within the size cap, qualify', () => {
 });
 
 test('every server error code has a translated message; anything else is a plain failure', () => {
-  for (const c of ['no_account', 'quota_exceeded', 'too_large', 'unsupported_type', 'rate_limited', 'not_signed_in', 'busy']) assert.equal(P.saveErrorKey(c), 'save.err_' + c);
+  for (const c of ['no_account', 'quota_exceeded', 'too_large', 'unsupported_type', 'rate_limited', 'not_signed_in', 'busy', 'unsure']) assert.equal(P.saveErrorKey(c), 'save.err_' + c);
   for (const c of ['csrf', 'failed', 'store_failed', '<script>', undefined, 5, null]) assert.equal(P.saveErrorKey(c), 'save.err_failed');
 });
 

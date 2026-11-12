@@ -136,12 +136,12 @@
       </form>
     </div>
     <p class="note"><Icon name="shield" size={15} />{t('send.unscanned')}</p>
-  {:else if phase === 'waiting' || (phase === 'connecting' && code && !sas)}
+  {:else if phase === 'waiting' || (phase === 'connecting' && !sas)}
     <section class="sc pair" aria-live="polite">
       {#if qr && phase === 'waiting'}<div class="qr" aria-hidden="true">{@html qr}</div>{/if}
       <div class="pair-body">
-        <p class="label">{t('send.code_label')}</p>
-        <p id="room-code" class="mono big">{grouped(code)}</p>
+        {#if code}<p class="label">{t('send.code_label')}</p>
+        <p id="room-code" class="mono big">{grouped(code)}</p>{/if}
         {#if phase === 'waiting'}<p class="muted">{t('send.scan')}</p>{/if}
         <p id="status" class="muted"><span class="dot" aria-hidden="true"></span>{phase === 'waiting' ? t('send.waiting') : t('send.connecting')}</p>
         <div class="srow">

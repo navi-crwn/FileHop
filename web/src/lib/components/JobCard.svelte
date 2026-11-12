@@ -268,7 +268,7 @@
           {:else}
             <p class="err px-err" role="alert"><Icon name="alert" size={15} /><span>{i18n.t(saveErrorKey(pxErr), { max: fmtSize(account.pixelhop.max) })}</span></p>
             <span class="px-row">
-              {#if pxErr === 'no_account'}<a class="mini secondary" href={account.pixelhop.url} target="_blank" rel="noopener">{i18n.t('save.open_pixelhop')}</a>{/if}
+              {#if pxErr === 'no_account' || pxErr === 'unsure'}<a class="mini secondary" href={account.pixelhop.url} target="_blank" rel="noopener">{i18n.t('save.open_pixelhop')}</a>{/if}
               <button class="mini" type="button" onclick={() => (px = 'confirm')}>{i18n.t('job.retry')}</button>
             </span>
           {/if}

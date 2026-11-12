@@ -31,6 +31,8 @@ type fakePixel struct {
 	body   []byte
 	status int
 	reply  string
+	delay  time.Duration
+	ctype  string
 	srv    *httptest.Server
 }
 
@@ -47,6 +49,10 @@ func newFakePixel(t *testing.T) *fakePixel {
 			return
 		}
 		f.actor, f.path, f.body = r.Header.Get("X-HOP-Actor"), r.URL.RequestURI(), body
+		time.Sleep(f.delay)
+		if f.ctype != "" {
+			w.Header().Set("Content-Type", f.ctype)
+		}
 		w.WriteHeader(f.status)
 		io.WriteString(w, f.reply)
 	}))
@@ -296,6 +302,12 @@ func TestPixelOwnTellsPixelHopsHostsFromLookalikes(t *testing.T) {
 			t.Errorf("%q must not be passed on, got %q", bad, got)
 		}
 	}
+	// the family domain is the hub's host without its first label, never a public suffix
+	a.cfg.SSOURL = "https://hub.example.co.uk"
+	if a.pixelOwn("https://p.example.co.uk/x") == "" || a.pixelOwn("https://evil.co.uk/x") != "" || a.pixelOwn("https://p.other.co.uk/x") != "" {
+		t.Error("hub.example.co.uk: example.co.uk is the family, co.uk is not")
+	}
+	a.cfg.SSOURL = "https://hub.example.org"
 	// without a family domain (local hub) only the configured addresses count
 	a.cfg.SSOURL = "http://localhost:8080"
 	if a.pixelOwn("https://p.example.org/x") != "" || a.pixelOwn("https://localhost/x") != "" || a.pixelOwn(f.srv.URL+"/x") == "" || a.pixelOwn("https://img.other.net/x") == "" {
@@ -325,6 +337,8 @@ func TestPixelHopURLIsDerivedFromTheHub(t *testing.T) {
 	for in, want := range map[string]string{
 		"https://hub.hel.ink": "https://pixel.hel.ink", "https://hel.ink": "https://pixel.hel.ink",
 		"http://localhost:8080": "", "": "", "https://localhost": "", "https://10.0.0.1": "",
+		"https://HUB.hel.ink.": "https://pixel.hel.ink", "https://hub.example.co.uk": "https://pixel.example.co.uk",
+		"https://a.hub.example.org": "https://pixel.hub.example.org", "https://[2001:db8::1]": "",
 	} {
 		if got := PixelHopURLFor(in); got != want {
 			t.Fatalf("%q: %q want %q", in, got, want)
@@ -433,5 +447,43 @@ func TestPixelBodyErrorsAreToldApart(t *testing.T) {
 	r.ContentLength = int64(len(tinyPNG))
 	if b, err := readPixelBody(rec, r, 1000); err != nil || !bytes.Equal(b, tinyPNG) || cap(b) != len(tinyPNG) {
 		t.Fatalf("normal read: %v cap=%d", err, cap(b))
+	}
+}
+
+// PixelHop answered 201 or 200 but the body could not be read (cut off, not JSON): the file is stored.
+func TestPixelSaveTreatsAnUnreadableSuccessAsSaved(t *testing.T) {
+	_, srv, f, c := pixelApp(t)
+	for _, reply := range []string{`{"ok":true,"data":{"page_ur`, "<html>stored</html>", ""} {
+		f.status, f.reply, f.ctype = 201, reply, ""
+		if code, m := save(t, c, srv, tinyPNG, "", nil); code != 200 || m["ok"] != true || m["page_url"] != f.srv.URL || m["url"] != "" {
+			t.Fatalf("201 %q: %d %v", reply, code, m)
+		}
+	}
+	// a 200 (PixelHop's "already stored") cut off: still saved; a 200 page that is not PixelHop's JSON is not
+	f.status, f.reply, f.ctype = 200, `{"ok":true,"data":{"dupl`, "application/json"
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 200 || m["ok"] != true {
+		t.Fatalf("200 cut off: %d %v", code, m)
+	}
+	f.ctype = ""
+	f.status, f.reply = 200, "<html>not PixelHop</html>"
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 502 || m["error"] != "failed" {
+		t.Fatalf("200 html: %d %v", code, m)
+	}
+	// an unreadable refusal is still a refusal
+	f.status, f.reply = 500, "<html>oops</html>"
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 502 || m["error"] != "failed" {
+		t.Fatalf("500: %d %v", code, m)
+	}
+}
+
+// PixelHop did not answer in time: it may have stored the file, so the page is not told it failed.
+func TestPixelSaveTimeoutIsUnsureNotFailed(t *testing.T) {
+	_, srv, f, c := pixelApp(t)
+	old := pixelTimeout
+	pixelTimeout = 50 * time.Millisecond
+	t.Cleanup(func() { pixelTimeout = old })
+	f.delay = 300 * time.Millisecond
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 504 || m["error"] != "unsure" {
+		t.Fatalf("timeout: %d %v", code, m)
 	}
 }

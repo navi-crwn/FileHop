@@ -14,7 +14,10 @@ if (!first) root.replaceChildren();
 const app = mount(App, { target: root });
 if (first) {
   const sendRoute = location.pathname.replace(/\/+$/, '') === '/send';
-  void Promise.allSettled([i18n.load(guessLocale()), sendRoute ? import('./lib/send/Send.svelte') : null])
+  const ready = Promise.allSettled([i18n.load(guessLocale()), sendRoute ? import('./lib/send/Send.svelte') : null]);
+  // A request that hangs must not leave the visitor with a first view whose buttons do nothing: after 3 s
+  // the app is shown as it is (in English until its dictionary arrives, then it switches by itself).
+  void Promise.race([ready, new Promise((r) => setTimeout(r, 3000))])
     .then(() => tick())
     .then(() => new Promise((r) => requestAnimationFrame(r)))
     .then(() => first.remove());

@@ -15,7 +15,7 @@
 // before both pressed Match closes the connection), forged (an offer above the sender's limit is
 // refused, a hostile name is cleaned), nomatch, rooms (unknown code, third device), multi (three files
 // in a row, every Save intact), abandoned (the code of a device that left, an empty room, a new #code in
-// the same tab).
+// the same tab), slowcreator (no code on screen before its device is in the room).
 import { createHash, randomBytes } from 'node:crypto';
 import { createReadStream, mkdirSync, statSync, writeFileSync, createWriteStream, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -362,6 +362,28 @@ const scenarios = {
     await Promise.all([A, B].map((d) => d.page.waitForSelector('#sas, #error', { timeout: 40000 })));
     const sas = await Promise.all([A, B].map((d) => d.page.textContent('#sas').catch(() => '')));
     check('a new code opened in the same tab joins the new room', sas[0] && sas[0] === sas[1], `A ${sas[0]} B ${sas[1]}`);
+    await Promise.all([A, B].map((d) => d.ctx.close()));
+  },
+
+  async slowcreator(b) {
+    // the device that opens the room is slow to get into it: its code must not be on screen before it is
+    // in the room, or the other device could enter the still empty room, give up and take the room with it
+    const slow = () => {
+      const send = WebSocket.prototype.send;
+      WebSocket.prototype.send = function (d) { if (String(d).includes('"join"')) setTimeout(() => send.call(this, d), 2500); else send.call(this, d); };
+    };
+    const A = await device(b[0], slow), B = await device(b[1]);
+    await A.page.goto(`${base}/send`);
+    await B.page.goto(`${base}/send`);
+    await A.page.click('#start');
+    await A.page.waitForTimeout(1200);
+    check('the code is not shown before the room is entered', (await A.page.$('#room-code')) === null && (await A.page.$('#status')) !== null);
+    await A.page.waitForSelector('#room-code', { timeout: 10000 });
+    const code = (await A.page.textContent('#room-code')).replace(/\s/g, '');
+    await B.page.fill('#code-in', code);
+    await B.page.click('#join');
+    await Promise.all([A, B].map((d) => d.page.waitForSelector('#sas, #error', { timeout: 40000 })));
+    check('once shown, the code pairs', !!(await A.page.$('#sas')) && !!(await B.page.$('#sas')));
     await Promise.all([A, B].map((d) => d.ctx.close()));
   },
 

@@ -58,15 +58,15 @@ export function guessLocale(): Locale {
   return 'en';
 }
 
-/** The language chosen before: the family cookie hop_lang (any HOP app), then this app's own old key. */
+/** The language chosen before: the family cookie hop_lang (any HOP app), then this app's own old key,
+    which is moved once into the cookie (the server reads the cookie to write the page's first view). */
 function readStored(): string | null {
   const family = getPref('hop_lang');
   if (family && isLocale(family)) return family;
-  try {
-    return localStorage.getItem('hop-lang');
-  } catch {
-    return null;
-  }
+  let old: string | null = null;
+  try { old = localStorage.getItem('hop-lang'); } catch { /* storage blocked */ }
+  if (family === null && old && isLocale(old)) setPref('hop_lang', old);
+  return old;
 }
 
 /** The person picked a language: every HOP app follows it (hop_lang), and the old key keeps up. */
@@ -94,7 +94,6 @@ class I18nState {
       this.locale = locale;
       this.dict = locale === 'en' ? FALLBACK : this.cache.get(locale)!;
       document.documentElement.lang = locale;
-      storeLocale(locale);
       return;
     }
     const loader = LOADERS[locale] ?? LOADERS.en;
@@ -103,8 +102,8 @@ class I18nState {
     this.loaded.add(locale);
     this.dict = mod.default;
     this.locale = locale;
+    // only a language the person picks is stored (chooseLocale), never one guessed from the browser
     document.documentElement.lang = locale;
-    storeLocale(locale);
   }
 
   private cache = new Map<string, Dict>();

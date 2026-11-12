@@ -299,3 +299,57 @@ func TestSitemapListsEveryPublicPageAndNothingElse(t *testing.T) {
 		}
 	}
 }
+
+// KONTRAK-SEO-BAHASA, FileHop: a page written in the visitor's language is in that one language from
+// <head> to body, varies on Cookie and Accept-Language, is private to the visitor, keeps the bare
+// canonical and has no hreflang. Checked with Accept-Language: ru and no cookie, on every public page.
+func TestFirstViewIsInOneLanguageAndNeverShared(t *testing.T) {
+	srv := builtApp(t)
+	ru, en := appStrings("ru"), appStrings("en")
+	for _, p := range publicPages {
+		req, _ := http.NewRequest("GET", srv.URL+p.Path, nil)
+		req.Header.Set("Accept-Language", "ru")
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, _ := io.ReadAll(res.Body)
+		res.Body.Close()
+		body := string(b)
+		title, desc := html.EscapeString(ru[p.Title]), html.EscapeString(ru[p.Desc])
+		for what, want := range map[string]string{
+			"html lang":      `<html lang="ru">`,
+			"title":          "<title>" + title + "</title>",
+			"og:title":       `<meta property="og:title" content="` + title + `">`,
+			"og:image:alt":   `<meta property="og:image:alt" content="` + title + `">`,
+			"description":    `<meta name="description" content="` + desc + `">`,
+			"og:description": `<meta property="og:description" content="` + desc + `">`,
+			"canonical":      `<link rel="canonical" href="` + siteOrigin + p.Path + `">`,
+		} {
+			if !strings.Contains(body, want) {
+				t.Errorf("%s: no Russian %s (%s)", p.Path, what, want)
+			}
+		}
+		if p.App {
+			var v struct{ Description string }
+			json.Unmarshal([]byte(one(t, p.Path, "data block", body, regexp.MustCompile(`<script type="application/ld\+json">(.*?)</script>`))), &v)
+			if v.Description != ru[p.Desc] {
+				t.Errorf("%s: JSON-LD description %q", p.Path, v.Description)
+			}
+		}
+		for _, k := range []string{p.Title, p.Desc, "app.needs_js"} {
+			if strings.Contains(body, html.EscapeString(en[k])) {
+				t.Errorf("%s: English %q left in a Russian page", p.Path, k)
+			}
+		}
+		if strings.Contains(body, "hreflang") {
+			t.Errorf("%s: hreflang", p.Path)
+		}
+		if v := res.Header.Get("Vary"); !strings.Contains(v, "Cookie") || !strings.Contains(v, "Accept-Language") {
+			t.Errorf("%s: Vary %q", p.Path, v)
+		}
+		if cc := res.Header.Get("Cache-Control"); !strings.Contains(cc, "private") && !strings.Contains(cc, "no-store") {
+			t.Errorf("%s: Cache-Control %q may let a shared cache keep it", p.Path, cc)
+		}
+	}
+}

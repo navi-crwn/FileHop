@@ -93,8 +93,8 @@ func TestStaticHeadersAndRoutes(t *testing.T) {
 		path, cache string
 		status      int
 	}{
-		{"/", "no-cache", 200},
-		{"/send", "no-cache", 200}, // reserved for the peer-to-peer sender: gets the shell
+		{"/", "private, no-cache", 200},     // in the visitor's language: never from a shared cache
+		{"/send", "private, no-cache", 200}, // reserved for the peer-to-peer sender: gets the shell
 		{"/assets/app-abc123.js", "public, max-age=31536000, immutable", 200},
 		{"/vendor/pdf.worker.min.mjs", "public, max-age=31536000, immutable", 200},
 		{"/hop-ui/v5/hop-ui.js", "public, max-age=31536000, immutable", 200},

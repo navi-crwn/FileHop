@@ -2,6 +2,7 @@
   "app.name": "FileHop",
   "app.tagline": "Any file, any format, on your device.",
   "app.title": "FileHop — any file, any format, on your device",
+  "app.description": "FileHop converts images, PDFs, data and archives in your browser. Nothing is uploaded.",
   "app.needs_js": "FileHop needs JavaScript. Turn it on in your browser, then reload this page.",
   "nav.add": "Add files",
   "nav.queue": "Queue",
@@ -284,6 +285,7 @@
   "save.err_rate_limited": "Too many saves. Wait a minute and try again.",
   "save.err_not_signed_in": "Sign in again to save to PixelHop.",
   "save.err_failed": "Could not save to PixelHop. FileHop kept nothing.",
+  "save.err_unsure": "PixelHop did not answer in time. The file may already be in your PixelHop library: look there before you try again.",
   "save.err_busy": "FileHop is busy saving other files. Try again in a moment.",
   "send.err_handshake_stalled": "The two devices connected but did not finish checking each other. Start again."
 }

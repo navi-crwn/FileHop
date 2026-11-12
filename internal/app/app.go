@@ -142,7 +142,7 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 			// a real file without an extension: fall through to it
 		} else {
 			h.Set("Content-Type", "text/html; charset=utf-8")
-			h.Set("Cache-Control", "no-cache")
+			h.Set("Cache-Control", "private, no-cache") // in the visitor's language: never from a shared cache
 			w.Write(a.shell(name, r, h))
 			return
 		}

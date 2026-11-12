@@ -15,7 +15,7 @@ export function canSaveToPixelHop(r: { name: string; size: number; blob: { type:
   return MIMES.has(r.blob.type) || (!r.blob.type && ext in TYPES);
 }
 
-const KNOWN = ['no_account', 'quota_exceeded', 'too_large', 'unsupported_type', 'rate_limited', 'not_signed_in', 'busy'];
+const KNOWN = ['no_account', 'quota_exceeded', 'too_large', 'unsupported_type', 'rate_limited', 'not_signed_in', 'busy', 'unsure'];
 
 /** The translation key for an error code from the server; anything unknown is a plain failure. */
 export function saveErrorKey(code: unknown): string {

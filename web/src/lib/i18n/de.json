@@ -2,6 +2,7 @@
   "app.name": "FileHop",
   "app.tagline": "Jede Datei, jedes Format, auf deinem Gerät.",
   "app.title": "FileHop — jede Datei, jedes Format, auf deinem Gerät",
+  "app.description": "FileHop wandelt Bilder, PDFs, Daten und Archive in deinem Browser um. Nichts wird hochgeladen.",
   "app.needs_js": "FileHop braucht JavaScript. Schalte es im Browser ein und lade diese Seite neu.",
   "nav.add": "Dateien hinzufügen",
   "nav.queue": "Warteschlange",
@@ -284,6 +285,7 @@
   "save.err_rate_limited": "Zu viele Speichervorgänge. Warte eine Minute und versuche es erneut.",
   "save.err_not_signed_in": "Melde dich erneut an, um in PixelHop zu speichern.",
   "save.err_failed": "Speichern in PixelHop fehlgeschlagen. FileHop hat nichts behalten.",
+  "save.err_unsure": "PixelHop hat nicht rechtzeitig geantwortet. Die Datei ist vielleicht schon in deiner PixelHop-Bibliothek: sieh dort nach, bevor du es noch einmal versuchst.",
   "save.err_busy": "FileHop speichert gerade andere Dateien. Versuche es gleich noch einmal.",
   "send.err_handshake_stalled": "Die beiden Geräte haben sich verbunden, die gegenseitige Prüfung aber nicht abgeschlossen. Beginne neu."
 }

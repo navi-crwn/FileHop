@@ -2,6 +2,7 @@
   "app.name": "FileHop",
   "app.tagline": "File apa pun, format apa pun, di perangkat Anda.",
   "app.title": "FileHop — file apa pun, format apa pun, di perangkat Anda",
+  "app.description": "FileHop mengonversi gambar, PDF, data, dan arsip di peramban Anda. Tidak ada yang diunggah.",
   "app.needs_js": "FileHop memerlukan JavaScript. Aktifkan di peramban, lalu muat ulang halaman ini.",
   "nav.add": "Tambah file",
   "nav.queue": "Antrean",
@@ -284,6 +285,7 @@
   "save.err_rate_limited": "Terlalu banyak penyimpanan. Tunggu semenit lalu coba lagi.",
   "save.err_not_signed_in": "Masuk lagi untuk menyimpan ke PixelHop.",
   "save.err_failed": "Gagal menyimpan ke PixelHop. FileHop tidak menyimpan apa pun.",
+  "save.err_unsure": "PixelHop tidak menjawab tepat waktu. Berkas ini mungkin sudah ada di perpustakaan PixelHop Anda: periksa di sana sebelum mencoba lagi.",
   "save.err_busy": "FileHop sedang sibuk menyimpan berkas lain. Coba lagi sebentar lagi.",
   "send.err_handshake_stalled": "Kedua perangkat tersambung tetapi tidak selesai saling memeriksa. Mulai ulang."
 }
