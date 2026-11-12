@@ -27,7 +27,25 @@ let failed = false;
 
 const post = (m: Record<string, unknown>) => (self as unknown as Worker).postMessage(m);
 
-async function open(m: { id: string; size: number; store: string; handle?: unknown }) {
+// Files this page received earlier stay in the folder until the page is gone: their Save links point at
+// them. Only leftovers of pages that are closed are removed. A page holds the Web Lock `filehop-send-<page>`
+// while it is open (p2p.ts); without Web Locks, only entries older than a day are removed.
+const DAY = 24 * 3600 * 1000;
+async function sweep(d: any, page: string) {
+  let held: Set<string> | null = null;
+  try { held = new Set(((await (navigator as any).locks.query()).held ?? []).map((l: { name: string }) => l.name)); } catch { /* no Web Locks */ }
+  for await (const [k, h] of d.entries() as AsyncIterable<[string, any]>) {
+    const owner = /^p(\w+)-r/.exec(k)?.[1];
+    if (owner === page) continue;
+    if (owner && held) { if (held.has('filehop-send-' + owner)) continue; }
+    else if (!held) {
+      try { if (Date.now() - (await h.getFile()).lastModified < DAY) continue; } catch { continue; } // in use by another page
+    }
+    await d.removeEntry(k).catch(() => {}); // a file another page is still writing is locked and stays
+  }
+}
+
+async function open(m: { id: string; size: number; store: string; page: string; handle?: unknown }) {
   size = m.size; got = 0; wrote = 0; parts = []; failed = false; chain = Promise.resolve();
   hasher = await createSHA256();
   if (m.handle && m.store !== 'opfs' && m.store !== 'blob') {
@@ -43,8 +61,8 @@ async function open(m: { id: string; size: number; store: string; handle?: unkno
     try {
       const root = await navigator.storage.getDirectory();
       dir = await root.getDirectoryHandle('filehop-send', { create: true });
-      for await (const k of (dir as any).keys()) await dir.removeEntry(k).catch(() => {}); // leftovers of earlier sessions
-      entry = 'r' + m.id;
+      await sweep(dir, m.page);
+      entry = `p${m.page}-r${m.id}`;
       handle = await dir.getFileHandle(entry, { create: true });
       access = await handle.createSyncAccessHandle();
       access.truncate(0);

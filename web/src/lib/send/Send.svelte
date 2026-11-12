@@ -3,6 +3,7 @@
   import qrcode from 'qrcode-generator';
   import Icon from '../components/Icon.svelte';
   import { i18n } from '../i18n/index.svelte';
+  import { confirmAction } from '../util/confirm';
   import { fmtSize } from '../util/format';
   import { Session, type Phase, type Route, type Offer, type Progress, type Finished } from './p2p';
 
@@ -58,7 +59,26 @@
     const m = location.hash.match(/^#(\d{6})$/);
     if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     if (m) { typed = m[1]; void session.join(m[1]); }
+    // A code opened while this page is already on /send (a second scan in the same tab or installed
+    // app) only changes the #fragment: nothing reloads. Start over with the new code, asking first
+    // when a pairing or a transfer would be ended by it.
+    const onHash = async () => {
+      const n = location.hash.match(/^#(\d{6})$/);
+      if (!n) return;
+      const live = phase === 'verify' || phase === 'ready' || (phase === 'connecting' && !!sas);
+      if (n[1] === code && phase !== 'error' && phase !== 'closed') return history.replaceState(null, '', location.pathname + location.search);
+      if (live && !(await confirmAction({ title: t('send.switch_title'), message: t('send.switch_body'), ok: t('send.leave'), danger: true }))) {
+        return history.replaceState(null, '', location.pathname + location.search);
+      }
+      session.leave();
+      location.reload(); // the address keeps the new #code, which the fresh page joins
+    };
+    const onShow = (e: PageTransitionEvent) => { if (e.persisted) void onHash(); };
+    addEventListener('hashchange', onHash);
+    addEventListener('pageshow', onShow);
     return () => {
+      removeEventListener('hashchange', onHash);
+      removeEventListener('pageshow', onShow);
       session.leave();
       for (const r of Object.values(rows)) if (r.url) URL.revokeObjectURL(r.url); // the received files are released with the page
     };
@@ -90,7 +110,7 @@
     const k = alias[r ?? ''] ?? r ?? '';
     return t('send.why_' + (known.includes(k) ? k : 'other'));
   };
-  const ERRORS = ['no_direct', 'room_unknown', 'room_full', 'room_expired', 'rate_limited', 'signal_lost', 'connection_lost', 'busy', 'protocol', 'commit_mismatch', 'handshake_stalled', 'unsupported'];
+  const ERRORS = ['no_direct', 'room_unknown', 'room_empty', 'room_full', 'room_expired', 'rate_limited', 'rate_limited_rooms', 'signal_lost', 'connection_lost', 'busy', 'protocol', 'commit_mismatch', 'handshake_stalled', 'unsupported'];
   const errText = (r: string) => t('send.err_' + (ERRORS.includes(r) ? r : 'signal_lost'));
   const routeText = (r: Route) => (r === 'host' ? t('send.route_host') : r === 'relay' ? t('send.route_relay') : r === 'unknown' ? '' : t('send.route_srflx'));
   const grouped = (c: string) => (c.length === 6 ? c.slice(0, 3) + ' ' + c.slice(3) : c);
