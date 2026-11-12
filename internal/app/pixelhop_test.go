@@ -217,10 +217,89 @@ func TestPixelSaveMapsEachUpstreamErrorWithoutEchoingIt(t *testing.T) {
 	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 502 || m["error"] != "failed" {
 		t.Fatalf("garbage: %d %v", code, m)
 	}
-	// success pointing at another host is not passed on
-	f.status, f.reply = 201, `{"ok":true,"data":{"page_url":"https://evil.example/x","url":"https://evil.example/i.png"}}`
-	if code, _ := save(t, c, srv, tinyPNG, "", nil); code != 502 {
-		t.Fatalf("a foreign address must not be returned: %d", code)
+}
+
+// PixelHop builds its addresses from its link host (p.<domain>), not from the host its API answers on.
+func TestPixelSaveAcceptsPixelHopsLinkHost(t *testing.T) {
+	a, srv, f, c := pixelApp(t) // the hub is hub.example.org, so the family domain is example.org
+	f.reply = okReply("https://p.example.org")
+	code, m := save(t, c, srv, tinyPNG, "", nil)
+	if code != 200 || m["ok"] != true || m["page_url"] != "https://p.example.org/x" ||
+		m["url"] != "https://p.example.org/i/x.png" || m["thumb_url"] != "https://p.example.org/t/x.jpg" {
+		t.Fatalf("link host on the family domain: %d %v", code, m)
+	}
+	// a link host on another domain counts only once it is named
+	f.reply = okReply("https://img.other.net")
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 200 || m["ok"] != true || m["page_url"] != f.srv.URL || m["url"] != "" {
+		t.Fatalf("unnamed link host: %d %v", code, m)
+	}
+	a.cfg.PixelHopLinkURL = "https://img.other.net"
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 200 || m["page_url"] != "https://img.other.net/x" || m["url"] != "https://img.other.net/i/x.png" {
+		t.Fatalf("named link host: %d %v", code, m)
+	}
+}
+
+// PixelHop answered 201: the file is stored, so the page must never be told the save failed.
+func TestPixelSaveNeverReportsAStoredFileAsFailed(t *testing.T) {
+	_, srv, f, c := pixelApp(t)
+	for name, reply := range map[string]string{
+		"foreign domain":   okReply("https://evil.example"),
+		"lookalike":        okReply("https://evilexample.org"),
+		"family as prefix": okReply("https://example.org.evil.example"),
+		"userinfo":         okReply("https://p.example.org@evil.example"),
+		"plain http":       okReply("http://p.example.org"),
+		"no addresses":     `{"ok":true,"data":{"bytes":71}}`,
+		// only the page address is foreign: the file addresses are not passed on without it
+		"foreign page only": `{"ok":true,"data":{"page_url":"https://evil.example/x","url":"https://p.example.org/i/x.png","thumb_url":"https://p.example.org/t/x.jpg"}}`,
+	} {
+		for _, status := range []int{201, 200} {
+			f.status, f.reply = status, reply
+			code, m := save(t, c, srv, tinyPNG, "", nil)
+			raw, _ := json.Marshal(m)
+			if code != 200 || m["ok"] != true || m["page_url"] != f.srv.URL || m["url"] != "" || m["thumb_url"] != "" ||
+				strings.Contains(string(raw), "evil") || strings.Contains(string(raw), "example.org") {
+				t.Fatalf("%s (%d): got %d %s", name, status, code, raw)
+			}
+		}
+	}
+	// a foreign file address beside a good page address is dropped on its own
+	f.status, f.reply = 201, `{"ok":true,"data":{"page_url":"https://p.example.org/x","url":"https://evil.example/i.png","thumb_url":"https://p.example.org/t/x.jpg"}}`
+	if code, m := save(t, c, srv, tinyPNG, "", nil); code != 200 || m["page_url"] != "https://p.example.org/x" || m["url"] != "" || m["thumb_url"] != "https://p.example.org/t/x.jpg" {
+		t.Fatalf("mixed addresses: %d %v", code, m)
+	}
+}
+
+func TestPixelOwnTellsPixelHopsHostsFromLookalikes(t *testing.T) {
+	a, _, f, _ := pixelApp(t)
+	a.cfg.PixelHopLinkURL = "https://img.other.net"
+	for _, good := range []string{
+		f.srv.URL + "/x", "https://p.example.org/x", "https://example.org/x",
+		"https://a.b.example.org/i/x.png", "https://img.other.net/x", "https://img.other.net/t/x.jpg",
+	} {
+		if got := a.pixelOwn(good); got != good {
+			t.Errorf("%q should be passed on, got %q", good, got)
+		}
+	}
+	for _, bad := range []string{
+		"", "/x", "//p.example.org/x", "p.example.org/x", "https:p.example.org/x", "javascript:alert(1)",
+		"http://p.example.org/x", "ftp://p.example.org/x", "https://p.example.org:8443/x",
+		"https://evilexample.org/x", "https://example.org.evil.com/x", "https://example.orgx/x", "https://xn--exmple-cua.org/x",
+		"https://p.example.org@evil.com/x", "https://evil.com@p.example.org/x", "https://user:pw@p.example.org/x",
+		`https://evil.com\@p.example.org/x`, `https://evil.com\.example.org/x`, "https://evil.com/\t@p.example.org/x", "https://p.example.org /x",
+		// upper case, a port (also 443), a trailing dot, a number for a name
+		"https://P.Example.org/x", "https://p.example.org:443/x", "https://p.example.org./x", "https://example.org./x",
+		"https://IMG.other.net/t/x.jpg", "https://img.other.net:443/x", "https://93.184.216.34/x", "https://[2001:db8::1]/x",
+		"http://img.other.net/x", "https://img.other.net.evil.com/x", "https://x.img.other.net/x", "https://other.net/x", "https://img.other.net:8443/x",
+		strings.Replace(f.srv.URL, "http://", "https://", 1) + "/x", strings.Replace(f.srv.URL, "http://", "http://user@", 1) + "/x",
+	} {
+		if got := a.pixelOwn(bad); got != "" {
+			t.Errorf("%q must not be passed on, got %q", bad, got)
+		}
+	}
+	// without a family domain (local hub) only the configured addresses count
+	a.cfg.SSOURL = "http://localhost:8080"
+	if a.pixelOwn("https://p.example.org/x") != "" || a.pixelOwn("https://localhost/x") != "" || a.pixelOwn(f.srv.URL+"/x") == "" || a.pixelOwn("https://img.other.net/x") == "" {
+		t.Error("a local hub has no family domain")
 	}
 }
 
@@ -245,7 +324,7 @@ func TestPixelSaveIsRateLimitedPerPerson(t *testing.T) {
 func TestPixelHopURLIsDerivedFromTheHub(t *testing.T) {
 	for in, want := range map[string]string{
 		"https://hub.hel.ink": "https://pixel.hel.ink", "https://hel.ink": "https://pixel.hel.ink",
-		"http://localhost:8080": "", "": "", "https://localhost": "",
+		"http://localhost:8080": "", "": "", "https://localhost": "", "https://10.0.0.1": "",
 	} {
 		if got := PixelHopURLFor(in); got != want {
 			t.Fatalf("%q: %q want %q", in, got, want)

@@ -32,6 +32,7 @@ type Config struct {
 	TrustProxy       bool     // read the visitor address from X-Forwarded-For (behind nginx)
 	StunURLs         []string // ICE: STUN servers for /send, from the environment
 	PixelHopURL      string   // https://pixel.<family domain>; with the secret below turns "Save to PixelHop" on
+	PixelHopLinkURL  string   // optional: the https host PixelHop builds its links on, when it is outside the family domain
 	PixelHopSecret   string   // FileHop's own secret for PixelHop's store (32+ characters, never the SSO secret)
 	PixelHopMaxBytes int64    // largest file forwarded; 0 means PixelHop's 20 MB default
 }

@@ -77,6 +77,12 @@ func main() {
 			log.Fatal("FILEHOP_PIXELHOP_SECRET must be 32+ characters and different from FILEHOP_SSO_SECRET")
 		}
 		cfg.PixelHopURL = strings.TrimRight(env("FILEHOP_PIXELHOP_URL", app.PixelHopURLFor(cfg.SSOURL)), "/")
+		// PixelHop's link host (its PIXELHOP_LINK_URL), only needed when it is outside the family domain
+		cfg.PixelHopLinkURL = strings.TrimRight(env("FILEHOP_PIXELHOP_LINK_URL", ""), "/")
+		// https, or plain http only beside a plain-http PixelHop (a local copy)
+		if l := cfg.PixelHopLinkURL; l != "" && !strings.HasPrefix(l, "https://") && !(strings.HasPrefix(l, "http://") && strings.HasPrefix(cfg.PixelHopURL, "http://")) {
+			log.Fatal("FILEHOP_PIXELHOP_LINK_URL must be an https:// address")
+		}
 		if mb, err := strconv.Atoi(env("FILEHOP_PIXELHOP_MAX_MB", "20")); err == nil && mb > 0 {
 			cfg.PixelHopMaxBytes = int64(mb) << 20
 		}

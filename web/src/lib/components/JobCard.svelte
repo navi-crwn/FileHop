@@ -264,7 +264,7 @@
           {:else if px === 'sending'}
             <span class="muted small" aria-live="polite">{i18n.t('save.sending')}</span>
           {:else if px === 'done'}
-            <span class="small ok-text" aria-live="polite">{i18n.t(pxDup ? 'save.duplicate' : 'save.done')} <a class="px-link" href={pxLink} target="_blank" rel="noopener">{i18n.t('save.open')}</a></span>
+            <span class="small ok-text" aria-live="polite">{i18n.t(pxDup ? 'save.duplicate' : 'save.done')} {#if pxLink}<a class="px-link" href={pxLink} target="_blank" rel="noopener">{i18n.t('save.open')}</a>{/if}</span>
           {:else}
             <p class="err px-err" role="alert"><Icon name="alert" size={15} /><span>{i18n.t(saveErrorKey(pxErr), { max: fmtSize(account.pixelhop.max) })}</span></p>
             <span class="px-row">

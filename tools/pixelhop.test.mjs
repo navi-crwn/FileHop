@@ -45,7 +45,21 @@ test('saveToPixelHop sends one same-origin call with the marker header and maps 
   assert.equal(seen.init.credentials, 'same-origin');
   assert.equal(seen.init.headers['X-Requested-With'], 'filehop');
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(409, { ok: false, error: 'no_account' })), { ok: false, error: 'no_account' });
-  assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(200, { ok: true, page_url: 'javascript:alert(1)' })), { ok: false, error: 'failed' });
+  // the page address is on PixelHop's link host, not the host the account menu knows: passed on as it is
+  assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(201, { ok: true, page_url: 'https://p.hel.ink/x' })), { ok: true, pageUrl: 'https://p.hel.ink/x', duplicate: false });
+  // stored is stored: an address that cannot be linked is dropped, the save is still a success
+  for (const bad of ['javascript:alert(1)', 'http://p.hel.ink/x', '//p.hel.ink/x', '', undefined, 5]) {
+    assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(200, { ok: true, page_url: bad })), { ok: true, pageUrl: '', duplicate: false });
+  }
+  assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(200, { ok: false, page_url: 'https://p.hel.ink/x' })), { ok: false, error: 'failed' });
+  // a plain-http page (a local or self-hosted copy without TLS) may link to its plain-http PixelHop; an https page never
+  globalThis.location = { protocol: 'http:' };
+  try {
+    assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(201, { ok: true, page_url: 'http://127.0.0.1:8114/x' })), { ok: true, pageUrl: 'http://127.0.0.1:8114/x', duplicate: false });
+    assert.equal((await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(201, { ok: true, page_url: 'javascript:alert(1)' }))).pageUrl, '');
+    globalThis.location = { protocol: 'https:' };
+    assert.equal((await P.saveToPixelHop(new Blob(['x']), 'a.png', fake(201, { ok: true, page_url: 'http://p.hel.ink/x' }))).pageUrl, '');
+  } finally { delete globalThis.location; }
   // a proxy's own HTML 413 / 503 is still understood
   const html = (status) => async () => ({ ok: false, status, json: async () => { throw new Error('html'); } });
   assert.deepEqual(await P.saveToPixelHop(new Blob(['x']), 'a.png', html(413)), { ok: false, error: 'too_large' });

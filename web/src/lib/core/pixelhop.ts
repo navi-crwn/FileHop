@@ -35,8 +35,14 @@ export async function saveToPixelHop(blob: Blob, name: string, fetcher: typeof f
       body: blob
     });
     const j = await res.json().catch(() => null);
-    if (res.ok && j?.ok === true && typeof j.page_url === 'string' && j.page_url.startsWith('https://')) {
-      return { ok: true, pageUrl: j.page_url, duplicate: j.duplicate === true };
+    if (res.ok && j?.ok === true) {
+      // stored is stored: a missing or odd page address only means there is nothing to link to.
+      // The server has already checked the host (PixelHop's own, its link host or the family domain), so
+      // only the scheme is checked here: https, or http while this page itself is plain http (a local or
+      // self-hosted copy without TLS, whose PixelHop is plain http too).
+      const plain = typeof location !== 'undefined' && location.protocol === 'http:';
+      const page = typeof j.page_url === 'string' && (j.page_url.startsWith('https://') || (plain && j.page_url.startsWith('http://'))) ? j.page_url : '';
+      return { ok: true, pageUrl: page, duplicate: j.duplicate === true };
     }
     if (typeof j?.error === 'string') return { ok: false, error: j.error };
     // an answer that is not ours (a proxy's HTML page): 413 can only mean too large, 503 only busy

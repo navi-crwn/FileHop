@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -115,21 +116,65 @@ func pixelName(r *http.Request) string {
 	return string(out)
 }
 
-// PixelHopURLFor is the address of PixelHop in the family the hub belongs to: pixel.<the hub's
-// parent domain>, so no second host has to be configured. Empty for a local hub.
-func PixelHopURLFor(sso string) string {
+// familyDomain is the parent domain the hub lives on, the last two labels of its host: hel.ink for
+// hub.hel.ink. Empty for a local hub, a hub that is not https, or one addressed by number.
+func familyDomain(sso string) string {
 	u, err := url.Parse(sso)
-	if err != nil || u.Scheme != "https" || u.Hostname() == "" {
+	if err != nil || u.Scheme != "https" {
 		return ""
 	}
-	parts := strings.Split(u.Hostname(), ".")
+	host := strings.ToLower(strings.TrimSuffix(u.Hostname(), "."))
+	if host == "" || net.ParseIP(host) != nil {
+		return ""
+	}
+	parts := strings.Split(host, ".")
 	if len(parts) < 2 {
 		return ""
 	}
-	if len(parts) > 2 {
-		parts = parts[len(parts)-2:]
+	return strings.Join(parts[len(parts)-2:], ".")
+}
+
+// PixelHopURLFor is the address of PixelHop in the family the hub belongs to: pixel.<the hub's
+// parent domain>, so no second host has to be configured. Empty for a local hub.
+func PixelHopURLFor(sso string) string {
+	if d := familyDomain(sso); d != "" {
+		return "https://pixel." + d
 	}
-	return "https://pixel." + strings.Join(parts, ".")
+	return ""
+}
+
+// sameHost: does u have exactly the scheme and host (port included) of the configured base address?
+func sameHost(u *url.URL, base string) bool {
+	b, err := url.Parse(base)
+	return err == nil && b.Host != "" && u.Scheme == b.Scheme && u.Host == b.Host
+}
+
+// pixelOwn passes an address from PixelHop's answer on to the page only when it points at PixelHop,
+// and returns "" otherwise. PixelHop builds its page and file addresses from its link host
+// (PIXELHOP_LINK_URL there, p.<domain>), not from the host its API answers on, so three places count:
+// the configured PixelHop address itself, the link host named in FILEHOP_PIXELHOP_LINK_URL, and any
+// https host on the family's parent domain (the hub's, from FILEHOP_SSO_URL). Beyond the configured
+// addresses, only the plain form counts: https, lower case, no port, no trailing dot, no
+// userinfo, a name and not a number. Everything else is refused.
+func (a *App) pixelOwn(s string) string {
+	if s == "" || strings.ContainsAny(s, "\\ \t\r\n") {
+		return "" // a browser reads a backslash as a slash; Go does not
+	}
+	u, err := url.Parse(s)
+	if err != nil || u.User != nil || u.Host == "" || u.Opaque != "" {
+		return ""
+	}
+	if sameHost(u, a.cfg.PixelHopURL) || (a.cfg.PixelHopLinkURL != "" && sameHost(u, a.cfg.PixelHopLinkURL)) {
+		return s // exactly a configured address (main.go allows plain http only beside a plain-http PixelHop)
+	}
+	host := u.Hostname()
+	if u.Scheme != "https" || u.Host != host || host != strings.ToLower(host) || strings.HasSuffix(host, ".") || net.ParseIP(host) != nil {
+		return ""
+	}
+	if d := familyDomain(a.cfg.SSOURL); d != "" && (host == d || strings.HasSuffix(host, "."+d)) {
+		return s
+	}
+	return ""
 }
 
 func (a *App) pixelEnabled() bool {
@@ -248,20 +293,15 @@ func (a *App) pixelSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if (status == http.StatusCreated || status == http.StatusOK) && env.OK {
-		// only addresses on PixelHop itself are passed on to the page
-		own := func(s string) string {
-			if strings.HasPrefix(s, a.cfg.PixelHopURL+"/") {
-				return s
-			}
-			return ""
-		}
-		page := own(env.Data.PageURL)
+		// PixelHop stored the file, so this is a success whatever addresses came back. Only addresses
+		// that point at PixelHop are passed on; without a usable page address the page opens PixelHop
+		// itself and gets no file addresses.
+		page, file, thumb := a.pixelOwn(env.Data.PageURL), a.pixelOwn(env.Data.URL), a.pixelOwn(env.Data.Thumb)
 		if page == "" {
-			pixelFail(w, http.StatusBadGateway, "failed")
-			return
+			page, file, thumb = a.cfg.PixelHopURL, "", ""
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "page_url": page, "url": own(env.Data.URL),
-			"thumb_url": own(env.Data.Thumb), "bytes": env.Data.Bytes, "duplicate": env.Data.Duplicate})
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "page_url": page, "url": file,
+			"thumb_url": thumb, "bytes": env.Data.Bytes, "duplicate": env.Data.Duplicate})
 		return
 	}
 	// PixelHop's own words are never passed on: only a code the page has a translated message for.
