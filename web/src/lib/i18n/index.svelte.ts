@@ -1,5 +1,6 @@
 import en from './en.json';
 import type { ActionDef } from '../core/types';
+import { getPref, setPref } from '../util/prefs';
 
 /* Nine languages, no Arabic, per the family rule. A missing key falls back to
    English and warns once, so the UI never shows a raw key.
@@ -57,12 +58,21 @@ export function guessLocale(): Locale {
   return 'en';
 }
 
+/** The language chosen before: the family cookie hop_lang (any HOP app), then this app's own old key. */
 function readStored(): string | null {
+  const family = getPref('hop_lang');
+  if (family && isLocale(family)) return family;
   try {
     return localStorage.getItem('hop-lang');
   } catch {
     return null;
   }
+}
+
+/** The person picked a language: every HOP app follows it (hop_lang), and the old key keeps up. */
+export function chooseLocale(l: Locale): void {
+  setPref('hop_lang', l);
+  storeLocale(l);
 }
 
 function storeLocale(l: string): void {

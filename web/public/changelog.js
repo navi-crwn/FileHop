@@ -1,11 +1,18 @@
 /* /changelog: theme button and remembered language. An external file because the CSP has no
-   'unsafe-inline' for scripts. Uses the same storage keys as the app (hop-theme, hop-lang). */
+   'unsafe-inline' for scripts. Uses the family cookies (hop_theme, hop_lang: every HOP app reads them)
+   and keeps the app's old keys (hop-theme, hop-lang) up to date, as the app does. */
 (function () {
   var LANGS = ['en', 'zh-CN', 'de', 'id', 'ja', 'pt-BR', 'es', 'fr', 'ru'];
   var root = document.documentElement;
+  // as web/src/lib/util/prefs.ts: for the whole family on *.hel.ink, for this host elsewhere
+  function setPref(name, value) {
+    try { document.cookie = name + '=' + value + '; Path=/; Max-Age=31536000; SameSite=Lax' + (/(^|\.)hel\.ink$/.test(location.hostname) ? '; domain=.hel.ink; Secure' : ''); } catch (e) { /* ignore */ }
+  }
   try {
     var q = new URLSearchParams(location.search);
-    var saved = localStorage.getItem('hop-lang');
+    // the server already follows ?lang= and the hop_lang cookie; the old key is only read without them
+    var family = (document.cookie.match(/(?:^|; )hop_lang=([^;]*)/) || [])[1];
+    var saved = LANGS.indexOf(family) >= 0 ? null : localStorage.getItem('hop-lang');
     // No explicit ?lang=: use the language chosen in the app, if it differs from what the server picked.
     if (!q.get('lang') && saved && LANGS.indexOf(saved) >= 0 && saved !== root.lang) {
       q.set('lang', saved);
@@ -16,6 +23,7 @@
 
   document.querySelectorAll('a[data-lang]').forEach(function (a) {
     a.addEventListener('click', function () {
+      setPref('hop_lang', a.getAttribute('data-lang'));
       try { localStorage.setItem('hop-lang', a.getAttribute('data-lang')); } catch (e) { /* ignore */ }
     });
   });
@@ -26,6 +34,7 @@
       var dark = root.dataset.theme ? root.dataset.theme === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches;
       var next = dark ? 'light' : 'dark';
       root.dataset.theme = next;
+      setPref('hop_theme', next);
       try { localStorage.setItem('hop-theme', next); } catch (e) { /* ignore */ }
     });
   }
