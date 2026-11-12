@@ -2,6 +2,7 @@
   "app.name": "FileHop",
   "app.tagline": "N'importe quel fichier, n'importe quel format, sur votre appareil.",
   "app.title": "FileHop — n’importe quel fichier, n’importe quel format, sur votre appareil",
+  "app.needs_js": "FileHop a besoin de JavaScript. Activez-le dans votre navigateur, puis rechargez cette page.",
   "nav.add": "Ajouter des fichiers",
   "nav.queue": "File d'attente",
   "nav.settings": "Moteur et réglages",

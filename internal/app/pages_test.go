@@ -2,6 +2,8 @@ package app
 
 import (
 	"encoding/json"
+	"html"
+	"html/template"
 	"io"
 	"io/fs"
 	"net/http"
@@ -92,43 +94,128 @@ func TestPublicPagesAreReadableWithoutScripts(t *testing.T) {
 	}
 	for _, p := range publicPages {
 		_, body := fetchPage(t, srv.URL+p.Path)
-		if !strings.Contains(body, `<div id="root"><main class="hop-static"><h1>`) || !strings.Contains(body, "<li>") {
-			t.Errorf("%s: no summary inside the mount node", p.Path)
+		if !strings.Contains(body, `<div id="root"><div class="hop-static `) || !strings.Contains(body, "<h1>") {
+			t.Errorf("%s: no first view inside the mount node", p.Path)
 		}
-		for _, l := range p.Links {
-			if !strings.Contains(body, `<a href="`+l.Href+`">`) {
-				t.Errorf("%s: no plain link to %s", p.Path, l.Href)
+		// shown as it is, not hidden until scripts turn out to be off
+		if strings.Contains(body, ".hop-static{display:none") || strings.Contains(body, "<noscript><style>") {
+			t.Errorf("%s: the first view is hidden", p.Path)
+		}
+		// <noscript> holds the one sentence, nothing else
+		ns := regexp.MustCompile(`(?s)<noscript>(.*?)</noscript>`).FindAllStringSubmatch(body, -1)
+		if len(ns) != 1 || ns[0][1] != `<p class="hs-nojs">`+html.EscapeString(appStrings("en")["app.needs_js"])+`</p>` {
+			t.Errorf("%s: noscript %q", p.Path, ns)
+		}
+		for _, href := range []string{"/changelog", "https://github.com/navi-crwn/FileHop"} {
+			if !strings.Contains(body, `<a href="`+href+`"`) {
+				t.Errorf("%s: no plain link to %s", p.Path, href)
 			}
-		}
-		if !strings.Contains(body, `<noscript><style>.hop-static{display:block}</style></noscript>`) {
-			t.Errorf("%s: the summary cannot be read with scripts off", p.Path)
 		}
 	}
 }
 
-func TestPublicPagesUseTheAppsOwnWords(t *testing.T) {
-	dict := appStrings("en")
-	for _, p := range publicPages {
-		keys := append([]string{p.Title, p.Lead}, p.H1...)
-		for _, o := range []string{p.Desc, p.ListTitle} {
-			if o != "" {
-				keys = append(keys, o)
+// The first view's heading is the app's: the hero title on the home page, the send title on /send,
+// with the accent phrase marked as App.svelte and Send.svelte mark it, in every language.
+func TestFirstViewHeadingIsTheAppsHeading(t *testing.T) {
+	srv := builtApp(t)
+	for _, lang := range changeLocales {
+		d := appStrings(lang)
+		home := html.EscapeString(d["hero.h1_pre"])
+		if heroBreakRe.MatchString(d["hero.h1_pre"]) {
+			home += "<br>"
+		} else {
+			home += " "
+		}
+		want := map[string]string{
+			"/":     home + `<em class="acc">` + html.EscapeString(d["hero.h1_accent"]) + `</em>`,
+			"/send": html.EscapeString(d["send.h1_pre"]) + ` <em class="acc">` + html.EscapeString(d["send.h1_accent"]) + `</em>`,
+		}
+		for path, h1 := range want {
+			req, _ := http.NewRequest("GET", srv.URL+path, nil)
+			req.AddCookie(&http.Cookie{Name: "hop_lang", Value: lang})
+			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, _ := io.ReadAll(res.Body)
+			res.Body.Close()
+			body := string(b)
+			if got := one(t, path, "h1", body, regexp.MustCompile(`<h1>(.*?)</h1>`)); got != h1 {
+				t.Errorf("%s %s: h1 %q, want %q", lang, path, got, h1)
+			}
+			if !strings.Contains(body, `<html lang="`+lang+`">`) {
+				t.Errorf("%s %s: not marked as %s", lang, path, lang)
+			}
+			if !strings.Contains(res.Header.Get("Vary"), "Cookie") {
+				t.Errorf("%s: Vary %q", path, res.Header.Get("Vary"))
 			}
 		}
-		for _, it := range p.Items {
-			keys = append(keys, it.Text)
-			if it.Head != "" {
-				keys = append(keys, it.Head)
+	}
+}
+
+// Every word of the first views comes from the dictionaries, in every language.
+func TestFirstViewUsesTheAppsOwnWords(t *testing.T) {
+	for _, lang := range changeLocales {
+		d := appStrings(lang)
+		for _, p := range publicPages {
+			missing := map[string]bool{}
+			tm := template.Must(firstViewTmpl.Clone()).Funcs(template.FuncMap{"t": func(k string) string {
+				if strings.TrimSpace(d[k]) == "" {
+					missing[k] = true
+				}
+				return d[k]
+			}})
+			if err := tm.ExecuteTemplate(io.Discard, p.View, struct {
+				LangCode string
+				Break    bool
+				Family   []familyApp
+			}{"EN", false, changeFamily}); err != nil {
+				t.Fatal(err)
+			}
+			for k := range missing {
+				t.Errorf("%s %s: %q is not in the dictionary", lang, p.Path, k)
+			}
+			for _, k := range []string{p.Title, p.Desc} {
+				if k != "" && strings.TrimSpace(d[k]) == "" {
+					t.Errorf("%s %s: %q is not in the dictionary", lang, p.Path, k)
+				}
 			}
 		}
-		for _, l := range p.Links {
-			keys = append(keys, l.Text)
+	}
+}
+
+// The first view comes in the language the app is about to show: the family cookie hop_lang (plain text,
+// one of the nine spelled exactly), then the browser's languages; a crawler (no cookie, no language) reads
+// English. A route the server does not know gets the home page's first view, not indexed.
+func TestFirstViewLanguageAndUnknownRoutes(t *testing.T) {
+	srv := builtApp(t)
+	get := func(path, cookie, accept string) (http.Header, string) {
+		req, _ := http.NewRequest("GET", srv.URL+path, nil)
+		if cookie != "" {
+			req.AddCookie(&http.Cookie{Name: "hop_lang", Value: cookie})
 		}
-		for _, k := range keys {
-			if strings.TrimSpace(dict[k]) == "" {
-				t.Errorf("%s: %q is not in the English dictionary", p.Path, k)
-			}
+		if accept != "" {
+			req.Header.Set("Accept-Language", accept)
 		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		b, _ := io.ReadAll(res.Body)
+		return res.Header, string(b)
+	}
+	for _, c := range []struct{ cookie, accept, want string }{
+		{"", "", "en"}, {"", "de-DE,de;q=0.9", "de"}, {"id", "de", "id"}, {"pt-BR", "", "pt-BR"},
+		{"ar", "ja", "ja"}, {"ID", "", "en"},
+	} {
+		if _, body := get("/", c.cookie, c.accept); !strings.Contains(body, `<html lang="`+c.want+`">`) {
+			t.Errorf("cookie %q accept %q: want %s", c.cookie, c.accept, c.want)
+		}
+	}
+	h, body := get("/no-such-page", "", "")
+	if h.Get("X-Robots-Tag") != "noindex" || !strings.Contains(body, `<div class="hop-static app">`) {
+		t.Errorf("unknown route: %q, first view %v", h.Get("X-Robots-Tag"), strings.Contains(body, "hop-static"))
 	}
 }
 

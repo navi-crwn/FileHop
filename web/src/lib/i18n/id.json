@@ -2,6 +2,7 @@
   "app.name": "FileHop",
   "app.tagline": "File apa pun, format apa pun, di perangkat Anda.",
   "app.title": "FileHop — file apa pun, format apa pun, di perangkat Anda",
+  "app.needs_js": "FileHop memerlukan JavaScript. Aktifkan di peramban, lalu muat ulang halaman ini.",
   "nav.add": "Tambah file",
   "nav.queue": "Antrean",
   "nav.settings": "Mesin & pengaturan",

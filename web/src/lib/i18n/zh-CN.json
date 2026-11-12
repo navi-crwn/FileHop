@@ -2,6 +2,7 @@
   "app.name": "FileHop",
   "app.tagline": "任意文件，任意格式，在你的设备上。",
   "app.title": "FileHop — 任何文件、任何格式，都在你的设备上",
+  "app.needs_js": "FileHop 需要 JavaScript。请在浏览器中启用它，然后重新加载此页面。",
   "nav.add": "添加文件",
   "nav.queue": "队列",
   "nav.settings": "引擎与设置",

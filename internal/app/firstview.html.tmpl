@@ -1,0 +1,51 @@
+{{/*
+The first view the server writes inside #root for each public route (pages.go): the same markup and
+classes as web/src/App.svelte (home) and the /send shell, so the page looks like the app before the
+app's script has run, and the app takes its place without anything moving (web/src/main.ts).
+Controls that need the script carry .hs-js: they are shown as the app shows them, and hidden when
+scripts are off, where the one <noscript> sentence stands instead. Change both sides together.
+*/}}
+{{define "tools"}}<div class="lang hs-js"><button class="tbtn lang-btn" type="button" tabindex="-1" aria-label="{{t "nav.language"}}">{{icon "net" 16}}<span>{{.LangCode}}</span></button></div><button class="tbtn icon hs-js" type="button" tabindex="-1" aria-label="{{t "nav.theme"}}"><span class="hs-sun">{{icon "sun" 17}}</span><span class="hs-moon">{{icon "moon" 17}}</span></button>{{end}}
+{{define "nojs"}}<noscript><p class="hs-nojs">{{t "app.needs_js"}}</p></noscript>{{end}}
+{{define "brand"}}<img src="/mark.svg" alt="" width="26" height="26"><span class="hop-name hop-name-filehop">FileHop</span>{{end}}
+
+{{define "home"}}<div class="hop-static app"><header class="topbar"><span class="brand">{{template "brand"}}</span><span class="spacer"></span><button class="tbtn primary hs-js" type="button" tabindex="-1">{{icon "plus" 17}}<span class="tlabel">{{t "nav.add"}}</span></button>{{template "tools" .}}</header>
+<main><div class="wrap">
+<section class="hero"><div class="hero-copy"><span class="eyebrow"><i></i>{{t "hero.eyebrow"}}</span>
+<h1>{{t "hero.h1_pre"}}{{if .Break}}<br>{{else}} {{end}}<em class="acc">{{t "hero.h1_accent"}}</em></h1>
+<p class="lead">{{t "hero.lead"}}</p>
+<div class="cta"><button class="tbtn secondary lg hs-js" type="button" tabindex="-1">{{icon "upload" 17}}{{t "hero.cta"}}</button><button class="tbtn lg hs-js" type="button" tabindex="-1">{{icon "gear" 17}}{{t "nav.settings"}}</button>{{template "nojs" .}}</div>
+<p class="proof">{{icon "shield" 15}}{{t "hero.proof"}}</p></div>
+<div class="hero-side"><figure class="hero-art" aria-hidden="true"><picture><source srcset="/hop-home/home/filehop-dark.webp" media="(prefers-color-scheme: dark)"><img src="/hop-home/home/filehop-light.webp" alt="" width="200" height="200"></picture></figure>
+<div class="zone hs-js" aria-hidden="true"><div class="halo"></div><div class="zicon">{{icon "upload" 26}}</div><h2>{{t "drop.title"}}</h2><p>{{hint}}</p></div></div></section>
+<section class="queue hs-js" aria-hidden="true"><div class="queue-head"><h2>{{t "queue.title"}}</h2><span class="spacer"></span></div><p class="queue-empty">{{t "queue.empty"}}<button class="tbtn primary empty-add" type="button" tabindex="-1">{{icon "plus" 17}}{{t "nav.add"}}</button></p></section>
+<section class="sec"><h2>{{t "how.title"}}</h2><div class="steps">
+<article class="step"><span class="n">01</span><h3>{{t "how.s1_h"}}</h3><p>{{t "how.s1_p"}}</p></article>
+<article class="step"><span class="n">02</span><h3>{{t "how.s2_h"}}</h3><p>{{t "how.s2_p"}}</p></article>
+<article class="step"><span class="n">03</span><h3>{{t "how.s3_h"}}</h3><p>{{t "how.s3_p"}}</p></article></div></section>
+<section class="sec"><h2>{{t "formats.title"}}</h2><div class="hop-bento fmts">
+<article class="fmt"><h3>{{icon "image" 16}}{{t "formats.images"}}</h3><p>{{t "formats.images_v"}}</p></article>
+<article class="fmt"><h3>{{icon "pdf" 16}}{{t "formats.pdf"}}</h3><p>{{t "formats.pdf_v"}}</p></article>
+<article class="fmt"><h3>{{icon "data" 16}}{{t "formats.data"}}</h3><p>{{t "formats.data_v"}}</p></article>
+<article class="fmt"><h3>{{icon "text" 16}}{{t "formats.text"}}</h3><p>{{t "formats.text_v"}}</p></article>
+<article class="fmt"><h3>{{icon "archive" 16}}{{t "formats.archive"}}</h3><p>{{t "formats.archive_v"}}</p></article>
+<article class="fmt"><h3>{{icon "hash" 16}}{{t "formats.hash"}}</h3><p>{{t "formats.hash_v"}}</p></article></div></section>
+<section class="sec"><div class="privacy-card"><h2>{{t "privacy.title"}}</h2><p>{{t "privacy.body"}}</p></div></section>
+{{template "footer" .}}
+</div></main></div>{{end}}
+
+{{define "footer"}}<footer class="ft"><a class="ft-part" href="https://hel.ink" rel="noopener"><img src="/hop-id-mark.png" alt="" width="20" height="20"><span>{{partOf}}</span></a>
+<div class="ft-grid"><div class="ft-col ft-brand"><b><img src="/mark.svg" alt="" width="20" height="20"><span class="hop-name hop-name-filehop">FileHop</span></b><p>{{t "footer.note"}}</p></div>
+<div class="ft-col"><h2 class="ft-h">{{t "footer.support"}}</h2><nav aria-label="{{t "footer.support"}}"><a href="/send">{{t "send.footer_link"}}</a><a href="/changelog">{{t "footer.changelog"}}</a><a href="https://github.com/navi-crwn/FileHop" rel="noopener">{{t "footer.source"}}</a></nav></div>
+<div class="ft-col"><h2 class="ft-h">{{t "footer.policies"}}</h2><nav aria-label="{{t "footer.policies"}}"><a href="https://hel.ink/terms" rel="noopener">{{t "footer.terms"}}</a></nav></div>
+<div class="ft-col"><h2 class="ft-h">{{t "footer.family"}}</h2><nav aria-label="{{t "footer.family"}}">{{range .Family}}<a href="{{.URL}}" rel="noopener"><img src="{{.Mark}}" alt="" width="16" height="16">{{.Name}}</a>{{end}}</nav></div></div>
+<p class="ft-copy">© 2026 navi-crwn · MIT License</p></footer>{{end}}
+
+{{define "send"}}<div class="hop-static shell"><aside class="shell-side" aria-label="FileHop"><a class="shell-brand" href="/">{{template "brand"}}</a>
+<nav class="shell-nav" aria-label="FileHop"><a href="/">{{icon "refresh" 18}}{{t "dash.convert"}}</a><a href="/send" aria-current="page">{{icon "upload" 18}}{{t "send.nav"}}</a><a href="/changelog">{{icon "text" 18}}{{t "footer.changelog"}}</a></nav>
+<p class="shell-label">{{t "footer.family"}}</p><nav class="shell-nav" aria-label="{{t "footer.family"}}">{{range .Family}}<a href="{{.URL}}" rel="noopener"><img src="{{.Mark}}" alt="" width="18" height="18">{{.Name}}</a>{{end}}</nav>
+<div class="shell-side-foot"><a href="/#privacy">{{t "footer.privacy"}}</a><a href="https://hel.ink/terms" rel="noopener">{{t "footer.terms"}}</a><a href="https://github.com/navi-crwn/FileHop" rel="noopener">{{t "footer.source"}}</a><button class="ft-link hs-js" type="button" tabindex="-1">{{t "footer.licenses"}}</button></div></aside>
+<div class="shell-body"><header class="topbar shell-top"><button class="tbtn icon shell-burger hs-js" type="button" tabindex="-1" aria-label="{{t "dash.menu"}}">{{icon "menu" 17}}</button><p class="shell-title">{{t "send.nav"}}</p><span class="spacer"></span><a class="tbtn primary" href="/">{{icon "refresh" 17}}<span class="tlabel">{{t "send.convert"}}</span></a>{{template "tools" .}}</header>
+<main class="shell-main"><div class="hs-send"><header class="hs-intro"><h1>{{t "send.h1_pre"}} <em class="acc">{{t "send.h1_accent"}}</em></h1><p class="hs-lead">{{t "send.lead"}}</p></header>
+<div class="hs-two hs-js"><section class="hs-sc"><button class="tbtn primary lg" type="button" tabindex="-1">{{icon "plus" 17}}{{t "send.start"}}</button></section><div class="hs-sc"><label>{{t "send.join_title"}}</label><div class="hs-srow"><input class="hs-field" readonly tabindex="-1" placeholder="000000" aria-label="{{t "send.code_label"}}"><button class="tbtn" type="button" disabled>{{t "send.join"}}</button></div></div></div>
+{{template "nojs" .}}<p class="hs-note">{{icon "shield" 15}}{{t "send.unscanned"}}</p></div></main></div></div>{{end}}

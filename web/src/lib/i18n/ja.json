@@ -2,6 +2,7 @@
   "app.name": "FileHop",
   "app.tagline": "どのファイルも、どの形式も、このデバイスで。",
   "app.title": "FileHop — どんなファイルも、どんな形式も、あなたのデバイスで",
+  "app.needs_js": "FileHop には JavaScript が必要です。ブラウザで有効にしてから、このページを再読み込みしてください。",
   "nav.add": "ファイルを追加",
   "nav.queue": "キュー",
   "nav.settings": "エンジンと設定",
