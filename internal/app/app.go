@@ -43,6 +43,7 @@ type App struct {
 	db      *db.DB
 	static  fs.FS
 	index   []byte
+	pages   map[string][]byte // the shell as each public route is served (pages.go)
 	used    usedTickets
 	nonces  hop.Nonces
 	started time.Time
@@ -57,7 +58,7 @@ func New(cfg Config, d *db.DB, static fs.FS) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	a := &App{cfg: cfg, db: d, static: static, index: index, used: usedTickets{m: map[string]int64{}}, started: time.Now()}
+	a := &App{cfg: cfg, db: d, static: static, index: index, pages: buildPages(index, appStrings("en")), used: usedTickets{m: map[string]int64{}}, started: time.Now()}
 	a.hubUp = newHubProbe(cfg.SSOURL).Up
 	return a, nil
 }
@@ -141,7 +142,7 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		} else {
 			h.Set("Content-Type", "text/html; charset=utf-8")
 			h.Set("Cache-Control", "no-cache")
-			w.Write(a.index)
+			w.Write(a.shell(name, h))
 			return
 		}
 	}
@@ -182,6 +183,9 @@ func secure(next http.Handler) http.Handler {
 		h.Set("Referrer-Policy", "no-referrer")
 		h.Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 		h.Set("X-Frame-Options", "DENY")
+		if privatePath(r.URL.Path) {
+			h.Set("X-Robots-Tag", "noindex")
+		}
 		next.ServeHTTP(w, r)
 	})
 }

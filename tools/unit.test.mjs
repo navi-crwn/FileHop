@@ -862,7 +862,7 @@ test('every string the dashboard adds exists in all locales', () => {
 test('sitemap.xml lists public pages only and robots.txt has the Sitemap line', () => {
   const pub = (f) => readFileSync(new URL(`../web/public/${f}`, import.meta.url), 'utf8');
   const urls = [...pub('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.deepEqual(urls, ['https://file.hel.ink/', 'https://file.hel.ink/changelog']);
+  assert.deepEqual(urls, ['https://file.hel.ink/', 'https://file.hel.ink/send', 'https://file.hel.ink/changelog']);
   assert.match(pub('robots.txt'), /^Sitemap: https:\/\/file\.hel\.ink\/sitemap\.xml$/m);
   assert.match(pub('robots.txt'), /^Disallow: \/dashboard$/m);
 });
