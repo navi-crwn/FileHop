@@ -107,7 +107,6 @@ const pageStyle = `<style>#root>.hop-static~*{display:none}` +
 	`.hs-sc{background:var(--panel);border:1px solid var(--line-2);border-radius:var(--radius);padding:18px;display:grid;gap:12px;justify-items:start}` +
 	`.hs-h{margin:0;font-size:17px}.hs-hint{font-size:13px;color:var(--muted)}` +
 	`.hs-two{display:grid;gap:16px;grid-template-columns:1fr 1fr}@media (max-width:640px){.hs-two{grid-template-columns:1fr}.hs-join{order:-1}}` +
-	`.hs-side .steps{grid-template-columns:minmax(0,1fr)}` +
 	`.hs-assure{gap:8px}.hs-assure p{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--muted)}.hs-assure svg{flex:none;margin-top:2px;color:var(--green)}` +
 	`.hs-srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}` +
 	`.hs-field{height:var(--hop-ctl-h,36px);padding:0 12px;border-radius:var(--radius-sm);border:1px solid var(--line-2);background:var(--bg-2);color:var(--text);font-size:16px;width:9rem;letter-spacing:.12em;font-variant-numeric:tabular-nums;font-family:var(--mono)}` +

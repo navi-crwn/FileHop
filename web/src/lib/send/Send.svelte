@@ -418,26 +418,6 @@
           <p class="note"><Icon name="shield" size={15} />{t('send.unscanned')}</p>
         </section>
       {:else}
-        <details class="sc how" open>
-          <summary><h2>{t('send.how_title')}</h2></summary>
-          <div class="steps">
-            <article class="step">
-              <span class="n">01</span>
-              <h3>{t('send.how_s1_h')}</h3>
-              <p>{t('send.how_s1_p')}</p>
-            </article>
-            <article class="step">
-              <span class="n">02</span>
-              <h3>{t('send.how_s2_h')}</h3>
-              <p>{t('send.how_s2_p')}</p>
-            </article>
-            <article class="step">
-              <span class="n">03</span>
-              <h3>{t('send.how_s3_h')}</h3>
-              <p>{t('send.how_s3_p')}</p>
-            </article>
-          </div>
-        </details>
         <section class="sc assure">
           <p><Icon name="shield" size={15} />{t('send.assure_a')}</p>
           <p>{t('send.assure_b')}</p>
@@ -447,6 +427,29 @@
       {/if}
     </aside>
   </div>
+
+  {#if !showTransfers}
+          <details class="sc how" open>
+            <summary><h2>{t('send.how_title')}</h2></summary>
+            <div class="steps">
+              <article class="step">
+                <span class="n">01</span>
+                <h3>{t('send.how_s1_h')}</h3>
+                <p>{t('send.how_s1_p')}</p>
+              </article>
+              <article class="step">
+                <span class="n">02</span>
+                <h3>{t('send.how_s2_h')}</h3>
+                <p>{t('send.how_s2_p')}</p>
+              </article>
+              <article class="step">
+                <span class="n">03</span>
+                <h3>{t('send.how_s3_h')}</h3>
+                <p>{t('send.how_s3_p')}</p>
+              </article>
+            </div>
+          </details>
+  {/if}
 </div>
 
 <style>
@@ -502,7 +505,6 @@
   .how summary::after { content: '−'; margin-inline-start: auto; color: var(--muted); font-family: var(--mono); }
   .how:not([open]) summary::after { content: '+'; }
   .how[open] summary { margin-bottom: 12px; }
-  .how .steps { grid-template-columns: minmax(0, 1fr); }
   .assure { gap: 8px; }
   .assure p { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; color: var(--muted); }
   .assure :global(svg) { flex: none; margin-top: 2px; color: var(--green); }
