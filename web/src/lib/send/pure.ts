@@ -12,6 +12,50 @@ export const CONNECT_MS = 20000; // no open channel by then: say so
 export const BLOB_LIMIT = 512 * 1024 * 1024; // last-resort in-memory copy
 export const NAME_MAX = 200;
 
+// A sender announces the group its file belongs to (n of count, total bytes). The receiver accepts
+// the whole group only while its cumulative bytes stay under this cap: every received file lives in
+// this tab's memory or private storage until the person saves it. Old peers send no group fields
+// and nothing changes for them.
+export const GROUP_CAP = 512 * 1024 * 1024;
+
+/** The optional group fields of an offer, or null when they are absent or not believable. */
+export function offerGroup(n: unknown, of: unknown, total: unknown): { n: number; of: number; total: number } | null {
+  const nn = Number(n), no = Number(of), nt = Number(total);
+  if (!Number.isInteger(nn) || !Number.isInteger(no) || !Number.isFinite(nt)) return null;
+  if (nn < 1 || no < 1 || nn > no || nt < 0) return null;
+  return { n: nn, of: no, total: nt };
+}
+
+export type Group = { n: number; of: number; total: number };
+/** "Accept all" / "Decline all" as it stands: which group it was pressed for and the last file seen of it. */
+export type Bulk = { mode: 'accept' | 'decline'; of: number; total: number; last: number };
+export type Verdict = 'ask' | 'accept' | 'decline' | 'group_too_big';
+
+/** Pressing "Accept all" or "Decline all" on an offer of a group. A single file has nothing to continue. */
+export function bulkFor(mode: 'accept' | 'decline', g: Group | undefined): Bulk | null {
+  return g && g.of > 1 && g.n < g.of ? { mode, of: g.of, total: g.total, last: g.n } : null;
+}
+
+/**
+ * What to do with an offer from the other device, whose fields are all its own claims. "Accept all" and
+ * "Decline all" reach only the later files of the group they were pressed for: the same announced
+ * count and total, a higher number than the last one seen, not past the count. Anything else (a new
+ * group, "1 of n" again, a single file, no group fields) asks again and ends the bulk choice.
+ * `held` is what this tab already holds of received files the person has not saved. While "Accept all"
+ * is on, nothing may take that past GROUP_CAP; otherwise the person decides on the card, as for a single
+ * file. A group that announces more than GROUP_CAP in all is refused at its first offer. One file
+ * (`of` 1) is not a group: only the per-file limit, which the caller checks, applies to it.
+ */
+export function judgeOffer(bulk: Bulk | null, group: Group | null, size: number, held: number): { verdict: Verdict; bulk: Bulk | null } {
+  const g = group && group.of > 1 ? group : null;
+  const goes = !!bulk && !!g && g.n > bulk.last && g.n <= bulk.of && g.of === bulk.of && g.total === bulk.total;
+  const next = goes && g!.n < bulk!.of ? { ...bulk!, last: g!.n } : null; // the last file of the group ends it
+  if (g && g.total > GROUP_CAP) return { verdict: 'group_too_big', bulk: null };
+  if (goes && bulk!.mode === 'decline') return { verdict: 'decline', bulk: next };
+  if (goes && held + size > GROUP_CAP) return { verdict: 'group_too_big', bulk: null };
+  return { verdict: goes ? 'accept' : 'ask', bulk: next };
+}
+
 /** What the sender should do before queueing the next chunk. */
 export type Gate = 'go' | 'buffer' | 'ack';
 

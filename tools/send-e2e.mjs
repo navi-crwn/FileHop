@@ -17,7 +17,7 @@
 // in a row, every Save intact), abandoned (the code of a device that left, an empty room, a new #code in
 // the same tab), slowcreator (no code on screen before its device is in the room).
 import { createHash, randomBytes } from 'node:crypto';
-import { createReadStream, mkdirSync, statSync, writeFileSync, createWriteStream, existsSync } from 'node:fs';
+import { createReadStream, readFileSync, mkdirSync, statSync, writeFileSync, createWriteStream, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
@@ -330,6 +330,228 @@ const scenarios = {
     }
     check('three files received one after another: all three Save links give intact files', results.every((r) => r.endsWith('intact')), results.join(' '));
     check('the received files stay in private storage while the page is open', (await opfsLeft(p.B.page)).length === files.length, JSON.stringify(await opfsLeft(p.B.page)));
+    await p.close();
+  },
+
+  async groupaccept(b) {
+    // "Accept all" is for the group on offer and nothing after it (audit finding 1): the three files of
+    // the group arrive without a click, then every later offer shows its card again
+    const files = [await makeFile('grp-a-1MiB.bin', 1), await makeFile('grp-b-1MiB.bin', 1), await makeFile('grp-c-1MiB.bin', 1)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    await p.B.page.waitForSelector('.offer-accept-all', { timeout: 15000 });
+    await p.B.page.click('.offer-accept-all');
+    await p.B.page.waitForFunction((k) => document.querySelectorAll('.xfer[data-dir=in][data-state=done]').length >= k, 3, { timeout: 60000 });
+    check('Accept all: the three files of the group arrive without another click', (await p.B.page.$$('.xfer[data-dir=in][data-state=done]')).length === 3 && (await p.B.page.$('.offer')) === null);
+    // a new group of two: it must ask (a card), not arrive by itself
+    await p.A.page.setInputFiles('#pick', [files[0], files[1]]);
+    let card = await p.B.page.waitForSelector('.offer', { timeout: 15000 }).then(() => true, () => false);
+    await p.B.page.waitForTimeout(1500);
+    check('after Accept all, the next group shows a card and waits', card && (await p.B.page.$$('.xfer[data-dir=in]')).length === 3);
+    check('the "Accept all is on" note is gone once the group is over', (await p.B.page.$('.auto')) === null);
+    await p.B.page.click('.offer .offer-decline'); // this file only
+    await p.B.page.waitForSelector('.offer', { timeout: 15000 }); // the second file of that group asks again
+    await p.B.page.click('.offer .offer-decline');
+    // a single file
+    await p.A.page.setInputFiles('#pick', files[2]);
+    card = await p.B.page.waitForSelector('.offer', { timeout: 15000 }).then(() => true, () => false);
+    await p.B.page.waitForTimeout(800);
+    check('after Accept all, a single file shows a card', card && (await p.B.page.$$('.xfer[data-dir=in]')).length === 3);
+    await p.close();
+  },
+
+  async groupdecline(b) {
+    // "Decline all" is for the group on offer (audit finding 3): a later offer shows its card
+    const files = [await makeFile('grp-a-1MiB.bin', 1), await makeFile('grp-b-1MiB.bin', 1), await makeFile('grp-c-1MiB.bin', 1)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    await p.B.page.waitForSelector('.offer-decline-all', { timeout: 15000 });
+    await p.B.page.click('.offer-decline-all');
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=failed]').length >= 3, null, { timeout: 15000 });
+    check('Decline all: the sender stops the whole group', (await p.B.page.$('.offer')) === null && (await p.B.page.$$('.xfer[data-dir=in]')).length === 0);
+    await p.A.page.setInputFiles('#pick', files[0]);
+    const card = await p.B.page.waitForSelector('.offer', { timeout: 15000 }).then(() => true, () => false);
+    check('after Decline all, a new offer shows a card (it is not refused unseen)', card);
+    await p.close();
+  },
+
+  async grouplies(b) {
+    // the offer's group fields come from the sender and are not trusted (audit findings 1 and 2)
+    const keep = () => {
+      const o = RTCPeerConnection.prototype.createDataChannel;
+      RTCPeerConnection.prototype.createDataChannel = function (...a) { const dc = o.apply(this, a); window.__dc = dc; const send = dc.send.bind(dc); dc.send = (d) => { if (typeof d === 'string' && d.includes('"cancel"')) return; send(d); }; /* this page's own session must not withdraw the forged offers */ window.__msgs = []; dc.addEventListener('message', (e) => window.__msgs.push(e.data)); return dc; };
+    };
+    const MiB = 1048576;
+    const sendOffer = (p, o) => p.B.page.evaluate((x) => window.__dc.send(JSON.stringify({ t: 'offer', name: 'x.bin', mime: '', ...x })), o);
+    const heard = (p, ...parts) => p.B.page.evaluate((ps) => window.__msgs.some((m) => typeof m === 'string' && ps.every((q) => m.includes(q))), parts);
+    const wait = (p, ...parts) => p.B.page.waitForFunction((ps) => window.__msgs.some((m) => typeof m === 'string' && ps.every((q) => m.includes(q))), parts, { timeout: 10000 });
+    // (c) a group whose announced total is above 512 MiB is refused at the first offer
+    let p = await pair(b, { initB: keep });
+    await sendOffer(p, { id: 'big1', size: 10, n: 1, of: 3, total: 600 * MiB });
+    await wait(p, 'reject', 'big1').catch(() => {});
+    check('a group announcing more than 512 MiB is refused at its first offer', (await heard(p, 'group_too_big', 'big1')) && (await p.A.page.$('.offer')) === null);
+    await sendOffer(p, { id: 'big2', size: 600 * MiB, n: 1, of: 2, total: 600 * MiB });
+    await wait(p, 'reject', 'big2').catch(() => {});
+    check('a file of a group announced above 512 MiB is refused', (await heard(p, 'group_too_big', 'big2')) && (await p.A.page.$('.offer')) === null);
+    // one file is not a group: a 1 GiB file announced "1 of 1" gets its card, as on main
+    await sendOffer(p, { id: 'one1', size: 1024 * MiB, n: 1, of: 1, total: 1024 * MiB });
+    const one = await p.A.page.waitForSelector('.offer', { timeout: 10000 }).then(() => true, () => false);
+    check('a single 1 GiB file announced as "1 of 1" shows its card (no group cap)', one && !(await heard(p, 'group_too_big', 'one1')));
+    await p.close();
+    // a sender that claims "1 of 1000" to get the Accept all button, then goes on offering
+    p = await pair(b, { initB: keep });
+    const oneByte = '6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d'; // sha-256 of the single byte 0x00
+    await sendOffer(p, { id: 'lie1', size: 1, n: 1, of: 1000, total: 1 });
+    await p.A.page.waitForSelector('.offer-accept-all', { timeout: 10000 });
+    await p.A.page.click('.offer-accept-all');
+    await wait(p, '"accept"', 'lie1');
+    await p.B.page.evaluate((h) => { window.__dc.send(new Uint8Array(1).buffer); window.__dc.send(JSON.stringify({ t: 'end', id: 'lie1', size: 1, sha256: h })); }, oneByte);
+    await p.A.page.waitForSelector('.xfer[data-dir=in][data-state=done]', { timeout: 15000 }).catch(async (e) => { log('DEBUG A: ' + (await p.A.page.innerText('.send')).replaceAll('\n', ' ').slice(0, 900) + ' | B msgs: ' + JSON.stringify(await p.B.page.evaluate(() => window.__msgs))); throw e; });
+    // the same lie again: "1 of 1000" starts a group, so it asks
+    await sendOffer(p, { id: 'lie2', size: 1, n: 1, of: 1000, total: 1 });
+    const card1 = await p.A.page.waitForSelector('.offer', { timeout: 10000 }).then(() => true, () => false);
+    check('"1 of 1000" repeated does not ride on the earlier Accept all: the card is shown', card1 && !(await heard(p, '"accept"', 'lie2')));
+    await p.A.page.click('.offer .offer-decline');
+    // an offer with no group fields at all (an old sender)
+    await sendOffer(p, { id: 'lie3', size: 1 });
+    const card2 = await p.A.page.waitForSelector('.offer', { timeout: 10000 }).then(() => true, () => false);
+    check('an offer without group fields shows its card', card2 && !(await heard(p, '"accept"', 'lie3')));
+    await p.close();
+  },
+
+  async singlefile(b) {
+    // a sender with one file writes no group fields at all, so an older receiver and the group rules see a plain offer
+    const spy = () => { const o = RTCDataChannel.prototype.send; window.__sent = []; RTCDataChannel.prototype.send = function (d) { if (typeof d === 'string') window.__sent.push(d); return o.call(this, d); }; };
+    const p = await pair(b, { initB: spy });
+    await p.B.page.setInputFiles('#pick', await makeFile('random-2MiB.bin', 2));
+    await p.A.page.waitForSelector('.offer', { timeout: 15000 });
+    const offer = await p.B.page.evaluate(() => window.__sent.map((m) => JSON.parse(m)).find((m) => m.t === 'offer'));
+    check('one file is offered without group fields (n, of, total)', !!offer && !('n' in offer) && !('of' in offer) && !('total' in offer), JSON.stringify(offer));
+    check('the receiver shows no "Accept all" for one file', (await p.A.page.$('.offer-accept-all')) === null);
+    await p.close();
+  },
+
+  async cancelwait(b) {
+    // the sender cancels a file the receiver has not answered (audit finding 4): no card or row is left
+    // hanging, and the next offer is not refused as "busy". The save dialog is stood in for by a page
+    // function that stays open until the test closes it.
+    const dialog = () => { window.showSaveFilePicker = () => new Promise((_, rej) => { window.__closeDialog = () => rej(new DOMException('closed', 'AbortError')); }); };
+    const file = await makeFile('random-2MiB.bin', 2);
+    const p = await pair(b, { initB: dialog, store: 'auto' });
+    // a) the card is still showing
+    await p.A.page.setInputFiles('#pick', file);
+    await p.B.page.waitForSelector('.offer', { timeout: 15000 });
+    await p.A.page.click('.xfer[data-dir=out] button');
+    await p.B.page.waitForFunction(() => !document.querySelector('.offer'), null, { timeout: 10000 });
+    check('cancelled by the sender before an answer: the card goes away', true);
+    // b) the receiver pressed Accept and the save dialog is open
+    await p.A.page.setInputFiles('#pick', file);
+    await p.B.page.waitForSelector('.offer-accept', { timeout: 15000 });
+    await p.B.page.click('.offer-accept');
+    await p.A.page.waitForSelector('.xfer[data-dir=out]:not([data-state=failed]) button', { timeout: 10000 });
+    await p.A.page.click('.xfer[data-dir=out]:not([data-state=failed]) button');
+    await p.A.page.waitForTimeout(500);
+    await p.B.page.evaluate(() => window.__closeDialog?.());
+    await p.B.page.waitForTimeout(1500);
+    const running = await p.B.page.$$('.xfer[data-dir=in][data-state=run]');
+    check('cancelled while the save dialog was open: no receive row is left running at 0 bytes', running.length === 0);
+    await p.A.page.setInputFiles('#pick', file);
+    const card = await p.B.page.waitForSelector('.offer', { timeout: 15000 }).then(() => true, () => false);
+    check('and the next offer is not refused as busy', card);
+    await p.close();
+  },
+
+  async acceptall(b) {
+    // three files picked at once travel as one group: the receiver accepts them with one click
+    const files = [await makeFile('gr-a-2MiB.bin', 2), await makeFile('gr-b-3MiB.bin', 3), await makeFile('gr-c-1MiB.bin', 1)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    await p.B.page.waitForSelector('.offer-accept-all', { timeout: 15000 });
+    const offerText = (await p.B.page.textContent('.offer'))?.replace(/\s+/g, ' ') ?? '';
+    check('the offer says which file of the group it is and what the group holds',
+      /1 \/ 3|1 of 3/.test(offerText) && /3/.test(offerText), offerText.slice(0, 160));
+    await p.B.page.click('.offer-accept-all');
+    await p.B.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=in][data-state=done], .xfer[data-dir=in][data-state=failed]').length >= 3, null, { timeout: 60000 });
+    const results = [];
+    for (const f of files) {
+      const name = f.split(/[\\/]/).pop();
+      const row = await p.B.page.$(`.xfer[data-dir=in] .sname:text-is("${name}")`);
+      const state = row ? await row.evaluate((el) => el.closest('.xfer').getAttribute('data-state')) : null;
+      const label = row ? await row.evaluate((el) => el.closest('.xfer').querySelector('.label')?.textContent ?? '') : '';
+      results.push(`${name}=${state}`);
+      if (!/3/.test(label)) check(`every received row keeps its "File n of 3" label (${name})`, false, label.trim());
+    }
+    check('Accept all: every file of the group arrives done', results.every((r) => r.endsWith('=done')), results.join(' '));
+    await p.close();
+  },
+
+  async cancelqueue(b) {
+    // a queued file is cancelled by its own button, the rest by "Cancel the rest", the running one keeps going
+    const files = [await makeFile('cq-a-64MiB.bin', 64), await makeFile('cq-b-1MiB.bin', 1), await makeFile('cq-c-1MiB.bin', 1), await makeFile('cq-d-1MiB.bin', 1)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    await p.B.page.waitForSelector('.offer-accept', { timeout: 15000 });
+    await p.B.page.click('.offer-accept');
+    await p.A.page.waitForFunction(() => { const e = document.querySelector('.xfer[data-dir=out] progress'); return e && e.value > 2 * 1048576; }, null, { timeout: 60000 });
+    // every queued row has its own Cancel; three are waiting behind the running one
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=queued]').length >= 3, null, { timeout: 15000 });
+    const rows = await p.A.page.$$('.xfer[data-dir=out][data-state=queued] button');
+    check('the sender queue shows every waiting file with its own Cancel', rows.length >= 3, `${rows.length} buttons`);
+    await rows[0].click(); // per-file cancel
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=failed]').length >= 1, null, { timeout: 10000 });
+    const gone = await p.A.page.$('.xfer[data-dir=out][data-state=failed] .result');
+    check('a per-file cancel ends that row as cancelled', ((await gone?.textContent()) ?? '').includes('Cancelled'), ((await gone?.textContent()) ?? '').trim());
+    await p.A.page.click('.xfers button:has-text("Cancel the rest")');
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=failed]').length >= 3, null, { timeout: 10000 });
+    check('"Cancel the rest" ends every queued row', (await p.A.page.$$('.xfer[data-dir=out][data-state=failed]')).length >= 3);
+    await Promise.all([
+      p.A.page.waitForFunction(() => document.querySelector('.xfer[data-dir=out]')?.getAttribute('data-state') === 'done', null, { timeout: 120000 }),
+      p.B.page.waitForFunction(() => document.querySelector('.xfer[data-dir=in]')?.getAttribute('data-state') === 'done', null, { timeout: 120000 }),
+    ]);
+    check('the running file is untouched by both cancels and still arrives', (await state(p.A.page, 'out')) === 'done' && (await state(p.B.page, 'in')) === 'done');
+    check('the receiver only ever saw the one accepted file', (await p.B.page.$$('.xfer[data-dir=in]')).length === 1);
+    await p.close();
+  },
+
+  async saveall(b) {
+    // two received files become one ZIP; every row then says Saved and offers Save again
+    const files = [await makeFile('sa-a-2MiB.bin', 2), await makeFile('sa-b-3MiB.bin', 3)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    for (let i = 0; i < files.length; i++) {
+      await p.B.page.waitForSelector('.offer-accept:not([disabled])', { timeout: 15000 });
+      await p.B.page.click('.offer-accept');
+      await p.B.page.waitForFunction((n) => document.querySelectorAll('.xfer[data-dir=in][data-state=done], .xfer[data-dir=in][data-state=failed]').length >= n, i + 1, { timeout: 60000 });
+    }
+    await p.B.page.waitForSelector('.saveall button', { timeout: 10000 });
+    const [dl] = await Promise.all([p.B.page.waitForEvent('download'), p.B.page.click('.saveall button')]);
+    const dest = join(out, 'saveall.zip');
+    await dl.saveAs(dest);
+    const zip = readFileSync(dest);
+    const names = files.map((f) => f.split(/[\\/]/).pop());
+    check('Save all downloads one ZIP that carries both names', zip[0] === 0x50 && zip[1] === 0x4b && names.every((n) => zip.includes(n)),
+      `${dl.suggestedFilename()} ${zip.length} bytes`);
+    const saved = await p.B.page.$$('.xfer[data-dir=in] .save[disabled]');
+    const again = await p.B.page.$$('.xfer[data-dir=in] .save-again');
+    check('after Save all every row says Saved and offers Save again', saved.length === 2 && again.length === 2, `saved=${saved.length} again=${again.length}`);
+    check('the Save all row is gone once everything is saved', (await p.B.page.$('.saveall button')) === null);
+    await p.close();
+  },
+
+  async declinedall(b) {
+    // "Decline all" refuses this file and every later one of the group; the sender stops its queue
+    const files = [await makeFile('dg-a-2MiB.bin', 2), await makeFile('dg-b-2MiB.bin', 2), await makeFile('dg-c-2MiB.bin', 2)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    await p.B.page.waitForSelector('.offer-accept-all', { timeout: 15000 });
+    await p.B.page.click('.offer .tbtn.ghost'); // Decline all
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=failed]').length >= 3, null, { timeout: 30000 });
+    const rows = await p.A.page.$$('.xfer[data-dir=out][data-state=failed]');
+    check('Decline all ends the whole group on the sender', rows.length === 3, `${rows.length} failed rows`);
+    const first = await p.A.page.$('.xfer[data-dir=out][data-state=failed] .result');
+    check('the refused file says the other device declined', ((await first?.textContent()) ?? '').toLowerCase().includes('declined'), ((await first?.textContent()) ?? '').trim());
+    await p.B.page.waitForTimeout(500);
+    check('the receiver got nothing to save and no later offer', (await p.B.page.$$('.xfer')).length === 0 && (await p.B.page.$$('.offer')).length === 0);
     await p.close();
   },
 
