@@ -4,6 +4,19 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-11-13
+
+### Added
+- A door to Send on the public home page: a "Send a file" button in the hero beside "Add files", a Send link in the top bar, and a "Two things you can do" band under the hero that names both halves of FileHop — convert here (nothing is uploaded) and send device to device (nothing is stored). The first view served before the app loads carries the same three places, so the door is there before any script runs and in every language.
+- `/send`: "Accept all" and "Decline all" for a run of offered files, so a folder of ten files is one press instead of ten. A file can still be accepted or declined on its own; accepting or declining one row never touches the others.
+- `/send`: every offered file has a cancel, and "Cancel the rest" appears while more than one file is still on its way, so a long queue stops where the person wants it. The sender sees its own queue with the file being sent marked, and a cancelled file leaves both lists.
+- `/send`: "Save all" for the files received in one go, packed into a single ZIP on the device (no upload), up to 512 MiB of files in all. Above that size the button is not offered and each file keeps its own Save link.
+
+### Changed
+- `/send` is now two columns: "Connection" (the code, the QR code, the pairing number, the route) on one side and "Transfers" (the queue and the received files) on the other, with a short "How it works" list under them, three steps, calm. On a phone the two columns become one stack, Connection first. The words are new in all nine languages, and the first view served before the app loads shows the same layout.
+- The file group travels on the wire: a sender now announces "3 of 8" and the bytes of the whole group before the first file, so the receiver can say how much is coming and refuse a group larger than 512 MiB before anything is written. A device that speaks the older protocol still pairs and transfers as before; the newer fields are optional.
+- `/dashboard` is centred in one column like the other apps' dashboards, and the side column now has a Send card next to the account card: one door to `/send`, with the plain sentence that files go straight from one device to the other and are never stored.
+
 ## [1.2.1] - 2026-11-12
 
 ### Fixed
