@@ -390,9 +390,13 @@ const scenarios = {
     await sendOffer(p, { id: 'big1', size: 10, n: 1, of: 3, total: 600 * MiB });
     await wait(p, 'reject', 'big1').catch(() => {});
     check('a group announcing more than 512 MiB is refused at its first offer', (await heard(p, 'group_too_big', 'big1')) && (await p.A.page.$('.offer')) === null);
-    await sendOffer(p, { id: 'big2', size: 600 * MiB, n: 1, of: 1, total: 600 * MiB });
+    await sendOffer(p, { id: 'big2', size: 600 * MiB, n: 1, of: 2, total: 600 * MiB });
     await wait(p, 'reject', 'big2').catch(() => {});
-    check('a single file announced above 512 MiB inside a group is refused', (await heard(p, 'group_too_big', 'big2')) && (await p.A.page.$('.offer')) === null);
+    check('a file of a group announced above 512 MiB is refused', (await heard(p, 'group_too_big', 'big2')) && (await p.A.page.$('.offer')) === null);
+    // one file is not a group: a 1 GiB file announced "1 of 1" gets its card, as on main
+    await sendOffer(p, { id: 'one1', size: 1024 * MiB, n: 1, of: 1, total: 1024 * MiB });
+    const one = await p.A.page.waitForSelector('.offer', { timeout: 10000 }).then(() => true, () => false);
+    check('a single 1 GiB file announced as "1 of 1" shows its card (no group cap)', one && !(await heard(p, 'group_too_big', 'one1')));
     await p.close();
     // a sender that claims "1 of 1000" to get the Accept all button, then goes on offering
     p = await pair(b, { initB: keep });
@@ -412,6 +416,18 @@ const scenarios = {
     await sendOffer(p, { id: 'lie3', size: 1 });
     const card2 = await p.A.page.waitForSelector('.offer', { timeout: 10000 }).then(() => true, () => false);
     check('an offer without group fields shows its card', card2 && !(await heard(p, '"accept"', 'lie3')));
+    await p.close();
+  },
+
+  async singlefile(b) {
+    // a sender with one file writes no group fields at all, so an older receiver and the group rules see a plain offer
+    const spy = () => { const o = RTCDataChannel.prototype.send; window.__sent = []; RTCDataChannel.prototype.send = function (d) { if (typeof d === 'string') window.__sent.push(d); return o.call(this, d); }; };
+    const p = await pair(b, { initB: spy });
+    await p.B.page.setInputFiles('#pick', await makeFile('random-2MiB.bin', 2));
+    await p.A.page.waitForSelector('.offer', { timeout: 15000 });
+    const offer = await p.B.page.evaluate(() => window.__sent.map((m) => JSON.parse(m)).find((m) => m.t === 'offer'));
+    check('one file is offered without group fields (n, of, total)', !!offer && !('n' in offer) && !('of' in offer) && !('total' in offer), JSON.stringify(offer));
+    check('the receiver shows no "Accept all" for one file', (await p.A.page.$('.offer-accept-all')) === null);
     await p.close();
   },
 

@@ -107,11 +107,19 @@ test('judgeOffer: the 512 MiB cap holds whatever the sender claims', () => {
   assert.equal(P.judgeOffer(null, G(1, 3, cap), 10, 0).verdict, 'ask');
   // what the tab already holds counts, not a "1 of n" that starts over
   assert.equal(P.judgeOffer(null, G(1, 1, 300 * MiB), 300 * MiB, 0).verdict, 'ask');
-  assert.equal(P.judgeOffer(null, G(1, 1, 300 * MiB), 300 * MiB, 300 * MiB).verdict, 'group_too_big');
-  assert.equal(P.judgeOffer(null, G(1, 1000, 1), 400 * MiB, 200 * MiB).verdict, 'group_too_big'); // "total: 1" is a lie
+  // outside "Accept all" an offer that would pass the cap is put to the person (a card), like a single file
+  assert.equal(P.judgeOffer(null, G(1, 2, 300 * MiB), 300 * MiB, 300 * MiB).verdict, 'ask');
+  assert.equal(P.judgeOffer(null, G(1, 1000, 1), 400 * MiB, 200 * MiB).verdict, 'ask'); // "total: 1" is a lie: still the person's call
   const bulk = accepted(G(1, 3, 30)); // while Accept all is on, the cap ends it
   assert.deepEqual(P.judgeOffer(bulk, G(2, 3, 30), 100 * MiB, cap - 50 * MiB), { verdict: 'group_too_big', bulk: null });
   assert.equal(P.judgeOffer(null, null, 900 * MiB, 0).verdict, 'ask'); // no group, nothing held: the person's call
+});
+
+test('judgeOffer: one file is not a group: no group cap, only the per-file limit the caller checks', () => {
+  const GiB = 1024 * MiB;
+  assert.deepEqual(P.judgeOffer(null, G(1, 1, GiB), GiB, 0), { verdict: 'ask', bulk: null });
+  assert.deepEqual(P.judgeOffer(null, G(1, 1, GiB), GiB, 400 * MiB), { verdict: 'ask', bulk: null });
+  assert.equal(P.judgeOffer(null, G(1, 1, P.GROUP_CAP + 1), 10, 0).verdict, 'ask');
 });
 
 test('gate: the channel queue holds the sender first, then the receiver window', () => {

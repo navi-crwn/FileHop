@@ -41,15 +41,18 @@ export function bulkFor(mode: 'accept' | 'decline', g: Group | undefined): Bulk 
  * "Decline all" reach only the later files of the group they were pressed for: the same announced
  * count and total, a higher number than the last one seen, not past the count. Anything else (a new
  * group, "1 of n" again, a single file, no group fields) asks again and ends the bulk choice.
- * `held` is what this tab already holds of received files the person has not saved; a group offer, or
- * any offer while "Accept all" is on, may not take that past GROUP_CAP, whatever the group claims.
+ * `held` is what this tab already holds of received files the person has not saved. While "Accept all"
+ * is on, nothing may take that past GROUP_CAP; otherwise the person decides on the card, as for a single
+ * file. A group that announces more than GROUP_CAP in all is refused at its first offer. One file
+ * (`of` 1) is not a group: only the per-file limit, which the caller checks, applies to it.
  */
-export function judgeOffer(bulk: Bulk | null, g: Group | null, size: number, held: number): { verdict: Verdict; bulk: Bulk | null } {
+export function judgeOffer(bulk: Bulk | null, group: Group | null, size: number, held: number): { verdict: Verdict; bulk: Bulk | null } {
+  const g = group && group.of > 1 ? group : null;
   const goes = !!bulk && !!g && g.n > bulk.last && g.n <= bulk.of && g.of === bulk.of && g.total === bulk.total;
   const next = goes && g!.n < bulk!.of ? { ...bulk!, last: g!.n } : null; // the last file of the group ends it
   if (g && g.total > GROUP_CAP) return { verdict: 'group_too_big', bulk: null };
   if (goes && bulk!.mode === 'decline') return { verdict: 'decline', bulk: next };
-  if ((g || goes) && held + size > GROUP_CAP) return { verdict: 'group_too_big', bulk: null };
+  if (goes && held + size > GROUP_CAP) return { verdict: 'group_too_big', bulk: null };
   return { verdict: goes ? 'accept' : 'ask', bulk: next };
 }
 

@@ -41,7 +41,7 @@
   /* The sender's queue: every picked file gets a row at once ("Waiting for the other device…") with
      its own Cancel, and the files travel one after another. Files announce their group (n of count,
      total bytes) so the receiver can show it and accept the whole group. */
-  type Queued = { id: string; file: File; key: number; n: number; of: number; total: number };
+  type Queued = { id: string; file: File; key: number; group?: { n: number; of: number; total: number } };
   let outQueue = $state<Queued[]>([]);
   let pumping = false;
   let groupSeq = 0;
@@ -130,8 +130,9 @@
     const total = files.reduce((s, f) => s + f.size, 0);
     files.forEach((f, i) => {
       const id = Math.random().toString(36).slice(2, 10);
-      const group = { n: i + 1, of: files.length, total };
-      outQueue = [...outQueue, { id, file: f, key, ...group }];
+      // one file is not a group: it travels without group fields, as on older versions
+      const group = files.length > 1 ? { n: i + 1, of: files.length, total } : undefined;
+      outQueue = [...outQueue, { id, file: f, key, group }];
       rows[id] = { id, dir: 'out', name: sanitizeFileName(f.name, t('send.default_name')), size: f.size, done: 0, bytesPerSec: 0, state: 'queued', group };
     });
     void pump();
@@ -142,7 +143,7 @@
     try {
       while (outQueue.length) {
         const it = outQueue[0];
-        const res = await session.sendFile(it.file, { id: it.id, group: { n: it.n, of: it.of, total: it.total } });
+        const res = await session.sendFile(it.file, { id: it.id, group: it.group });
         outQueue = outQueue.slice(1);
         // the other device declined the whole group: what is still queued of it will not be sent
         if (!res.ok && res.reason === 'declined_all') {
@@ -272,7 +273,7 @@
             <button id="start" class="tbtn primary lg" type="button" onclick={() => session.create()}><Icon name="plus" size={17} />{t('send.start')}</button>
           </section>
           <form class="sc join" onsubmit={(e) => { e.preventDefault(); if (validCode(typed)) void session.join(typed); }}>
-            <label for="code-in">{t('send.join_title')}</label>
+            <h2>{t('send.join_title')}</h2>
             <p class="muted small">{t('send.join_hint')}</p>
             <div class="srow">
               <input id="code-in" class="sfield mono" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="000000" aria-label={t('send.code_label')} pattern={'[0-9]{6}'} bind:value={typed} />
@@ -352,11 +353,11 @@
                 <section class="sc offer" data-offer={o.id}>
                   <p class="label">{t('send.incoming')}</p>
                   <p><b class="mono sname">{o.name}</b> <span class="num muted">{fmtSize(o.size)}</span></p>
-                  {#if ofN(o.group)}<p class="muted small">{ofN(o.group)}{#if o.group} · {t('send.group_summary', { n: o.group.of, size: fmtSize(o.group.total) })}{/if}</p>{/if}
+                  {#if ofN(o.group)}<p class="muted small">{ofN(o.group)}{#if o.group}{' · '}{t('send.group_summary', { n: o.group.of, size: fmtSize(o.group.total) })}{/if}</p>{/if}
                   <p class="muted small">{t('send.unscanned')}</p>
                   <div class="srow">
                     <button class="tbtn primary offer-accept" type="button" disabled={receiving} onclick={() => accept(o)}>{t('send.accept')}</button>
-                    {#if o.group && o.group.of > 1}<button class="tbtn offer-accept-all" type="button" onclick={() => acceptAll(o)}>{t('send.accept_all')}</button>{/if}
+                    {#if o.group && o.group.of > 1}<button class="tbtn offer-accept-all" type="button" disabled={receiving} onclick={() => acceptAll(o)}>{t('send.accept_all')}</button>{/if}
                     <button class="tbtn offer-decline" type="button" onclick={() => decline(o)}>{t('send.decline')}</button>
                     {#if o.group && o.group.of > 1}<button class="tbtn ghost offer-decline-all" type="button" onclick={() => declineAll(o)}>{t('send.decline_all')}</button>{/if}
                   </div>
@@ -377,7 +378,7 @@
           {/if}
           {#each Object.values(rows) as r (r.id)}
             <section class="sc xfer" data-state={r.state} data-dir={r.dir}>
-              <p class="label">{r.dir === 'out' ? t('send.sending') : t('send.receiving')}{#if ofN(r.group)} · {ofN(r.group)}{/if}</p>
+              <p class="label">{r.dir === 'out' ? t('send.sending') : t('send.receiving')}{#if ofN(r.group)}{' · '}{ofN(r.group)}{/if}</p>
               <p><b class="mono sname">{r.name}</b> <span class="num muted">{fmtSize(r.done)} / {fmtSize(r.size)}</span></p>
               {#if r.state === 'queued'}
                 <p class="num muted srow"><span>{t('send.waiting')}</span>
@@ -415,7 +416,7 @@
           {#if !offers.length && !Object.keys(rows).length}
             <p class="muted small">{t('send.transfers_hint')}</p>
           {/if}
-          <p class="note"><Icon name="shield" size={15} />{t('send.unscanned')}</p>
+          {#if !offers.length}<p class="note"><Icon name="shield" size={15} />{t('send.unscanned')}</p>{/if}
         </section>
       {:else}
         <section class="sc assure">
@@ -466,6 +467,8 @@
   @media (max-width: 640px) { .two { grid-template-columns: 1fr; } .two .join { order: -1; } }
   .sticky { position: sticky; top: 88px; }
   .srow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  /* the four offer buttons: two by two on a phone, Accept / Accept all above Decline / Decline all */
+  @media (max-width: 640px) { .offer .srow { display: grid; grid-template-columns: 1fr 1fr; } }
   .sfield { height: var(--hop-ctl-h, 36px); padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--line-2); background: var(--bg-2); color: var(--text); font-size: 16px; width: 9rem; letter-spacing: .12em; font-variant-numeric: tabular-nums; }
   .sfield:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   label { font-size: 13px; font-weight: 600; }
