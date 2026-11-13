@@ -9,15 +9,19 @@ scripts are off, where the one <noscript> sentence stands instead. Change both s
 {{define "nojs"}}<noscript><p class="hs-nojs">{{t "app.needs_js"}}</p></noscript>{{end}}
 {{define "brand"}}<img src="/mark.svg" alt="" width="26" height="26"><span class="hop-name hop-name-filehop">FileHop</span>{{end}}
 
-{{define "home"}}<div class="hop-static app"><header class="topbar"><span class="brand">{{template "brand"}}</span><span class="spacer"></span><button class="tbtn primary hs-js" type="button" tabindex="-1">{{icon "plus" 17}}<span class="tlabel">{{t "nav.add"}}</span></button>{{template "tools" .}}</header>
+{{define "home"}}<div class="hop-static app"><header class="topbar"><span class="brand">{{template "brand"}}</span><span class="spacer"></span><a class="tbtn topnav-send" href="/send">{{icon "upload" 17}}<span class="tlabel">{{t "send.nav"}}</span></a><button class="tbtn primary hs-js" type="button" tabindex="-1">{{icon "plus" 17}}<span class="tlabel">{{t "nav.add"}}</span></button>{{template "tools" .}}</header>
 <main><div class="wrap">
 <section class="hero"><div class="hero-copy"><span class="eyebrow"><i></i>{{t "hero.eyebrow"}}</span>
 <h1>{{t "hero.h1_pre"}}{{if .Break}}<br>{{else}} {{end}}<em class="acc">{{t "hero.h1_accent"}}</em></h1>
 <p class="lead">{{t "hero.lead"}}</p>
-<div class="cta"><button class="tbtn secondary lg hs-js" type="button" tabindex="-1">{{icon "upload" 17}}{{t "hero.cta"}}</button><button class="tbtn lg hs-js" type="button" tabindex="-1">{{icon "gear" 17}}{{t "nav.settings"}}</button>{{template "nojs" .}}</div>
+<div class="cta"><button class="tbtn secondary lg hs-js" type="button" tabindex="-1">{{icon "upload" 17}}{{t "hero.cta"}}</button><a class="tbtn lg" href="/send">{{icon "upload" 17}}{{t "home.send_cta"}}</a><button class="tbtn ghost hs-js" type="button" tabindex="-1">{{icon "gear" 17}}{{t "nav.settings"}}</button>{{template "nojs" .}}</div>
 <p class="proof">{{icon "shield" 15}}{{t "hero.proof"}}</p></div>
 <div class="hero-side"><figure class="hero-art" aria-hidden="true"><picture><source srcset="/hop-home/home/filehop-dark.webp" media="(prefers-color-scheme: dark)"><img src="/hop-home/home/filehop-light.webp" alt="" width="200" height="200"></picture></figure>
 <div class="zone hs-js" aria-hidden="true"><div class="halo"></div><div class="zicon">{{icon "upload" 26}}</div><h2>{{t "drop.title"}}</h2><p>{{hint}}</p></div></div></section>
+<section class="sec two-things"><h2>{{t "home.two_title"}}</h2><div class="things">
+<article class="thing"><h3>{{icon "refresh" 16}}{{t "home.two_convert_h"}}</h3><p>{{t "home.two_convert_p"}}</p><button class="tbtn hs-js" type="button" tabindex="-1">{{icon "upload" 16}}{{t "hero.cta"}}</button></article>
+<article class="thing"><h3>{{icon "upload" 16}}{{t "home.two_send_h"}}</h3><p>{{t "home.two_send_p"}}</p><ol class="thing-steps"><li>{{t "home.two_send_s1"}}</li><li>{{t "home.two_send_s2"}}</li><li>{{t "home.two_send_s3"}}</li></ol><a class="tbtn secondary" href="/send">{{t "home.two_send_cta"}}</a></article>
+</div></section>
 <section class="queue hs-js" aria-hidden="true"><div class="queue-head"><h2>{{t "queue.title"}}</h2><span class="spacer"></span></div><p class="queue-empty">{{t "queue.empty"}}<button class="tbtn primary empty-add" type="button" tabindex="-1">{{icon "plus" 17}}{{t "nav.add"}}</button></p></section>
 <section class="sec"><h2>{{t "how.title"}}</h2><div class="steps">
 <article class="step"><span class="n">01</span><h3>{{t "how.s1_h"}}</h3><p>{{t "how.s1_p"}}</p></article>

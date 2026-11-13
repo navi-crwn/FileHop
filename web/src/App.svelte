@@ -748,6 +748,8 @@
 
     <span class="spacer"></span>
 
+    <a class="tbtn topnav-send" href="/send"><Icon name="upload" size={17} /><span class="tlabel">{i18n.t('send.nav')}</span></a>
+
     {@render tools()}
   </header>
 
@@ -762,7 +764,10 @@
             <button class="tbtn secondary lg" type="button" onclick={pickFiles}>
               <Icon name="upload" size={17} />{i18n.t('hero.cta')}
             </button>
-            <button class="tbtn lg" type="button" onclick={() => (settingsOpen = true)}>
+            <a class="tbtn lg" href="/send">
+              <Icon name="upload" size={17} />{i18n.t('home.send_cta')}
+            </a>
+            <button class="tbtn ghost" type="button" onclick={() => (settingsOpen = true)}>
               <Icon name="gear" size={17} />{i18n.t('nav.settings')}
             </button>
           </div>
@@ -775,6 +780,27 @@
           <canvas data-hop-hero="filehop"></canvas>
         </figure>
         {@render dropzone()}
+        </div>
+      </section>
+
+      <section class="sec two-things" aria-labelledby="two-h">
+        <h2 id="two-h">{i18n.t('home.two_title')}</h2>
+        <div class="things">
+          <article class="thing">
+            <h3><Icon name="refresh" size={16} />{i18n.t('home.two_convert_h')}</h3>
+            <p>{i18n.t('home.two_convert_p')}</p>
+            <button class="tbtn" type="button" onclick={pickFiles}><Icon name="upload" size={16} />{i18n.t('hero.cta')}</button>
+          </article>
+          <article class="thing">
+            <h3><Icon name="upload" size={16} />{i18n.t('home.two_send_h')}</h3>
+            <p>{i18n.t('home.two_send_p')}</p>
+            <ol class="thing-steps">
+              <li>{i18n.t('home.two_send_s1')}</li>
+              <li>{i18n.t('home.two_send_s2')}</li>
+              <li>{i18n.t('home.two_send_s3')}</li>
+            </ol>
+            <a class="tbtn secondary" href="/send">{i18n.t('home.two_send_cta')}<Icon name="arrow" size={16} /></a>
+          </article>
         </div>
       </section>
 
