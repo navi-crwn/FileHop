@@ -856,7 +856,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 .shell-top { top: 12px; margin: 12px 12px 0; padding: 0 10px; height: 56px; border: 1px solid var(--line-2); border-radius: 18px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
 .shell-burger { display: none; }
 .shell-main { flex: 1; padding: 18px 12px 28px; min-width: 0; }
-.dash-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; max-width: 1180px; }
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; max-width: 1180px; margin-inline: auto; }
+.dash-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .dash-work { min-width: 0; }
 .dash-work .zone { padding: 26px 22px 22px; }
 .dash-work .queue { margin-top: 22px; }

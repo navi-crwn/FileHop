@@ -719,18 +719,25 @@
           {@render dropzone()}
           {@render workspace()}
         </div>
-        <section class="dash-card" aria-labelledby="acc-h">
-          <h2 id="acc-h">{i18n.t('dash.account')}</h2>
-          {#if account.ready && account.signedIn}
-            <div class="acc-id">
-              <span class="dash-avatar" aria-hidden="true">{initials(account.name, account.email)}</span>
-              <div class="acc-who"><strong>{account.name || account.email}</strong>{#if account.name && account.email}<span class="small muted">{account.email}</span>{/if}</div>
-            </div>
-          {/if}
-          <p class="acc-note"><Icon name="shield" size={16} />{i18n.t('dash.never_uploaded')}</p>
-          <span class="counter"><Icon name="net" size={14} />{i18n.t('privacy.network', { n: networkCount })}</span>
-          {#if account.hubUrl}<a class="tbtn" href={account.hubUrl} rel="noopener">{i18n.t('account.hop_id')}</a>{/if}
-        </section>
+        <div class="dash-side">
+          <section class="dash-card" aria-labelledby="sendcard-h">
+            <h2 id="sendcard-h">{i18n.t('dash.send_card_h')}</h2>
+            <p class="acc-note">{i18n.t('dash.send_card_p')}</p>
+            <a class="tbtn" href="/send"><Icon name="upload" size={17} />{i18n.t('dash.send_card_cta')}</a>
+          </section>
+          <section class="dash-card" aria-labelledby="acc-h">
+            <h2 id="acc-h">{i18n.t('dash.account')}</h2>
+            {#if account.ready && account.signedIn}
+              <div class="acc-id">
+                <span class="dash-avatar" aria-hidden="true">{initials(account.name, account.email)}</span>
+                <div class="acc-who"><strong>{account.name || account.email}</strong>{#if account.name && account.email}<span class="small muted">{account.email}</span>{/if}</div>
+              </div>
+            {/if}
+            <p class="acc-note"><Icon name="shield" size={16} />{i18n.t('dash.never_uploaded')}</p>
+            <span class="counter"><Icon name="net" size={14} />{i18n.t('privacy.network', { n: networkCount })}</span>
+            {#if account.hubUrl}<a class="tbtn" href={account.hubUrl} rel="noopener">{i18n.t('account.hop_id')}</a>{/if}
+          </section>
+        </div>
       </div>
       {/if}
     </main>
