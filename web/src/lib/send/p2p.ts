@@ -14,7 +14,7 @@
 import { createSHA256 } from 'hash-wasm';
 import {
   CHUNK, READ, LOW, CONNECT_MS, gate, ackDue, sanitizeFileName, fingerprintOf, newNonce, commitOf,
-  revealMatches, verificationNumber, routeOf, validOfferId, shouldAnswerReveal, type Route
+  revealMatches, verificationNumber, routeOf, validOfferId, shouldAnswerReveal, offerGroup, GROUP_CAP, type Route
 } from './pure';
 
 export type { Route };
@@ -29,7 +29,7 @@ try { void (navigator as any).locks?.request('filehop-send-' + PAGE, () => new P
 
 export type Phase = 'idle' | 'waiting' | 'connecting' | 'verify' | 'ready' | 'closed' | 'error';
 
-export interface Offer { id: string; name: string; size: number; mime: string }
+export interface Offer { id: string; name: string; size: number; mime: string; group?: { n: number; of: number; total: number } }
 export interface Progress { id: string; dir: 'in' | 'out'; name: string; size: number; done: number; bytesPerSec: number }
 export interface Finished {
   id: string; dir: 'in' | 'out'; name: string; size: number; ok: boolean;
@@ -44,6 +44,8 @@ export interface Hooks {
   limits(mine: number, peer: number): void;
   diag(text: string): void;
   offer(o: Offer): void;
+  /** The other device cancelled a file that was still waiting to be accepted: take its card away. */
+  offerGone?(id: string): void;
   progress(p: Progress): void;
   finished(f: Finished): void;
   verified(): void;
@@ -58,6 +60,8 @@ export class Session {
   fallbackName = 'file';
   maxBytes = GIB2; // what this device may send, as the server sees it
   peerMax = GIB2; // what the other device may send, as the server told us
+  /** After "Accept all": later files of the group are taken without asking, into private storage. */
+  autoAccept = false;
   closed = false;
   private ws: WebSocket | null = null;
   private pc: RTCPeerConnection | null = null;
@@ -88,6 +92,8 @@ export class Session {
   private waiters = new Map<string, (m: Json) => void>();
   private cancelled = new Set<string>();
   private seenIds = new Set<string>(); // offer ids the other device has used
+  private autoDecline = false; // after "Decline all": later files of the group are refused unseen
+  private groupBytes = 0; // what the current group of the other device has announced so far
   private acked = new Map<string, number>();
   private worker: Worker | null = null;
   private incoming: { id: string; name: string; size: number; got: number; acked: number; t0: number; sha: string; endSize: number; peerOk: boolean } | null = null;
@@ -399,7 +405,20 @@ export class Session {
         this.seenIds.add(id);
         if (!Number.isFinite(size) || size < 0 || size > this.peerMax) return this.say({ t: 'reject', id, why: 'too_big' });
         if (this.incoming) return this.say({ t: 'reject', id, why: 'busy' });
-        this.h.offer({ id, name: sanitizeFileName(m.name, this.fallbackName), size, mime: String(m.mime ?? '') });
+        // The group the sender announces (optional; old senders have none). Its cumulative bytes are
+        // capped: every accepted file stays in this tab until the person saves it.
+        const group = offerGroup(m.n, m.of, m.total) ?? undefined;
+        if (group) {
+          if (group.n === 1) this.groupBytes = 0;
+          if (this.groupBytes + size > GROUP_CAP) return this.say({ t: 'reject', id, why: 'group_too_big' });
+          this.groupBytes += size;
+        }
+        if (this.autoDecline) return this.say({ t: 'reject', id, why: 'declined_all' });
+        const o: Offer = { id, name: sanitizeFileName(m.name, this.fallbackName), size, mime: String(m.mime ?? ''), group };
+        // after "Accept all" there is no card and no save dialog per file: the file goes to private
+        // storage and the Save list picks it up when it is complete
+        if (this.autoAccept) return void this.accept(o, true);
+        this.h.offer(o);
         break;
       }
       case 'reject': this.cancelled.add(m.id); this.waiters.get('ack:' + m.id)?.(m); this.waiters.get(m.id)?.(m); this.wake?.(); break;
@@ -410,6 +429,7 @@ export class Session {
         this.waiters.get('ack:' + m.id)?.(m);
         this.wake?.();
         if (this.incoming?.id === m.id) this.abortIncoming('cancelled_by_peer');
+        else this.h.offerGone?.(m.id); // a card still waiting for its Accept goes away
         break;
       case 'end': this.finishIncoming(m); break;
     }
@@ -419,20 +439,26 @@ export class Session {
   cancel(id: string) {
     this.cancelled.add(id);
     this.say({ t: 'cancel', id });
+    // a file still queued on this device (its offer waits for an answer, or nothing was sent yet)
+    // stops at once instead of waiting for the other device to answer an offer nobody wants
+    this.waiters.get(id)?.({ t: 'reject', id, why: 'cancelled' });
     this.wake?.();
     if (this.incoming?.id === id) this.abortIncoming('cancelled');
   }
 
-  async sendFile(file: File): Promise<void> {
-    const id = Math.random().toString(36).slice(2, 10);
+  async sendFile(file: File, opts: { id?: string; group?: { n: number; of: number; total: number } } = {}): Promise<Finished> {
+    const id = opts.id ?? Math.random().toString(36).slice(2, 10);
     const name = sanitizeFileName(file.name, this.fallbackName);
     const base = { id, dir: 'out' as const, name, size: file.size };
-    const fail = (reason: string, extra: Partial<Finished> = {}) =>
-      this.h.finished({ ...base, ok: false, sha256: '', peerSha256: '', ms: 0, reason, ...extra });
+    const fail = (reason: string, extra: Partial<Finished> = {}): Finished => {
+      const f: Finished = { ...base, ok: false, sha256: '', peerSha256: '', ms: 0, reason, ...extra };
+      this.h.finished(f);
+      return f;
+    };
     if (file.size > this.maxBytes) return fail('too_big');
     if (!this.matched || this.dc?.readyState !== 'open') return fail('connection_lost');
     const answer = new Promise<Json>((res) => this.waiters.set(id, res));
-    this.say({ t: 'offer', id, name, size: file.size, mime: file.type });
+    this.say({ t: 'offer', id, name, size: file.size, mime: file.type, ...(opts.group ?? {}) });
     const a = await answer;
     this.waiters.delete(id);
     if (a.t !== 'accept') return fail(a.t === 'lost' ? 'connection_lost' : String(a.why ?? 'rejected'));
@@ -470,7 +496,7 @@ export class Session {
     this.acked.delete(id);
     const sha = hasher.digest('hex');
     if (stop()) {
-      return this.h.finished({ ...base, ok: false, sha256: sha, peerSha256: '', ms: performance.now() - t0, reason: this.cancelled.has(id) ? 'cancelled' : 'connection_lost' });
+      return fail(this.cancelled.has(id) ? 'cancelled' : 'connection_lost', { sha256: sha, ms: performance.now() - t0 });
     }
     const fin = new Promise<Json>((res) => this.waiters.set(id, res));
     this.say({ t: 'end', id, size: file.size, sha256: sha });
@@ -478,7 +504,9 @@ export class Session {
     this.waiters.delete(id);
     const ms = performance.now() - t0;
     this.h.progress({ ...base, done: file.size, bytesPerSec: file.size / Math.max(0.001, ms / 1000) });
-    this.h.finished({ ...base, ok: d.ok === true, sha256: sha, peerSha256: String(d.sha256 ?? ''), ms, reason: d.ok === true ? undefined : String(d.t === 'lost' ? 'connection_lost' : d.why ?? 'hash_mismatch') });
+    const done: Finished = { ...base, ok: d.ok === true, sha256: sha, peerSha256: String(d.sha256 ?? ''), ms, reason: d.ok === true ? undefined : String(d.t === 'lost' ? 'connection_lost' : d.why ?? 'hash_mismatch') };
+    this.h.finished(done);
+    return done;
   }
 
   // ---------- receiving ----------
@@ -487,10 +515,12 @@ export class Session {
    * only be opened from a click, so it comes first. Dismissing it is not a refusal: the file goes to
    * the browser's private storage and is offered for download when it is complete and checked.
    */
-  async accept(o: Offer): Promise<void> {
+  async accept(o: Offer, auto = false): Promise<void> {
     let handle: unknown;
     const picker = (window as any).showSaveFilePicker;
-    if (typeof picker === 'function' && STORE_MODE === 'auto') {
+    // an auto-accepted file (after "Accept all") cannot ask the person per file: it goes straight to
+    // private storage, and the Save list offers every file of the group when it is complete
+    if (!auto && typeof picker === 'function' && STORE_MODE === 'auto') {
       try { handle = await picker.call(window, { suggestedName: o.name }); } catch { /* dismissed, blocked or unsupported */ }
     }
     if (this.closed || this.incoming) return;
@@ -504,6 +534,8 @@ export class Session {
     this.say({ t: 'accept', id: o.id });
   }
   decline(id: string, why = 'declined') { this.say({ t: 'reject', id, why }); }
+  /** "Decline all": this file and every later one of the group are refused; the sender stops the queue. */
+  declineAll(id: string) { this.autoDecline = true; this.decline(id, 'declined_all'); }
 
   private bytes(buf: ArrayBuffer) {
     if (!this.matched) return this.fail('protocol'); // data before both people said "Match"

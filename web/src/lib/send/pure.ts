@@ -12,6 +12,20 @@ export const CONNECT_MS = 20000; // no open channel by then: say so
 export const BLOB_LIMIT = 512 * 1024 * 1024; // last-resort in-memory copy
 export const NAME_MAX = 200;
 
+// A sender announces the group its file belongs to (n of count, total bytes). The receiver accepts
+// the whole group only while its cumulative bytes stay under this cap: every received file lives in
+// this tab's memory or private storage until the person saves it. Old peers send no group fields
+// and nothing changes for them.
+export const GROUP_CAP = 512 * 1024 * 1024;
+
+/** The optional group fields of an offer, or null when they are absent or not believable. */
+export function offerGroup(n: unknown, of: unknown, total: unknown): { n: number; of: number; total: number } | null {
+  const nn = Number(n), no = Number(of), nt = Number(total);
+  if (!Number.isInteger(nn) || !Number.isInteger(no) || !Number.isFinite(nt)) return null;
+  if (nn < 1 || no < 1 || nn > no || nt < 0) return null;
+  return { n: nn, of: no, total: nt };
+}
+
 /** What the sender should do before queueing the next chunk. */
 export type Gate = 'go' | 'buffer' | 'ack';
 

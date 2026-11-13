@@ -32,6 +32,23 @@ test('the numbers are the ones the plan names', () => {
   assert.equal(P.CONNECT_MS, 20000);
 });
 
+test('offerGroup: only a believable, complete group passes', () => {
+  assert.deepEqual(P.offerGroup(2, 5, 1000), { n: 2, of: 5, total: 1000 });
+  assert.deepEqual(P.offerGroup(1, 1, 0), { n: 1, of: 1, total: 0 });
+  assert.equal(P.offerGroup(undefined, undefined, undefined), null); // an old sender sends none
+  assert.equal(P.offerGroup(0, 5, 10), null);
+  assert.equal(P.offerGroup(6, 5, 10), null);
+  assert.equal(P.offerGroup(1, 0, 10), null);
+  assert.equal(P.offerGroup(1, 1, -1), null);
+  assert.equal(P.offerGroup(1.5, 2, 10), null);
+  assert.equal(P.offerGroup(1, 1, NaN), null);
+  assert.equal(P.offerGroup(1, 1, Infinity), null);
+});
+
+test('a group one receiver takes in one go is capped at what a tab should hold', () => {
+  assert.equal(P.GROUP_CAP, 512 * MiB);
+});
+
 test('gate: the channel queue holds the sender first, then the receiver window', () => {
   assert.equal(P.gate(0, 0, 0), 'go');
   assert.equal(P.gate(10 * MiB, 0, P.HIGH), 'go'); // exactly HIGH is still allowed
