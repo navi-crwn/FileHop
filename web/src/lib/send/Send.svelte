@@ -335,8 +335,8 @@
                   <div class="srow">
                     <button class="tbtn primary offer-accept" type="button" disabled={receiving} onclick={() => accept(o)}>{t('send.accept')}</button>
                     {#if o.group && o.group.of > 1}<button class="tbtn offer-accept-all" type="button" onclick={() => acceptAll(o)}>{t('send.accept_all')}</button>{/if}
-                    <button class="tbtn" type="button" onclick={() => decline(o)}>{t('send.decline')}</button>
-                    {#if o.group && o.group.of > 1}<button class="tbtn ghost" type="button" onclick={() => declineAll(o)}>{t('send.decline_all')}</button>{/if}
+                    <button class="tbtn offer-decline" type="button" onclick={() => decline(o)}>{t('send.decline')}</button>
+                    {#if o.group && o.group.of > 1}<button class="tbtn ghost offer-decline-all" type="button" onclick={() => declineAll(o)}>{t('send.decline_all')}</button>{/if}
                   </div>
                 </section>
               {/each}
