@@ -30,10 +30,10 @@ try { void (navigator as any).locks?.request('filehop-send-' + PAGE, () => new P
 export type Phase = 'idle' | 'waiting' | 'connecting' | 'verify' | 'ready' | 'closed' | 'error';
 
 export interface Offer { id: string; name: string; size: number; mime: string; group?: { n: number; of: number; total: number } }
-export interface Progress { id: string; dir: 'in' | 'out'; name: string; size: number; done: number; bytesPerSec: number }
+export interface Progress { id: string; dir: 'in' | 'out'; name: string; size: number; done: number; bytesPerSec: number; group?: { n: number; of: number; total: number } }
 export interface Finished {
   id: string; dir: 'in' | 'out'; name: string; size: number; ok: boolean;
-  sha256: string; peerSha256: string; ms: number; file?: File; store?: string; reason?: string;
+  sha256: string; peerSha256: string; ms: number; file?: File; store?: string; reason?: string; group?: { n: number; of: number; total: number };
 }
 
 export interface Hooks {
@@ -96,7 +96,7 @@ export class Session {
   private groupBytes = 0; // what the current group of the other device has announced so far
   private acked = new Map<string, number>();
   private worker: Worker | null = null;
-  private incoming: { id: string; name: string; size: number; got: number; acked: number; t0: number; sha: string; endSize: number; peerOk: boolean } | null = null;
+  private incoming: { id: string; name: string; size: number; got: number; acked: number; t0: number; sha: string; endSize: number; peerOk: boolean; group?: { n: number; of: number; total: number } } | null = null;
   private resolveWorker: ((m: Json) => void) | null = null;
   private wake: (() => void) | null = null;
   private trail: string[] = []; // what happened, for the technical detail shown when something fails
@@ -525,7 +525,7 @@ export class Session {
     }
     if (this.closed || this.incoming) return;
     const w = (this.worker = new Worker(new URL('./recv.worker.ts', import.meta.url), { type: 'module' }));
-    this.incoming = { id: o.id, name: o.name, size: o.size, got: 0, acked: 0, t0: performance.now(), sha: '', endSize: -1, peerOk: false };
+    this.incoming = { id: o.id, name: o.name, size: o.size, got: 0, acked: 0, t0: performance.now(), sha: '', endSize: -1, peerOk: false, group: o.group };
     w.onmessage = (e) => this.fromWorker(e.data);
     const ready = new Promise<Json>((res) => (this.resolveWorker = res));
     w.postMessage({ t: 'open', id: o.id, size: o.size, store: STORE_MODE, page: PAGE, handle });
@@ -550,7 +550,7 @@ export class Session {
     const inc = this.incoming;
     if ((m.t === 'ready' || m.t === 'failed') && this.resolveWorker) { const r = this.resolveWorker; this.resolveWorker = null; r(m); return; }
     if (!inc) return;
-    const prog = (n: number) => this.h.progress({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, done: n, bytesPerSec: n / Math.max(0.001, (performance.now() - inc.t0) / 1000) });
+    const prog = (n: number) => this.h.progress({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, done: n, bytesPerSec: n / Math.max(0.001, (performance.now() - inc.t0) / 1000), group: inc.group });
     if (m.t === 'written') {
       if (ackDue(m.n, inc.acked)) { inc.acked = m.n; this.say({ t: 'ack', id: inc.id, n: m.n }); }
       prog(m.n);
@@ -560,13 +560,13 @@ export class Session {
       if (ok) { inc.sha = m.sha256; this.worker?.postMessage({ t: 'commit', name: inc.name }); return; }
       this.worker?.postMessage({ t: 'abort' });
       this.say({ t: 'done', id: inc.id, ok: false, sha256: m.sha256, why: m.n !== inc.size ? 'size_mismatch' : 'hash_mismatch' });
-      this.h.finished({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, ok: false, sha256: m.sha256, peerSha256: inc.sha, ms: performance.now() - inc.t0, reason: m.n !== inc.size ? 'size_mismatch' : 'hash_mismatch' });
+      this.h.finished({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, ok: false, sha256: m.sha256, peerSha256: inc.sha, ms: performance.now() - inc.t0, reason: m.n !== inc.size ? 'size_mismatch' : 'hash_mismatch', group: inc.group });
       this.endWorker();
     } else if (m.t === 'saved') {
       const ms = performance.now() - inc.t0;
       this.say({ t: 'done', id: inc.id, ok: true, sha256: inc.sha });
       prog(inc.size);
-      this.h.finished({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, ok: true, sha256: inc.sha, peerSha256: inc.sha, ms, file: m.file, store: m.store });
+      this.h.finished({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, ok: true, sha256: inc.sha, peerSha256: inc.sha, ms, file: m.file, store: m.store, group: inc.group });
       this.endWorker();
     } else if (m.t === 'failed') {
       this.abortIncoming(String(m.why ?? 'storage'));
@@ -586,7 +586,7 @@ export class Session {
     if (!inc) return;
     this.worker?.postMessage({ t: 'abort' });
     this.say({ t: 'reject', id: inc.id, why });
-    this.h.finished({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, ok: false, sha256: '', peerSha256: '', ms: performance.now() - inc.t0, reason: why });
+    this.h.finished({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, ok: false, sha256: '', peerSha256: '', ms: performance.now() - inc.t0, reason: why, group: inc.group });
     this.endWorker();
   }
 

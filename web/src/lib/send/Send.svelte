@@ -74,7 +74,7 @@
       rows[p.id] = { ...prev, ...p, state: prev?.state === 'done' || prev?.state === 'failed' ? prev.state : 'run' };
     },
     finished: (f: Finished) => {
-      const prev = rows[f.id] ?? { id: f.id, dir: f.dir, name: f.name, size: f.size, done: f.size, bytesPerSec: 0 };
+      const prev = rows[f.id] ?? { id: f.id, dir: f.dir, name: f.name, size: f.size, done: f.size, bytesPerSec: 0, group: f.group };
       if (prev.url) URL.revokeObjectURL(prev.url);
       const url = f.file && f.ok ? URL.createObjectURL(f.file) : undefined;
       rows[f.id] = { ...prev, state: f.ok ? 'done' : 'failed', res: f, url };
@@ -164,8 +164,9 @@
   }
   function cancelRest() {
     outQueue = outQueue.filter((q) => {
+      if (pumping && outQueue[0]?.id === q.id) return true; // the one the pump is on keeps its own Cancel
       if (rows[q.id]?.state === 'queued') { markCancelled(q.id, 'cancelled'); return false; }
-      return true; // the one file that is already on the wire keeps its own Cancel
+      return true;
     });
   }
   function accept(o: Offer) {
