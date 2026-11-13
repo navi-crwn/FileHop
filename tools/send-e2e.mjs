@@ -379,7 +379,7 @@ const scenarios = {
     // the offer's group fields come from the sender and are not trusted (audit findings 1 and 2)
     const keep = () => {
       const o = RTCPeerConnection.prototype.createDataChannel;
-      RTCPeerConnection.prototype.createDataChannel = function (...a) { const dc = o.apply(this, a); window.__dc = dc; window.__msgs = []; dc.addEventListener('message', (e) => window.__msgs.push(e.data)); return dc; };
+      RTCPeerConnection.prototype.createDataChannel = function (...a) { const dc = o.apply(this, a); window.__dc = dc; const send = dc.send.bind(dc); dc.send = (d) => { if (typeof d === 'string' && d.includes('"cancel"')) return; send(d); }; /* this page's own session must not withdraw the forged offers */ window.__msgs = []; dc.addEventListener('message', (e) => window.__msgs.push(e.data)); return dc; };
     };
     const MiB = 1048576;
     const sendOffer = (p, o) => p.B.page.evaluate((x) => window.__dc.send(JSON.stringify({ t: 'offer', name: 'x.bin', mime: '', ...x })), o);
@@ -396,20 +396,20 @@ const scenarios = {
     await p.close();
     // a sender that claims "1 of 1000" to get the Accept all button, then goes on offering
     p = await pair(b, { initB: keep });
-    const empty = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
-    await sendOffer(p, { id: 'lie1', size: 0, n: 1, of: 1000, total: 1 });
+    const oneByte = '6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d'; // sha-256 of the single byte 0x00
+    await sendOffer(p, { id: 'lie1', size: 1, n: 1, of: 1000, total: 1 });
     await p.A.page.waitForSelector('.offer-accept-all', { timeout: 10000 });
     await p.A.page.click('.offer-accept-all');
     await wait(p, '"accept"', 'lie1');
-    await p.B.page.evaluate((h) => window.__dc.send(JSON.stringify({ t: 'end', id: 'lie1', size: 0, sha256: h })), empty);
-    await p.A.page.waitForSelector('.xfer[data-dir=in][data-state=done]', { timeout: 15000 });
+    await p.B.page.evaluate((h) => { window.__dc.send(new Uint8Array(1).buffer); window.__dc.send(JSON.stringify({ t: 'end', id: 'lie1', size: 1, sha256: h })); }, oneByte);
+    await p.A.page.waitForSelector('.xfer[data-dir=in][data-state=done]', { timeout: 15000 }).catch(async (e) => { log('DEBUG A: ' + (await p.A.page.innerText('.send')).replaceAll('\n', ' ').slice(0, 900) + ' | B msgs: ' + JSON.stringify(await p.B.page.evaluate(() => window.__msgs))); throw e; });
     // the same lie again: "1 of 1000" starts a group, so it asks
-    await sendOffer(p, { id: 'lie2', size: 0, n: 1, of: 1000, total: 1 });
+    await sendOffer(p, { id: 'lie2', size: 1, n: 1, of: 1000, total: 1 });
     const card1 = await p.A.page.waitForSelector('.offer', { timeout: 10000 }).then(() => true, () => false);
     check('"1 of 1000" repeated does not ride on the earlier Accept all: the card is shown', card1 && !(await heard(p, '"accept"', 'lie2')));
     await p.A.page.click('.offer .offer-decline');
     // an offer with no group fields at all (an old sender)
-    await sendOffer(p, { id: 'lie3', size: 0 });
+    await sendOffer(p, { id: 'lie3', size: 1 });
     const card2 = await p.A.page.waitForSelector('.offer', { timeout: 10000 }).then(() => true, () => false);
     check('an offer without group fields shows its card', card2 && !(await heard(p, '"accept"', 'lie3')));
     await p.close();

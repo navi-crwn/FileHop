@@ -259,6 +259,8 @@
   "send.auto_note": "Berkas berikut diterima otomatis.",
   "send.cancel_rest": "Batalkan sisanya",
   "send.save_all": "Simpan semua sebagai ZIP",
+  "send.save_all_of": "{n} dari {of}",
+  "send.zip_failed": "ZIP tidak dapat dibuat. Simpan berkas satu per satu.",
   "send.saved": "Tersimpan",
   "send.save_again": "Simpan lagi",
   "send.why_group_too_big": "Seluruh kelompok lebih besar daripada yang bisa diterima perangkat ini sekaligus.",

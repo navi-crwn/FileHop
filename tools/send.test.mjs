@@ -49,6 +49,71 @@ test('a group one receiver takes in one go is capped at what a tab should hold',
   assert.equal(P.GROUP_CAP, 512 * MiB);
 });
 
+// "Accept all" and "Decline all" reach the group they were pressed for, and what a sender claims is not trusted
+const G = (n, of, total) => ({ n, of, total });
+const accepted = (g) => P.bulkFor('accept', g);
+
+test('judgeOffer: with no choice made every offer asks', () => {
+  assert.deepEqual(P.judgeOffer(null, G(1, 3, 30), 10, 0), { verdict: 'ask', bulk: null });
+  assert.deepEqual(P.judgeOffer(null, null, 10, 0), { verdict: 'ask', bulk: null });
+});
+
+test('judgeOffer: Accept all takes the later files of that group, and ends with the last one', () => {
+  const bulk = accepted(G(1, 3, 30));
+  let j = P.judgeOffer(bulk, G(2, 3, 30), 10, 10);
+  assert.equal(j.verdict, 'accept');
+  j = P.judgeOffer(j.bulk, G(3, 3, 30), 10, 20);
+  assert.equal(j.verdict, 'accept');
+  assert.equal(j.bulk, null); // n === of: the choice is over
+  assert.equal(P.judgeOffer(j.bulk, G(1, 3, 30), 10, 30).verdict, 'ask');
+});
+
+test('judgeOffer: a new group, a single file or no group fields ask again and end the choice', () => {
+  const bulk = accepted(G(1, 3, 30));
+  for (const g of [G(1, 3, 30), G(1, 1, 5), G(2, 5, 30), G(2, 3, 99), null]) {
+    assert.deepEqual(P.judgeOffer(bulk, g, 10, 0), { verdict: 'ask', bulk: null }, JSON.stringify(g));
+  }
+});
+
+test('judgeOffer: a sender that lies ("1 of 1000", "1 of 1" again and again) never gets files taken unasked', () => {
+  let bulk = accepted(G(1, 1000, 1));
+  for (let i = 0; i < 5; i++) {
+    assert.equal(P.judgeOffer(bulk, G(1, 1000, 1), 1, 0).verdict, 'ask');
+    bulk = accepted(G(1, 1000, 1));
+  }
+  assert.equal(P.bulkFor('accept', G(1, 1, 5)), null); // one file: nothing to continue
+  assert.equal(P.bulkFor('accept', undefined), null);
+  assert.equal(P.bulkFor('accept', G(3, 3, 5)), null); // the last file of its group
+  const b = accepted(G(2, 5, 50)); // a number that repeats or goes backwards does not continue it either
+  assert.equal(P.judgeOffer(b, G(2, 5, 50), 1, 0).verdict, 'ask');
+  assert.equal(P.judgeOffer(b, G(1, 5, 50), 1, 0).verdict, 'ask');
+});
+
+test('judgeOffer: Decline all refuses the rest of that group only', () => {
+  const bulk = P.bulkFor('decline', G(1, 3, 30));
+  let j = P.judgeOffer(bulk, G(2, 3, 30), 10, 0);
+  assert.equal(j.verdict, 'decline');
+  j = P.judgeOffer(j.bulk, G(3, 3, 30), 10, 0);
+  assert.equal(j.verdict, 'decline');
+  assert.equal(j.bulk, null);
+  assert.equal(P.judgeOffer(j.bulk, G(1, 2, 20), 10, 0).verdict, 'ask'); // the next group
+  assert.equal(P.judgeOffer(bulk, G(1, 1, 5), 5, 0).verdict, 'ask'); // a single file after Decline all
+  assert.equal(P.judgeOffer(bulk, null, 5, 0).verdict, 'ask');
+});
+
+test('judgeOffer: the 512 MiB cap holds whatever the sender claims', () => {
+  const cap = P.GROUP_CAP;
+  assert.equal(P.judgeOffer(null, G(1, 3, cap + 1), 10, 0).verdict, 'group_too_big'); // refused at the first offer
+  assert.equal(P.judgeOffer(null, G(1, 3, cap), 10, 0).verdict, 'ask');
+  // what the tab already holds counts, not a "1 of n" that starts over
+  assert.equal(P.judgeOffer(null, G(1, 1, 300 * MiB), 300 * MiB, 0).verdict, 'ask');
+  assert.equal(P.judgeOffer(null, G(1, 1, 300 * MiB), 300 * MiB, 300 * MiB).verdict, 'group_too_big');
+  assert.equal(P.judgeOffer(null, G(1, 1000, 1), 400 * MiB, 200 * MiB).verdict, 'group_too_big'); // "total: 1" is a lie
+  const bulk = accepted(G(1, 3, 30)); // while Accept all is on, the cap ends it
+  assert.deepEqual(P.judgeOffer(bulk, G(2, 3, 30), 100 * MiB, cap - 50 * MiB), { verdict: 'group_too_big', bulk: null });
+  assert.equal(P.judgeOffer(null, null, 900 * MiB, 0).verdict, 'ask'); // no group, nothing held: the person's call
+});
+
 test('gate: the channel queue holds the sender first, then the receiver window', () => {
   assert.equal(P.gate(0, 0, 0), 'go');
   assert.equal(P.gate(10 * MiB, 0, P.HIGH), 'go'); // exactly HIGH is still allowed

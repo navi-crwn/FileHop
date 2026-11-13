@@ -259,6 +259,8 @@
   "send.auto_note": "后续文件将自动接受。",
   "send.cancel_rest": "取消其余",
   "send.save_all": "全部保存为 ZIP",
+  "send.save_all_of": "{n} / {of}",
+  "send.zip_failed": "无法生成 ZIP。请改为逐个保存文件。",
   "send.saved": "已保存",
   "send.save_again": "再次保存",
   "send.why_group_too_big": "整组文件超过本设备一次能接收的上限。",

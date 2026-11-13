@@ -26,6 +26,33 @@ export function offerGroup(n: unknown, of: unknown, total: unknown): { n: number
   return { n: nn, of: no, total: nt };
 }
 
+export type Group = { n: number; of: number; total: number };
+/** "Accept all" / "Decline all" as it stands: which group it was pressed for and the last file seen of it. */
+export type Bulk = { mode: 'accept' | 'decline'; of: number; total: number; last: number };
+export type Verdict = 'ask' | 'accept' | 'decline' | 'group_too_big';
+
+/** Pressing "Accept all" or "Decline all" on an offer of a group. A single file has nothing to continue. */
+export function bulkFor(mode: 'accept' | 'decline', g: Group | undefined): Bulk | null {
+  return g && g.of > 1 && g.n < g.of ? { mode, of: g.of, total: g.total, last: g.n } : null;
+}
+
+/**
+ * What to do with an offer from the other device, whose fields are all its own claims. "Accept all" and
+ * "Decline all" reach only the later files of the group they were pressed for: the same announced
+ * count and total, a higher number than the last one seen, not past the count. Anything else (a new
+ * group, "1 of n" again, a single file, no group fields) asks again and ends the bulk choice.
+ * `held` is what this tab already holds of received files the person has not saved; a group offer, or
+ * any offer while "Accept all" is on, may not take that past GROUP_CAP, whatever the group claims.
+ */
+export function judgeOffer(bulk: Bulk | null, g: Group | null, size: number, held: number): { verdict: Verdict; bulk: Bulk | null } {
+  const goes = !!bulk && !!g && g.n > bulk.last && g.n <= bulk.of && g.of === bulk.of && g.total === bulk.total;
+  const next = goes && g!.n < bulk!.of ? { ...bulk!, last: g!.n } : null; // the last file of the group ends it
+  if (g && g.total > GROUP_CAP) return { verdict: 'group_too_big', bulk: null };
+  if (goes && bulk!.mode === 'decline') return { verdict: 'decline', bulk: next };
+  if ((g || goes) && held + size > GROUP_CAP) return { verdict: 'group_too_big', bulk: null };
+  return { verdict: goes ? 'accept' : 'ask', bulk: next };
+}
+
 /** What the sender should do before queueing the next chunk. */
 export type Gate = 'go' | 'buffer' | 'ack';
 

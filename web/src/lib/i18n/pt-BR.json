@@ -259,6 +259,8 @@
   "send.auto_note": "Aceitando os próximos arquivos automaticamente.",
   "send.cancel_rest": "Cancelar o resto",
   "send.save_all": "Salvar todos como ZIP",
+  "send.save_all_of": "{n} de {of}",
+  "send.zip_failed": "Não foi possível criar o ZIP. Salve os arquivos um a um.",
   "send.saved": "Salvo",
   "send.save_again": "Salvar de novo",
   "send.why_group_too_big": "O grupo inteiro é maior do que este dispositivo consegue receber de uma vez.",

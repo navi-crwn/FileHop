@@ -259,6 +259,8 @@
   "send.auto_note": "以降のファイルは自動的に受け入れます。",
   "send.cancel_rest": "残りをキャンセル",
   "send.save_all": "すべてZIPで保存",
+  "send.save_all_of": "{n} / {of}",
+  "send.zip_failed": "ZIPを作成できませんでした。ファイルを1つずつ保存してください。",
   "send.saved": "保存済み",
   "send.save_again": "もう一度保存",
   "send.why_group_too_big": "グループ全体がこのデバイスで一度に受け取れる上限を超えています。",

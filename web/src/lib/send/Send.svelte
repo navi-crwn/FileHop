@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import qrcode from 'qrcode-generator';
-  import { zipSync } from 'fflate';
+  import { Zip, ZipPassThrough } from 'fflate';
   import Icon from '../components/Icon.svelte';
   import { i18n } from '../i18n/index.svelte';
   import { confirmAction } from '../util/confirm';
@@ -22,9 +22,9 @@
   let limits = $state<[number, number] | null>(null);
   let offers = $state<Offer[]>([]);
   let copied = $state(false);
-  let autoOn = $state(false); // "Accept all" is on: later files are taken without asking
+  let autoOn = $state(false); // "Accept all" is on for the rest of the group on offer
   let zipping = $state(false);
-  let howEl = $state<HTMLDetailsElement>();
+  let zipError = $state(false);
   type Row = Progress & { state: 'queued' | 'run' | 'done' | 'failed'; res?: Finished; url?: string; saved?: boolean; group?: { n: number; of: number; total: number } };
   let rows = $state<Record<string, Row>>({});
   let receiving = $derived(Object.values(rows).some((r) => r.dir === 'in' && r.state === 'run'));
@@ -49,6 +49,12 @@
   const saveList = $derived(Object.values(rows).filter((r) => r.dir === 'in' && r.state === 'done' && r.res?.ok && r.url && !r.saved));
   const saveBytes = $derived(saveList.reduce((s, r) => s + r.size, 0));
   const canZip = $derived(saveList.length > 1 && saveBytes <= GROUP_CAP);
+  // files of the same group that failed are not in the ZIP: the button says so ("3 of 4")
+  const zipOf = $derived.by(() => {
+    const g = saveList[0]?.group;
+    const lost = g ? Object.values(rows).filter((r) => r.dir === 'in' && r.state === 'failed' && r.group && r.group.of === g.of && r.group.total === g.total).length : 0;
+    return saveList.length + lost;
+  });
   const showTransfers = $derived(phase === 'ready' || offers.length > 0 || Object.keys(rows).length > 0);
 
   const hooks = {
@@ -69,6 +75,7 @@
     verified: () => {},
     offer: (o: Offer) => (offers = [...offers, o]),
     offerGone: (id: string) => (offers = offers.filter((x) => x.id !== id)),
+    bulk: (mode: 'accept' | 'decline' | null) => (autoOn = mode === 'accept'),
     progress: (p: Progress) => {
       const prev = rows[p.id];
       rows[p.id] = { ...prev, ...p, state: prev?.state === 'done' || prev?.state === 'failed' ? prev.state : 'run' };
@@ -84,8 +91,6 @@
   $effect(() => { session.fallbackName = t('send.default_name'); });
 
   onMount(() => {
-    // on a phone the "How it works" panel starts folded; the cards and the code come first
-    if (matchMedia('(max-width: 640px)').matches && howEl) howEl.open = false;
     // A scanned QR code carries the room code in the #fragment, which never reaches a server.
     // It is read once and removed from the address bar.
     const m = location.hash.match(/^#(\d{6})$/);
@@ -175,25 +180,25 @@
     void session.accept(o); // straight from the click: the save dialog needs it
   }
   function acceptAll(o: Offer) {
-    session.autoAccept = true;
-    autoOn = true;
-    for (const x of [...offers]) accept(x); // in practice one card waits at a time; the flag takes the rest
+    // this file now, and the later files of this group (the session decides which those are)
+    offers = offers.filter((x) => x.id !== o.id);
+    rows[o.id] = { id: o.id, dir: 'in', name: o.name, size: o.size, done: 0, bytesPerSec: 0, state: 'run', group: o.group };
+    void session.acceptAll(o); // straight from the click: the save dialog needs it
   }
   function decline(o: Offer) {
     offers = offers.filter((x) => x.id !== o.id);
     session.decline(o.id);
   }
   function declineAll(o: Offer) {
-    offers = [];
-    autoOn = false;
-    session.declineAll(o.id); // this file and every later one of the group; the sender stops its queue
+    offers = offers.filter((x) => x.id !== o.id);
+    session.declineAll(o); // this file and the later ones of this group; the sender stops its queue
   }
   async function copyLink() {
     try { await navigator.clipboard.writeText(link); copied = true; setTimeout(() => (copied = false), 2000); } catch { /* */ }
   }
   const restart = () => { session.leave(); location.href = '/send'; };
   function confirmSas() { myOk = true; session.confirmShortCode(); }
-  const markSaved = (id: string) => { rows[id] = { ...rows[id], saved: true }; };
+  const markSaved = (id: string) => { rows[id] = { ...rows[id], saved: true }; session.released(id); };
 
   /** "Save all": one ZIP of every received file that is not saved yet, while the group stays small
       enough for one tab; above the cap each file keeps its own Save button. */
@@ -201,24 +206,41 @@
     const list = saveList;
     if (!list.length || zipping) return;
     zipping = true;
+    zipError = false;
     try {
-      const tree: Record<string, Uint8Array> = {};
+      // streamed: each file is read in pieces and stored as it goes, so a file is never held whole next
+      // to its copy in the archive
       const used = new Set<string>();
       const uniq = (n: string) => {
-        if (!used.has(n)) { used.add(n); return n; }
+        // two names that differ only in capitals are one file on Windows and macOS
+        if (!used.has(n.toLowerCase())) { used.add(n.toLowerCase()); return n; }
         const dot = n.lastIndexOf('.');
         const base = dot > 0 ? n.slice(0, dot) : n, ext = dot > 0 ? n.slice(dot) : '';
         let i = 2;
-        while (used.has(`${base} (${i})${ext}`)) i++;
+        while (used.has(`${base} (${i})${ext}`.toLowerCase())) i++;
         const out = `${base} (${i})${ext}`;
-        used.add(out);
+        used.add(out.toLowerCase());
         return out;
       };
-      for (const r of list) tree[uniq(r.name)] = new Uint8Array(await r.res!.file!.arrayBuffer());
-      const zipped = zipSync(tree, { level: 0 });
-      download(new Blob([zipped as unknown as BlobPart], { type: 'application/zip' }), `filehop-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.zip`);
+      const parts: Uint8Array[] = [];
+      await new Promise<void>((resolve, reject) => {
+        const zip = new Zip((err, chunk, final) => { if (err) return reject(err); parts.push(chunk); if (final) resolve(); });
+        (async () => {
+          try {
+            for (const r of list) {
+              const entry = new ZipPassThrough(uniq(r.name));
+              zip.add(entry);
+              const rd = r.res!.file!.stream().getReader();
+              for (;;) { const { done, value } = await rd.read(); if (done) break; entry.push(value, false); }
+              entry.push(new Uint8Array(0), true);
+            }
+            zip.end();
+          } catch (e) { zip.terminate(); reject(e); }
+        })();
+      });
+      download(new Blob(parts as unknown as BlobPart[], { type: 'application/zip' }), `filehop-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.zip`);
       for (const r of list) markSaved(r.id);
-    } finally { zipping = false; }
+    } catch { zipError = true; } finally { zipping = false; }
   }
 
   const reasonText = (r: string | undefined) => {
@@ -346,9 +368,10 @@
           {#if canZip}
             <div class="srow saveall">
               <button class="tbtn primary" type="button" disabled={zipping} onclick={saveAll}><Icon name="archive" size={16} />{t('send.save_all')}</button>
-              <span class="muted small num">{saveList.length} · {fmtSize(saveBytes)}</span>
+              <span class="muted small num">{zipOf > saveList.length ? t('send.save_all_of', { n: saveList.length, of: zipOf }) : saveList.length} · {fmtSize(saveBytes)}</span>
             </div>
           {/if}
+          {#if zipError}<p class="result" data-ok="false" role="alert"><Icon name="alert" size={16} />{t('send.zip_failed')}</p>{/if}
           {#if queuedRest > 1}
             <p class="srow"><button class="tbtn sm" type="button" onclick={cancelRest}>{t('send.cancel_rest')}</button><span class="muted small">{t('send.waiting')}</span></p>
           {/if}
@@ -395,7 +418,7 @@
           <p class="note"><Icon name="shield" size={15} />{t('send.unscanned')}</p>
         </section>
       {:else}
-        <details class="sc how" open bind:this={howEl}>
+        <details class="sc how" open>
           <summary><h2>{t('send.how_title')}</h2></summary>
           <div class="steps">
             <article class="step">

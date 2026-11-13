@@ -14,7 +14,7 @@
 import { createSHA256 } from 'hash-wasm';
 import {
   CHUNK, READ, LOW, CONNECT_MS, gate, ackDue, sanitizeFileName, fingerprintOf, newNonce, commitOf,
-  revealMatches, verificationNumber, routeOf, validOfferId, shouldAnswerReveal, offerGroup, GROUP_CAP, type Route
+  revealMatches, verificationNumber, routeOf, validOfferId, shouldAnswerReveal, offerGroup, judgeOffer, bulkFor, type Route, type Bulk
 } from './pure';
 
 export type { Route };
@@ -46,6 +46,8 @@ export interface Hooks {
   offer(o: Offer): void;
   /** The other device cancelled a file that was still waiting to be accepted: take its card away. */
   offerGone?(id: string): void;
+  /** "Accept all" or "Decline all" is on for the rest of the group on offer, or over (null). */
+  bulk?(mode: 'accept' | 'decline' | null): void;
   progress(p: Progress): void;
   finished(f: Finished): void;
   verified(): void;
@@ -60,8 +62,6 @@ export class Session {
   fallbackName = 'file';
   maxBytes = GIB2; // what this device may send, as the server sees it
   peerMax = GIB2; // what the other device may send, as the server told us
-  /** After "Accept all": later files of the group are taken without asking, into private storage. */
-  autoAccept = false;
   closed = false;
   private ws: WebSocket | null = null;
   private pc: RTCPeerConnection | null = null;
@@ -92,8 +92,8 @@ export class Session {
   private waiters = new Map<string, (m: Json) => void>();
   private cancelled = new Set<string>();
   private seenIds = new Set<string>(); // offer ids the other device has used
-  private autoDecline = false; // after "Decline all": later files of the group are refused unseen
-  private groupBytes = 0; // what the current group of the other device has announced so far
+  private bulk: Bulk | null = null; // "Accept all" / "Decline all", for the group it was pressed on only
+  private held = new Map<string, number>(); // received files kept in this tab and not saved yet
   private acked = new Map<string, number>();
   private worker: Worker | null = null;
   private incoming: { id: string; name: string; size: number; got: number; acked: number; t0: number; sha: string; endSize: number; peerOk: boolean; group?: { n: number; of: number; total: number } } | null = null;
@@ -408,21 +408,25 @@ export class Session {
         // The group the sender announces (optional; old senders have none). Its cumulative bytes are
         // capped: every accepted file stays in this tab until the person saves it.
         const group = offerGroup(m.n, m.of, m.total) ?? undefined;
-        if (group) {
-          if (group.n === 1) this.groupBytes = 0;
-          if (this.groupBytes + size > GROUP_CAP) return this.say({ t: 'reject', id, why: 'group_too_big' });
-          this.groupBytes += size;
-        }
-        if (this.autoDecline) return this.say({ t: 'reject', id, why: 'declined_all' });
+        const j = judgeOffer(this.bulk, group ?? null, size, this.heldBytes());
+        this.setBulk(j.bulk);
+        if (j.verdict === 'group_too_big') return this.say({ t: 'reject', id, why: 'group_too_big' });
+        if (j.verdict === 'decline') return this.say({ t: 'reject', id, why: 'declined_all' });
         const o: Offer = { id, name: sanitizeFileName(m.name, this.fallbackName), size, mime: String(m.mime ?? ''), group };
-        // after "Accept all" there is no card and no save dialog per file: the file goes to private
-        // storage and the Save list picks it up when it is complete
-        if (this.autoAccept) return void this.accept(o, true);
+        // after "Accept all" the later files of that group have no card and no save dialog: each goes to
+        // private storage and the Save list picks it up when it is complete
+        if (j.verdict === 'accept') return void this.accept(o, true);
         this.h.offer(o);
         break;
       }
       case 'reject': this.cancelled.add(m.id); this.waiters.get('ack:' + m.id)?.(m); this.waiters.get(m.id)?.(m); this.wake?.(); break;
-      case 'accept': case 'done': this.waiters.get(m.id)?.(m); break;
+      case 'accept': {
+        const w = this.waiters.get(m.id);
+        if (w) w(m);
+        else this.say({ t: 'cancel', id: m.id }); // an answer to an offer this device has already withdrawn
+        break;
+      }
+      case 'done': this.waiters.get(m.id)?.(m); break;
       case 'ack': this.waiters.get('ack:' + m.id)?.(m); break;
       case 'cancel':
         this.cancelled.add(m.id);
@@ -523,7 +527,11 @@ export class Session {
     if (!auto && typeof picker === 'function' && STORE_MODE === 'auto') {
       try { handle = await picker.call(window, { suggestedName: o.name }); } catch { /* dismissed, blocked or unsupported */ }
     }
-    if (this.closed || this.incoming) return;
+    if (this.closed) return;
+    // the sender may have withdrawn the file while the save dialog was open: nothing is accepted, and
+    // the row does not stay at 0 bytes
+    if (this.cancelled.has(o.id)) return this.dropOffer(o, 'cancelled_by_peer');
+    if (this.incoming) { this.say({ t: 'reject', id: o.id, why: 'busy' }); return this.dropOffer(o, 'busy'); }
     const w = (this.worker = new Worker(new URL('./recv.worker.ts', import.meta.url), { type: 'module' }));
     this.incoming = { id: o.id, name: o.name, size: o.size, got: 0, acked: 0, t0: performance.now(), sha: '', endSize: -1, peerOk: false, group: o.group };
     w.onmessage = (e) => this.fromWorker(e.data);
@@ -534,8 +542,25 @@ export class Session {
     this.say({ t: 'accept', id: o.id });
   }
   decline(id: string, why = 'declined') { this.say({ t: 'reject', id, why }); }
-  /** "Decline all": this file and every later one of the group are refused; the sender stops the queue. */
-  declineAll(id: string) { this.autoDecline = true; this.decline(id, 'declined_all'); }
+  /** "Decline all": this file and the later ones of this group are refused; the sender stops the queue. */
+  declineAll(o: Offer) { this.setBulk(bulkFor('decline', o.group)); this.decline(o.id, 'declined_all'); }
+  /** "Accept all": this file is accepted as usual, the later files of this group are taken without asking. */
+  acceptAll(o: Offer) { this.setBulk(bulkFor('accept', o.group)); return this.accept(o); }
+  /** The person saved a received file: this tab no longer counts it as held. */
+  released(id: string) { this.held.delete(id); }
+  private heldBytes() {
+    let n = 0;
+    this.held.forEach((v) => (n += v));
+    return n;
+  }
+  private setBulk(b: Bulk | null) {
+    const was = this.bulk?.mode ?? null;
+    this.bulk = b;
+    if ((b?.mode ?? null) !== was) this.h.bulk?.(b?.mode ?? null);
+  }
+  private dropOffer(o: Offer, why: string) {
+    this.h.finished({ id: o.id, dir: 'in', name: o.name, size: o.size, ok: false, sha256: '', peerSha256: '', ms: 0, reason: why, group: o.group });
+  }
 
   private bytes(buf: ArrayBuffer) {
     if (!this.matched) return this.fail('protocol'); // data before both people said "Match"
@@ -565,6 +590,7 @@ export class Session {
     } else if (m.t === 'saved') {
       const ms = performance.now() - inc.t0;
       this.say({ t: 'done', id: inc.id, ok: true, sha256: inc.sha });
+      if (m.file) this.held.set(inc.id, inc.size); // kept in this tab until it is saved
       prog(inc.size);
       this.h.finished({ id: inc.id, dir: 'in', name: inc.name, size: inc.size, ok: true, sha256: inc.sha, peerSha256: inc.sha, ms, file: m.file, store: m.store, group: inc.group });
       this.endWorker();
