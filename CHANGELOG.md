@@ -4,6 +4,17 @@ What changed in FileHop, newest first. Each entry will link to its pull request 
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-12
+
+### Fixed
+- "Save to PixelHop" reported a failure although PixelHop had stored the file. PixelHop answers with addresses on its link host (`p.hel.ink`), and FileHop only accepted addresses on the host it calls (`pixel.hel.ink`). A stored file (201, or 200 with `ok`, also when the answer is cut off) is now always reported as saved. When PixelHop does not answer in time, the page no longer says the save failed: the file may be stored, so it asks the person to look in PixelHop before trying again. An address from PixelHop is passed on to the page when it is exactly the configured PixelHop address, exactly the host in the new optional `FILEHOP_PIXELHOP_LINK_URL`, or a plain https address on the family's domain (the hub's host without its first label, never a public suffix such as `co.uk`; lower case, no port, no trailing dot, no user name, not a number); otherwise the link opens PixelHop itself. Pressing the button again for the same file shows "Already in your PixelHop library": PixelHop keeps one copy per member.
+- `/send`: the code of a device that left is dead at once. A room is removed when its only device leaves before anyone joined, so an old QR code (a reloaded page, "Leave" then "Start") says the room does not exist instead of leaving the second device waiting with the old code on screen. Joining a room with nobody in it says the other device already left; the device that opens a room shows its code only once it is in the room itself. A new `#code` opened while the page is on `/send` (a second scan in the same tab or installed app) starts over with it, asking first during a pairing or a transfer. Too many new codes from one network says it is per hour and how to go on.
+- `/send`: when several files were received one after another, receiving the next one deleted the earlier ones from the browser's private storage, so their Save links failed ("download failed"). Each page now keeps its own received files until it is closed; only leftovers of closed pages are removed.
+
+### Changed
+- The theme and the language follow the family cookies `hop_theme` and `hop_lang`, shared by every HOP app on hel.ink: a choice made in one app is the choice in the others. The old `hop-theme` / `hop-lang` keys are still read (after the cookies), moved once into the cookies, and kept up to date; only a language the person picks is stored, never one guessed from the browser. `/changelog` follows `?lang=`, then the cookie, then the browser.
+- `/` and `/send` are served with the page's first view already drawn (the app's own markup, words, fonts and colours, in the visitor's theme and language), so the page is readable at once and by search engines; the app takes its place without anything moving. The whole page, head included, is in one language; it varies on `Cookie` and `Accept-Language` and is `Cache-Control: private`. If the app's files are slow, it is shown after at most 3 seconds. Without scripts, the page says that FileHop needs JavaScript.
+
 ## [1.2.0] - 2026-11-12
 
 ### Added

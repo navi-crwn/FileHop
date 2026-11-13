@@ -13,7 +13,9 @@
 // Scenarios: transfer (>= 100 MiB by default, four hashes compared), corrupt (one byte flipped on
 // the wire: nothing may be offered for saving), cancel (both directions), early (data or an offer
 // before both pressed Match closes the connection), forged (an offer above the sender's limit is
-// refused, a hostile name is cleaned), nomatch, rooms (unknown code, third device).
+// refused, a hostile name is cleaned), nomatch, rooms (unknown code, third device), multi (three files
+// in a row, every Save intact), abandoned (the code of a device that left, an empty room, a new #code in
+// the same tab), slowcreator (no code on screen before its device is in the room).
 import { createHash, randomBytes } from 'node:crypto';
 import { createReadStream, mkdirSync, statSync, writeFileSync, createWriteStream, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -304,6 +306,85 @@ const scenarios = {
     const rj = await tryJoin(R.page, code);
     check('another address still joins the waiting room', rj === 'joined', rj);
     await Promise.all([A, S, R].map((d) => d.ctx.close()));
+  },
+
+  async multi(b) {
+    // three files in one pick: every Save link must still give its own, intact file (receiving one
+    // file used to delete the earlier ones from private storage, so their Save failed)
+    const files = [await makeFile('multi-a-3MiB.bin', 3), await makeFile('multi-b-2MiB.bin', 2), await makeFile('multi-c-1MiB.bin', 1)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    for (let i = 1; i <= files.length; i++) {
+      await p.B.page.waitForSelector('.offer-accept:not([disabled])', { timeout: 15000 });
+      await p.B.page.click('.offer-accept');
+      await p.B.page.waitForFunction((n) => document.querySelectorAll('.xfer[data-dir=in][data-state=done], .xfer[data-dir=in][data-state=failed]').length >= n, i, { timeout: 60000 });
+    }
+    const results = [];
+    for (const f of files) {
+      const name = f.split(/[\\/]/).pop();
+      const [dl] = await Promise.all([p.B.page.waitForEvent('download'), p.B.page.click(`.xfer[data-dir=in] .save[download="${name}"]`)]);
+      const dest = join(out, `received-${name}`);
+      let ok = false;
+      try { await dl.saveAs(dest); ok = (await sha(dest)) === (await sha(f)); } catch (e) { log(`  ${name}: ${String(e).split('\n')[0]}`); }
+      results.push(`${name}=${ok ? 'intact' : 'FAILED'}`);
+    }
+    check('three files received one after another: all three Save links give intact files', results.every((r) => r.endsWith('intact')), results.join(' '));
+    check('the received files stay in private storage while the page is open', (await opfsLeft(p.B.page)).length === files.length, JSON.stringify(await opfsLeft(p.B.page)));
+    await p.close();
+  },
+
+  async abandoned(b) {
+    // A-37: a code whose device left must not keep anyone waiting with the old code on screen
+    const A = await device(b[0]), B = await device(b[1]);
+    const hello = (page) => page.waitForFunction(() => window.__log.some((l) => l.includes('ws:hello')), null, { timeout: 10000 });
+    await A.page.goto(`${base}/send`);
+    await A.page.click('#start');
+    await A.page.waitForSelector('#room-code');
+    await hello(A.page);
+    const old = (await A.page.textContent('#room-code')).replace(/\s/g, '');
+    await A.page.reload(); // the device that showed the code reloads (or leaves) before anyone joined
+    await B.page.goto(`${base}/send#${old}`);
+    await B.page.waitForSelector('#error', { timeout: 10000 });
+    check('scanning the code of a device that left says the room is gone (not "waiting")', (await B.page.getAttribute('#error', 'data-reason')) === 'room_unknown' && (await B.page.$('#room-code')) === null);
+    // a room that was opened but never entered (the page died before its socket): the joiner is told
+    const ghost = await A.page.evaluate(async () => (await (await fetch('/api/send/room', { method: 'POST' })).json()).code);
+    await B.page.goto(`${base}/send`);
+    await B.page.fill('#code-in', ghost);
+    await B.page.click('#join');
+    await B.page.waitForSelector('#error', { timeout: 10000 });
+    check('joining an empty room says the other device already left', (await B.page.getAttribute('#error', 'data-reason')) === 'room_empty');
+    // the device that left shows a new code; the second one opens it in the same tab (only the #fragment changes)
+    await A.page.click('#start');
+    await A.page.waitForSelector('#room-code');
+    await hello(A.page);
+    const fresh = (await A.page.textContent('#room-code')).replace(/\s/g, '');
+    await B.page.evaluate((c) => { location.hash = c; }, '#' + fresh);
+    await Promise.all([A, B].map((d) => d.page.waitForSelector('#sas, #error', { timeout: 40000 })));
+    const sas = await Promise.all([A, B].map((d) => d.page.textContent('#sas').catch(() => '')));
+    check('a new code opened in the same tab joins the new room', sas[0] && sas[0] === sas[1], `A ${sas[0]} B ${sas[1]}`);
+    await Promise.all([A, B].map((d) => d.ctx.close()));
+  },
+
+  async slowcreator(b) {
+    // the device that opens the room is slow to get into it: its code must not be on screen before it is
+    // in the room, or the other device could enter the still empty room, give up and take the room with it
+    const slow = () => {
+      const send = WebSocket.prototype.send;
+      WebSocket.prototype.send = function (d) { if (String(d).includes('"join"')) setTimeout(() => send.call(this, d), 2500); else send.call(this, d); };
+    };
+    const A = await device(b[0], slow), B = await device(b[1]);
+    await A.page.goto(`${base}/send`);
+    await B.page.goto(`${base}/send`);
+    await A.page.click('#start');
+    await A.page.waitForTimeout(1200);
+    check('the code is not shown before the room is entered', (await A.page.$('#room-code')) === null && (await A.page.$('#status')) !== null);
+    await A.page.waitForSelector('#room-code', { timeout: 10000 });
+    const code = (await A.page.textContent('#room-code')).replace(/\s/g, '');
+    await B.page.fill('#code-in', code);
+    await B.page.click('#join');
+    await Promise.all([A, B].map((d) => d.page.waitForSelector('#sas, #error', { timeout: 40000 })));
+    check('once shown, the code pairs', !!(await A.page.$('#sas')) && !!(await B.page.$('#sas')));
+    await Promise.all([A, B].map((d) => d.ctx.close()));
   },
 
   async rooms(b) {

@@ -232,6 +232,34 @@ func TestSendRoomIsSealedOnceTwoDevicesHaveJoined(t *testing.T) {
 	}
 }
 
+func TestSendRoomIsGoneOnceItsOnlyDeviceLeaves(t *testing.T) {
+	a, srv := newTestApp(t, false)
+	code := newCode(t, srv.URL)
+	c := sendWS(t, srv.URL, "")
+	wsSend(t, c, map[string]any{"t": "join", "code": code})
+	if m := wsRead(t, c); m["t"] != "hello" {
+		t.Fatalf("hello: %v", m)
+	}
+	// The device that opened the room reloads or leaves before anyone joined.
+	c.Close(websocket.StatusNormalClosure, "")
+	deadline := time.Now().Add(2 * time.Second)
+	for a.send.count() != 0 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if n := a.send.count(); n != 0 {
+		t.Fatalf("the abandoned room must be removed, %d left", n)
+	}
+	// Someone scanning the old code is told it is unknown instead of waiting in an empty room.
+	d := sendWS(t, srv.URL, "")
+	wsSend(t, d, map[string]any{"t": "join", "code": code})
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, _, err := d.Read(ctx)
+	if websocket.CloseStatus(err) != 4404 {
+		t.Fatalf("an abandoned code must close with 4404, got %v", err)
+	}
+}
+
 func TestSendParallelGuessesFromOneAddressAreStillLimited(t *testing.T) {
 	a, srv := newTestApp(t, false)
 	a.cfg.TrustProxy = true

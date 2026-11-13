@@ -2,6 +2,8 @@
   "app.name": "FileHop",
   "app.tagline": "Cualquier archivo, cualquier formato, en tu dispositivo.",
   "app.title": "FileHop — cualquier archivo, cualquier formato, en tu dispositivo",
+  "app.description": "FileHop convierte imágenes, PDF, datos y archivos comprimidos en tu navegador. No se sube nada.",
+  "app.needs_js": "FileHop necesita JavaScript. Actívalo en tu navegador y vuelve a cargar esta página.",
   "nav.add": "Añadir archivos",
   "nav.queue": "Cola",
   "nav.settings": "Motor y ajustes",
@@ -244,6 +246,10 @@
   "send.err_room_full": "Esa sala ya tiene dos dispositivos.",
   "send.err_room_expired": "La sala caducó a los 10 minutos. Crea una nueva.",
   "send.err_rate_limited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
+  "send.err_rate_limited_rooms": "Demasiados códigos nuevos desde esta red en esta hora. Inténtalo más tarde o escribe el código que muestra el otro dispositivo.",
+  "send.err_room_empty": "El dispositivo que mostró este código ya se fue. Pide el código que tiene ahora en pantalla.",
+  "send.switch_title": "¿Unirse con el código nuevo?",
+  "send.switch_body": "Esto termina la conexión actual.",
   "send.err_signal_lost": "Se perdió la conexión con FileHop.",
   "send.err_connection_lost": "El otro dispositivo se desconectó.",
   "send.err_busy": "FileHop está ocupado. Inténtalo de nuevo en un momento.",
@@ -279,6 +285,7 @@
   "save.err_rate_limited": "Demasiados guardados. Espera un minuto e inténtalo de nuevo.",
   "save.err_not_signed_in": "Inicia sesión de nuevo para guardar en PixelHop.",
   "save.err_failed": "No se pudo guardar en PixelHop. FileHop no conservó nada.",
+  "save.err_unsure": "PixelHop no respondió a tiempo. Puede que el archivo ya esté en tu biblioteca de PixelHop: revísala antes de volver a intentarlo.",
   "save.err_busy": "FileHop está ocupado guardando otros archivos. Inténtalo de nuevo en un momento.",
   "send.err_handshake_stalled": "Los dos dispositivos se conectaron, pero no terminaron de comprobarse entre sí. Empieza de nuevo."
 }

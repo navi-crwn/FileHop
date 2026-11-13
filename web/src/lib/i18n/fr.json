@@ -2,6 +2,8 @@
   "app.name": "FileHop",
   "app.tagline": "N'importe quel fichier, n'importe quel format, sur votre appareil.",
   "app.title": "FileHop — n’importe quel fichier, n’importe quel format, sur votre appareil",
+  "app.description": "FileHop convertit images, PDF, données et archives dans votre navigateur. Rien n’est envoyé.",
+  "app.needs_js": "FileHop a besoin de JavaScript. Activez-le dans votre navigateur, puis rechargez cette page.",
   "nav.add": "Ajouter des fichiers",
   "nav.queue": "File d'attente",
   "nav.settings": "Moteur et réglages",
@@ -244,6 +246,10 @@
   "send.err_room_full": "Ce salon a déjà deux appareils.",
   "send.err_room_expired": "Le salon a expiré après 10 minutes. Créez-en un nouveau.",
   "send.err_rate_limited": "Trop d’essais. Attendez une minute et réessayez.",
+  "send.err_rate_limited_rooms": "Trop de nouveaux codes depuis ce réseau cette heure-ci. Réessayez plus tard, ou saisissez le code affiché sur l’autre appareil.",
+  "send.err_room_empty": "L’appareil qui affichait ce code est déjà parti. Demandez le code affiché maintenant sur son écran.",
+  "send.switch_title": "Rejoindre avec le nouveau code ?",
+  "send.switch_body": "La connexion actuelle sera fermée.",
   "send.err_signal_lost": "La connexion à FileHop a été perdue.",
   "send.err_connection_lost": "L’autre appareil s’est déconnecté.",
   "send.err_busy": "FileHop est occupé. Réessayez dans un instant.",
@@ -279,6 +285,7 @@
   "save.err_rate_limited": "Trop d’enregistrements. Attendez une minute et réessayez.",
   "save.err_not_signed_in": "Reconnectez-vous pour enregistrer dans PixelHop.",
   "save.err_failed": "Impossible d’enregistrer dans PixelHop. FileHop n’a rien conservé.",
+  "save.err_unsure": "PixelHop n’a pas répondu à temps. Le fichier est peut-être déjà dans votre bibliothèque PixelHop : vérifiez-y avant de réessayer.",
   "save.err_busy": "FileHop est occupé à enregistrer d’autres fichiers. Réessayez dans un instant.",
   "send.err_handshake_stalled": "Les deux appareils se sont connectés mais n’ont pas terminé la vérification mutuelle. Recommencez."
 }

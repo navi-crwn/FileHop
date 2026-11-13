@@ -32,6 +32,7 @@ type Config struct {
 	TrustProxy       bool     // read the visitor address from X-Forwarded-For (behind nginx)
 	StunURLs         []string // ICE: STUN servers for /send, from the environment
 	PixelHopURL      string   // https://pixel.<family domain>; with the secret below turns "Save to PixelHop" on
+	PixelHopLinkURL  string   // optional: the https host PixelHop builds its links on, when it is outside the family domain
 	PixelHopSecret   string   // FileHop's own secret for PixelHop's store (32+ characters, never the SSO secret)
 	PixelHopMaxBytes int64    // largest file forwarded; 0 means PixelHop's 20 MB default
 }
@@ -43,6 +44,7 @@ type App struct {
 	db      *db.DB
 	static  fs.FS
 	index   []byte
+	pages   map[string]map[string][]byte // the shell as each public route is served, per language (pages.go)
 	used    usedTickets
 	nonces  hop.Nonces
 	started time.Time
@@ -57,7 +59,7 @@ func New(cfg Config, d *db.DB, static fs.FS) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	a := &App{cfg: cfg, db: d, static: static, index: index, used: usedTickets{m: map[string]int64{}}, started: time.Now()}
+	a := &App{cfg: cfg, db: d, static: static, index: index, pages: buildPages(index), used: usedTickets{m: map[string]int64{}}, started: time.Now()}
 	a.hubUp = newHubProbe(cfg.SSOURL).Up
 	return a, nil
 }
@@ -140,8 +142,8 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 			// a real file without an extension: fall through to it
 		} else {
 			h.Set("Content-Type", "text/html; charset=utf-8")
-			h.Set("Cache-Control", "no-cache")
-			w.Write(a.index)
+			h.Set("Cache-Control", "private, no-cache") // in the visitor's language: never from a shared cache
+			w.Write(a.shell(name, r, h))
 			return
 		}
 	}
@@ -182,6 +184,9 @@ func secure(next http.Handler) http.Handler {
 		h.Set("Referrer-Policy", "no-referrer")
 		h.Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 		h.Set("X-Frame-Options", "DENY")
+		if privatePath(r.URL.Path) {
+			h.Set("X-Robots-Tag", "noindex")
+		}
 		next.ServeHTTP(w, r)
 	})
 }

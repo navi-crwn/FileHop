@@ -69,35 +69,57 @@ var changeText = map[string]changeStrings{
 	"ru":    {"История изменений", "Все изменения FileHop, от новых к старым, из публичного репозитория.", "Релиз", "Pull request", "Коммит", "Новее", "Старее", "Страница %d из %d", "Назад к FileHop", "Тема", "Язык", "Часть Hop Easy Link"},
 }
 
-// changeLang picks ?lang=, then the browser's Accept-Language, then English.
+// changeLang picks ?lang=, then the family cookie hop_lang, then the browser's Accept-Language, then English.
 func changeLang(r *http.Request) string {
-	match := func(tag string) string {
-		tag = strings.TrimSpace(strings.SplitN(tag, ";", 2)[0])
-		if tag == "" {
-			return ""
-		}
-		for _, l := range changeLocales {
-			if strings.EqualFold(l, tag) {
-				return l
-			}
-		}
-		base := strings.ToLower(strings.SplitN(tag, "-", 2)[0])
-		for _, l := range changeLocales {
-			if strings.ToLower(strings.SplitN(l, "-", 2)[0]) == base {
-				return l
-			}
-		}
-		return ""
-	}
-	if l := match(r.URL.Query().Get("lang")); l != "" {
+	if l := matchLang(r.URL.Query().Get("lang")); l != "" {
 		return l
 	}
+	if l := cookieLang(r); l != "" {
+		return l
+	}
+	return acceptLang(r)
+}
+
+// cookieLang is the family's language cookie (hop_lang, plain text, shared by every HOP app on .hel.ink)
+// when it names one of the nine languages exactly; "" otherwise.
+func cookieLang(r *http.Request) string {
+	if c, err := r.Cookie("hop_lang"); err == nil {
+		for _, l := range changeLocales {
+			if c.Value == l {
+				return l
+			}
+		}
+	}
+	return ""
+}
+
+// acceptLang is the first of the browser's languages FileHop has, or English.
+func acceptLang(r *http.Request) string {
 	for _, tag := range strings.Split(r.Header.Get("Accept-Language"), ",") {
-		if l := match(tag); l != "" {
+		if l := matchLang(tag); l != "" {
 			return l
 		}
 	}
 	return "en"
+}
+
+func matchLang(tag string) string {
+	tag = strings.TrimSpace(strings.SplitN(tag, ";", 2)[0])
+	if tag == "" {
+		return ""
+	}
+	for _, l := range changeLocales {
+		if strings.EqualFold(l, tag) {
+			return l
+		}
+	}
+	base := strings.ToLower(strings.SplitN(tag, "-", 2)[0])
+	for _, l := range changeLocales {
+		if strings.ToLower(strings.SplitN(l, "-", 2)[0]) == base {
+			return l
+		}
+	}
+	return ""
 }
 
 type changeRow struct {
@@ -196,7 +218,7 @@ func (a *App) changelog(w http.ResponseWriter, r *http.Request) {
 	setAppHeaders(h)
 	h.Set("Content-Type", "text/html; charset=utf-8")
 	h.Set("Cache-Control", "no-cache")
-	h.Add("Vary", "Accept-Language")
+	h.Add("Vary", "Cookie, Accept-Language")
 	if r.Method == http.MethodHead {
 		return
 	}

@@ -177,6 +177,11 @@ func (h *sendHub) leave(code string, p *sendPeer) {
 		for _, q := range r.peers {
 			sendDeliver(q, mustJSON(map[string]any{"t": "leave", "id": p.id}))
 		}
+		// A room its only device left before anyone joined is dead: its code must not keep a
+		// second device waiting in an empty room (an old QR, a reloaded page).
+		if !r.sealed && len(r.peers) == 0 {
+			delete(h.rooms, code)
+		}
 	}
 }
 

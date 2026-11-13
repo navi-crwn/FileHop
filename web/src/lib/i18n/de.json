@@ -2,6 +2,8 @@
   "app.name": "FileHop",
   "app.tagline": "Jede Datei, jedes Format, auf deinem Gerät.",
   "app.title": "FileHop — jede Datei, jedes Format, auf deinem Gerät",
+  "app.description": "FileHop wandelt Bilder, PDFs, Daten und Archive in deinem Browser um. Nichts wird hochgeladen.",
+  "app.needs_js": "FileHop braucht JavaScript. Schalte es im Browser ein und lade diese Seite neu.",
   "nav.add": "Dateien hinzufügen",
   "nav.queue": "Warteschlange",
   "nav.settings": "Engine & Einstellungen",
@@ -244,6 +246,10 @@
   "send.err_room_full": "In diesem Raum sind schon zwei Geräte.",
   "send.err_room_expired": "Der Raum ist nach 10 Minuten abgelaufen. Starte einen neuen.",
   "send.err_rate_limited": "Zu viele Versuche. Warte eine Minute und versuche es erneut.",
+  "send.err_rate_limited_rooms": "Zu viele neue Codes aus diesem Netz in dieser Stunde. Versuche es später erneut oder gib den Code ein, den das andere Gerät zeigt.",
+  "send.err_room_empty": "Das Gerät, das diesen Code gezeigt hat, ist schon weg. Frag nach dem Code, der jetzt auf seinem Bildschirm steht.",
+  "send.switch_title": "Mit dem neuen Code verbinden?",
+  "send.switch_body": "Die jetzige Verbindung wird beendet.",
   "send.err_signal_lost": "Die Verbindung zu FileHop ist abgebrochen.",
   "send.err_connection_lost": "Das andere Gerät ist weg.",
   "send.err_busy": "FileHop ist ausgelastet. Versuche es gleich noch einmal.",
@@ -279,6 +285,7 @@
   "save.err_rate_limited": "Zu viele Speichervorgänge. Warte eine Minute und versuche es erneut.",
   "save.err_not_signed_in": "Melde dich erneut an, um in PixelHop zu speichern.",
   "save.err_failed": "Speichern in PixelHop fehlgeschlagen. FileHop hat nichts behalten.",
+  "save.err_unsure": "PixelHop hat nicht rechtzeitig geantwortet. Die Datei ist vielleicht schon in deiner PixelHop-Bibliothek: sieh dort nach, bevor du es noch einmal versuchst.",
   "save.err_busy": "FileHop speichert gerade andere Dateien. Versuche es gleich noch einmal.",
   "send.err_handshake_stalled": "Die beiden Geräte haben sich verbunden, die gegenseitige Prüfung aber nicht abgeschlossen. Beginne neu."
 }

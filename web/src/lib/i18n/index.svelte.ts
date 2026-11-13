@@ -1,5 +1,6 @@
 import en from './en.json';
 import type { ActionDef } from '../core/types';
+import { getPref, setPref } from '../util/prefs';
 
 /* Nine languages, no Arabic, per the family rule. A missing key falls back to
    English and warns once, so the UI never shows a raw key.
@@ -57,12 +58,21 @@ export function guessLocale(): Locale {
   return 'en';
 }
 
+/** The language chosen before: the family cookie hop_lang (any HOP app), then this app's own old key,
+    which is moved once into the cookie (the server reads the cookie to write the page's first view). */
 function readStored(): string | null {
-  try {
-    return localStorage.getItem('hop-lang');
-  } catch {
-    return null;
-  }
+  const family = getPref('hop_lang');
+  if (family && isLocale(family)) return family;
+  let old: string | null = null;
+  try { old = localStorage.getItem('hop-lang'); } catch { /* storage blocked */ }
+  if (family === null && old && isLocale(old)) setPref('hop_lang', old);
+  return old;
+}
+
+/** The person picked a language: every HOP app follows it (hop_lang), and the old key keeps up. */
+export function chooseLocale(l: Locale): void {
+  setPref('hop_lang', l);
+  storeLocale(l);
 }
 
 function storeLocale(l: string): void {
@@ -84,7 +94,6 @@ class I18nState {
       this.locale = locale;
       this.dict = locale === 'en' ? FALLBACK : this.cache.get(locale)!;
       document.documentElement.lang = locale;
-      storeLocale(locale);
       return;
     }
     const loader = LOADERS[locale] ?? LOADERS.en;
@@ -93,8 +102,8 @@ class I18nState {
     this.loaded.add(locale);
     this.dict = mod.default;
     this.locale = locale;
+    // only a language the person picks is stored (chooseLocale), never one guessed from the browser
     document.documentElement.lang = locale;
-    storeLocale(locale);
   }
 
   private cache = new Map<string, Dict>();

@@ -4,7 +4,8 @@
   import JobCard from './lib/components/JobCard.svelte';
   import FormatRing from './lib/components/FormatRing.svelte';
   import SettingsDrawer from './lib/components/SettingsDrawer.svelte';
-  import { i18n, guessLocale, actionLabel, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
+  import { i18n, guessLocale, chooseLocale, actionLabel, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
+  import { getPref, setPref } from './lib/util/prefs';
   import { Queue } from './lib/store/queue.svelte';
   import { Pool, hardwareSlots } from './lib/core/pool';
   import { detectFile } from './lib/core/detect';
@@ -63,6 +64,7 @@
   }
   function pickLang(l: string) {
     locale = l as typeof locale;
+    chooseLocale(locale);
     closeLang(true);
   }
   function onLangKey(e: KeyboardEvent) {
@@ -129,17 +131,24 @@
 
   let theme = $state<'dark' | 'light'>(readTheme());
 
+  // The family cookie hop_theme first (any other value there means the system setting), then this app's
+  // old key, then the system setting: the order public/theme.js used before the first paint.
   function readTheme(): 'dark' | 'light' {
-    try {
-      const t = localStorage.getItem('hop-theme');
-      if (t === 'light' || t === 'dark') return t;
-    } catch { /* ignore */ }
+    const family = getPref('hop_theme');
+    if (family === 'light' || family === 'dark') return family;
+    if (family === null) {
+      try {
+        const t = localStorage.getItem('hop-theme');
+        if (t === 'light' || t === 'dark') return t;
+      } catch { /* ignore */ }
+    }
     return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
 
   function toggleTheme() {
     theme = theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = theme;
+    setPref('hop_theme', theme); // every HOP app follows it
     try { localStorage.setItem('hop-theme', theme); } catch { /* ignore */ }
   }
 
@@ -876,7 +885,7 @@
   <div class="scrim" onclick={() => (settingsOpen = false)} role="presentation"></div>
   <SettingsDrawer
     {locale}
-    onLocale={(l) => (locale = l as typeof locale)}
+    onLocale={(l) => { locale = l as typeof locale; chooseLocale(locale); }}
     {maxWorkers}
     autoWorkers={hardwareSlots()}
     {batterySaver}

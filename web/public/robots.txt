@@ -3,5 +3,6 @@ Allow: /
 Disallow: /dashboard
 Disallow: /auth/
 Disallow: /api/
+Disallow: /hop/
 
 Sitemap: https://file.hel.ink/sitemap.xml

@@ -22,6 +22,10 @@ export type { Route };
 const params = new URLSearchParams(location.search);
 // 'opfs' or 'blob' force a save tier (used by the browser tests); the default tries the save dialog first.
 const STORE_MODE = params.get('store') ?? 'auto';
+// This page's name for the files it receives into the private file system. The page holds a Web Lock under
+// it for as long as it is open, so the receiving worker can tell its files from leftovers of closed pages.
+const PAGE = Math.random().toString(36).slice(2, 10);
+try { void (navigator as any).locks?.request('filehop-send-' + PAGE, () => new Promise(() => {})); } catch { /* no Web Locks */ }
 
 export type Phase = 'idle' | 'waiting' | 'connecting' | 'verify' | 'ready' | 'closed' | 'error';
 
@@ -62,6 +66,7 @@ export class Session {
   private peer = '';
   private ice: RTCIceServer[] = [];
   private caller = false;
+  private joining = false; // entered a code (or scanned one) rather than opening the room
   private ttlMs = 0;
   private roomAt = 0;
   private early: RTCIceCandidateInit[] = [];
@@ -101,17 +106,18 @@ export class Session {
     this.h.phase('connecting');
     let r: Response;
     try { r = await fetch('/api/send/room', { method: 'POST' }); } catch { return this.fail('busy'); }
-    if (r.status === 429) return this.fail('rate_limited');
+    if (r.status === 429) return this.fail('rate_limited_rooms'); // rooms per hour, not wrong tries per minute
     if (!r.ok) return this.fail('busy');
     const j = await r.json();
     this.ttlMs = (j.ttl ?? 600) * 1000;
     this.roomAt = Date.now();
-    this.code = j.code;
-    this.h.code(j.code);
+    this.code = j.code; // shown once this device is in the room (hello): a code on screen before that
+    // could be entered by the other device into a room that is still empty
     await this.open(j.code);
   }
 
   async join(code: string): Promise<void> {
+    this.joining = true;
     this.code = code;
     this.h.code(code);
     this.h.phase('connecting');
@@ -132,6 +138,7 @@ export class Session {
       this.note('ws:' + m.t);
       if (m.t === 'hello') {
         this.me = m.id;
+        if (!this.joining) this.h.code(this.code);
         if (typeof m.max === 'number') this.maxBytes = m.max;
         const other = m.peers?.[0];
         if (other) {
@@ -140,6 +147,10 @@ export class Session {
           this.caller = true; // the newcomer calls
           this.h.limits(this.maxBytes, this.peerMax);
           void this.begin();
+        } else if (this.joining) {
+          // nobody is in the room: whoever showed this code has left. Waiting here, with the old code on
+          // screen, would leave two devices each waiting for the other.
+          this.fail('room_empty');
         } else {
           this.h.limits(this.maxBytes, this.peerMax);
           this.h.phase('waiting');
@@ -487,7 +498,7 @@ export class Session {
     this.incoming = { id: o.id, name: o.name, size: o.size, got: 0, acked: 0, t0: performance.now(), sha: '', endSize: -1, peerOk: false };
     w.onmessage = (e) => this.fromWorker(e.data);
     const ready = new Promise<Json>((res) => (this.resolveWorker = res));
-    w.postMessage({ t: 'open', id: o.id, size: o.size, store: STORE_MODE, handle });
+    w.postMessage({ t: 'open', id: o.id, size: o.size, store: STORE_MODE, page: PAGE, handle });
     const r = await ready;
     if (r.t !== 'ready') return this.abortIncoming(String(r.why ?? 'storage'));
     this.say({ t: 'accept', id: o.id });

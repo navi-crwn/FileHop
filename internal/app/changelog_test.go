@@ -78,6 +78,28 @@ func TestChangelogLanguageAndPaging(t *testing.T) {
 	if _, body := get(t, srv.URL, "/changelog", "pt-BR,pt;q=0.9"); !strings.Contains(body, "Histórico de alterações") {
 		t.Error("Accept-Language pt-BR ignored")
 	}
+	// The family cookie hop_lang (any HOP app) comes after ?lang= and before Accept-Language.
+	withCookie := func(q, lang, accept string) string {
+		req, _ := http.NewRequest("GET", srv.URL+"/changelog"+q, nil)
+		req.AddCookie(&http.Cookie{Name: "hop_lang", Value: lang})
+		req.Header.Set("Accept-Language", accept)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		b, _ := io.ReadAll(res.Body)
+		return string(b)
+	}
+	if !strings.Contains(withCookie("", "id", "de"), `<html lang="id">`) {
+		t.Error("the hop_lang cookie must win over Accept-Language")
+	}
+	if !strings.Contains(withCookie("?lang=fr", "id", "de"), `<html lang="fr">`) {
+		t.Error("?lang= must win over the hop_lang cookie")
+	}
+	if !strings.Contains(withCookie("", "xx", "de"), `<html lang="de">`) {
+		t.Error("a hop_lang that is not one of the nine languages must be ignored")
+	}
 	if _, body := get(t, srv.URL, "/changelog?lang=ar", "ar"); !strings.Contains(body, "<h1>Changelog</h1>") || strings.Contains(body, `lang="ar"`) {
 		t.Error("an unsupported language must fall back to English")
 	}

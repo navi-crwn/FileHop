@@ -862,7 +862,7 @@ test('every string the dashboard adds exists in all locales', () => {
 test('sitemap.xml lists public pages only and robots.txt has the Sitemap line', () => {
   const pub = (f) => readFileSync(new URL(`../web/public/${f}`, import.meta.url), 'utf8');
   const urls = [...pub('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.deepEqual(urls, ['https://file.hel.ink/', 'https://file.hel.ink/changelog']);
+  assert.deepEqual(urls, ['https://file.hel.ink/', 'https://file.hel.ink/send', 'https://file.hel.ink/changelog']);
   assert.match(pub('robots.txt'), /^Sitemap: https:\/\/file\.hel\.ink\/sitemap\.xml$/m);
   assert.match(pub('robots.txt'), /^Disallow: \/dashboard$/m);
 });
@@ -877,4 +877,51 @@ test('settings are reachable by guests (footer) and by signed-in people (account
   const t0 = src.indexOf('{#snippet tools()}');
   const menu = src.slice(src.indexOf('<div class="acct-menu">', t0), src.indexOf('</details>', t0));
   assert.ok(menu.includes('settingsOpen = true') && menu.includes("nav.settings") && !/\{#if dash\}/.test(menu), 'account menu item, on every page');
+});
+
+/* Family preference cookies (dokumen KONTRAK-PREFERENSI): hop_theme and hop_lang, for the whole family on
+   *.hel.ink and for this host elsewhere, plain text, one year, SameSite=Lax, never HttpOnly. */
+writeFileSync(join(dir, 'prefs.mjs'), ts.transpileModule(readFileSync(new URL('../web/src/lib/util/prefs.ts', import.meta.url), 'utf8'),
+  { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
+const prefs = await import('file://' + join(dir, 'prefs.mjs').replace(/\\/g, '/'));
+
+test('the family cookies are set for .hel.ink on the family hosts and for this host elsewhere', () => {
+  for (const host of ['file.hel.ink', 'hel.ink', 'pay.hel.ink']) {
+    assert.equal(prefs.prefCookie('hop_theme', 'dark', host), 'hop_theme=dark; Path=/; Max-Age=31536000; SameSite=Lax; domain=.hel.ink; Secure');
+  }
+  for (const host of ['localhost', 'files.example.org', 'hel.ink.example.org', 'nothel.ink']) {
+    assert.equal(prefs.prefCookie('hop_lang', 'pt-BR', host), 'hop_lang=pt-BR; Path=/; Max-Age=31536000; SameSite=Lax');
+  }
+  assert.equal(prefs.readCookie('hop_lang', 'hop_ui=clean; hop_lang=zh-CN; x=1'), 'zh-CN');
+  assert.equal(prefs.readCookie('hop_lang', 'xhop_lang=de'), null);
+});
+
+test('theme.js and changelog.js write the family cookies exactly as prefs.ts does', () => {
+  const pub = (f) => readFileSync(new URL(`../web/public/${f}`, import.meta.url), 'utf8');
+  for (const f of ['theme.js', 'changelog.js']) {
+    const src = pub(f);
+    assert.ok(src.includes("'; Path=/; Max-Age=31536000; SameSite=Lax'"), f);
+    assert.ok(src.includes("/(^|\\.)hel\\.ink$/.test(location.hostname) ? '; domain=.hel.ink; Secure' : ''"), f);
+    assert.ok(readFileSync(new URL('../web/src/lib/util/prefs.ts', import.meta.url), 'utf8').includes('/(^|\\.)hel\\.ink$/'), 'prefs.ts');
+  }
+  assert.match(pub('changelog.js'), /setPref\('hop_theme', next\);\s*try \{ localStorage\.setItem\('hop-theme', next\)/);
+  assert.match(pub('changelog.js'), /setPref\('hop_lang', a\.getAttribute\('data-lang'\)\);\s*try \{ localStorage\.setItem\('hop-lang'/);
+});
+
+/* theme.js runs before the first paint: cookie, then the old key (moved once into the cookie), then the system. */
+test('theme.js reads hop_theme first, moves the old key into it once, and leaves anything else to the system', async () => {
+  const { runInNewContext } = await import('node:vm');
+  const src = readFileSync(new URL('../web/public/theme.js', import.meta.url), 'utf8');
+  const run = (cookie, stored, host = 'localhost') => {
+    const written = [];
+    const document = { documentElement: { dataset: {} } };
+    Object.defineProperty(document, 'cookie', { get: () => cookie, set: (v) => written.push(v) });
+    runInNewContext(src, { document, location: { hostname: host }, localStorage: { getItem: (k) => (k === 'hop-theme' ? stored : null) } });
+    return { theme: document.documentElement.dataset.theme, written };
+  };
+  assert.deepEqual(run('hop_theme=dark', 'light'), { theme: 'dark', written: [] });
+  assert.deepEqual(run('', 'light'), { theme: 'light', written: ['hop_theme=light; Path=/; Max-Age=31536000; SameSite=Lax'] });
+  assert.deepEqual(run('', 'dark', 'file.hel.ink').written, ['hop_theme=dark; Path=/; Max-Age=31536000; SameSite=Lax; domain=.hel.ink; Secure']);
+  assert.deepEqual(run('hop_theme=system', 'dark'), { theme: undefined, written: [] });
+  assert.deepEqual(run('', null), { theme: undefined, written: [] });
 });

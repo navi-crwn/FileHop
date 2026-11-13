@@ -2,6 +2,8 @@
   "app.name": "FileHop",
   "app.tagline": "任意文件，任意格式，在你的设备上。",
   "app.title": "FileHop — 任何文件、任何格式，都在你的设备上",
+  "app.description": "FileHop 在浏览器中转换图片、PDF、数据和压缩包。不上传任何内容。",
+  "app.needs_js": "FileHop 需要 JavaScript。请在浏览器中启用它，然后重新加载此页面。",
   "nav.add": "添加文件",
   "nav.queue": "队列",
   "nav.settings": "引擎与设置",
@@ -244,6 +246,10 @@
   "send.err_room_full": "该房间已有两台设备。",
   "send.err_room_expired": "房间在 10 分钟后已过期。请新建一个。",
   "send.err_rate_limited": "尝试次数过多。请等一分钟再试。",
+  "send.err_rate_limited_rooms": "本网络在这一小时内创建的新代码过多。请稍后再试，或输入另一台设备上显示的代码。",
+  "send.err_room_empty": "显示此代码的设备已经离开。请询问其屏幕上现在显示的代码。",
+  "send.switch_title": "使用新代码加入？",
+  "send.switch_body": "这会结束当前的连接。",
   "send.err_signal_lost": "与 FileHop 的连接中断了。",
   "send.err_connection_lost": "对方设备已断开。",
   "send.err_busy": "FileHop 正忙，请稍后再试。",
@@ -279,6 +285,7 @@
   "save.err_rate_limited": "保存太频繁。请等一分钟再试。",
   "save.err_not_signed_in": "请重新登录后再保存到 PixelHop。",
   "save.err_failed": "无法保存到 PixelHop。FileHop 没有保留任何内容。",
+  "save.err_unsure": "PixelHop 未能及时响应。文件可能已在你的 PixelHop 图库中：请先查看，再决定是否重试。",
   "save.err_busy": "FileHop 正忙于保存其他文件，请稍后再试。",
   "send.err_handshake_stalled": "两台设备已连接，但没有完成互相核对。请重新开始。"
 }

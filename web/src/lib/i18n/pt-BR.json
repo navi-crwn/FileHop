@@ -2,6 +2,8 @@
   "app.name": "FileHop",
   "app.tagline": "Qualquer arquivo, qualquer formato, no seu dispositivo.",
   "app.title": "FileHop — qualquer arquivo, qualquer formato, no seu dispositivo",
+  "app.description": "O FileHop converte imagens, PDFs, dados e arquivos compactados no seu navegador. Nada é enviado.",
+  "app.needs_js": "O FileHop precisa de JavaScript. Ative-o no navegador e recarregue esta página.",
   "nav.add": "Adicionar arquivos",
   "nav.queue": "Fila",
   "nav.settings": "Motor e ajustes",
@@ -244,6 +246,10 @@
   "send.err_room_full": "Essa sala já tem dois dispositivos.",
   "send.err_room_expired": "A sala expirou após 10 minutos. Crie uma nova.",
   "send.err_rate_limited": "Muitas tentativas. Aguarde um minuto e tente de novo.",
+  "send.err_rate_limited_rooms": "Códigos novos demais desta rede nesta hora. Tente mais tarde ou digite o código mostrado no outro aparelho.",
+  "send.err_room_empty": "O aparelho que mostrou este código já saiu. Peça o código que aparece na tela dele agora.",
+  "send.switch_title": "Entrar com o novo código?",
+  "send.switch_body": "Isso encerra a conexão atual.",
   "send.err_signal_lost": "A conexão com o FileHop foi perdida.",
   "send.err_connection_lost": "O outro dispositivo saiu.",
   "send.err_busy": "O FileHop está ocupado. Tente novamente em breve.",
@@ -279,6 +285,7 @@
   "save.err_rate_limited": "Muitos salvamentos. Aguarde um minuto e tente de novo.",
   "save.err_not_signed_in": "Entre novamente para salvar no PixelHop.",
   "save.err_failed": "Não foi possível salvar no PixelHop. O FileHop não guardou nada.",
+  "save.err_unsure": "O PixelHop não respondeu a tempo. O arquivo pode já estar na sua biblioteca do PixelHop: confira lá antes de tentar de novo.",
   "save.err_busy": "O FileHop está ocupado salvando outros arquivos. Tente de novo em instantes.",
   "send.err_handshake_stalled": "Os dois dispositivos se conectaram, mas não concluíram a verificação mútua. Comece de novo."
 }
