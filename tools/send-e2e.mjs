@@ -17,7 +17,7 @@
 // in a row, every Save intact), abandoned (the code of a device that left, an empty room, a new #code in
 // the same tab), slowcreator (no code on screen before its device is in the room).
 import { createHash, randomBytes } from 'node:crypto';
-import { createReadStream, mkdirSync, statSync, writeFileSync, createWriteStream, existsSync } from 'node:fs';
+import { createReadStream, readFileSync, mkdirSync, statSync, writeFileSync, createWriteStream, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
@@ -442,6 +442,100 @@ const scenarios = {
     await p.A.page.setInputFiles('#pick', file);
     const card = await p.B.page.waitForSelector('.offer', { timeout: 15000 }).then(() => true, () => false);
     check('and the next offer is not refused as busy', card);
+    await p.close();
+  },
+
+  async acceptall(b) {
+    // three files picked at once travel as one group: the receiver accepts them with one click
+    const files = [await makeFile('gr-a-2MiB.bin', 2), await makeFile('gr-b-3MiB.bin', 3), await makeFile('gr-c-1MiB.bin', 1)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    await p.B.page.waitForSelector('.offer-accept-all', { timeout: 15000 });
+    const offerText = (await p.B.page.textContent('.offer'))?.replace(/\s+/g, ' ') ?? '';
+    check('the offer says which file of the group it is and what the group holds',
+      /1 \/ 3|1 of 3/.test(offerText) && /3/.test(offerText), offerText.slice(0, 160));
+    await p.B.page.click('.offer-accept-all');
+    await p.B.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=in][data-state=done], .xfer[data-dir=in][data-state=failed]').length >= 3, null, { timeout: 60000 });
+    const results = [];
+    for (const f of files) {
+      const name = f.split(/[\\/]/).pop();
+      const row = await p.B.page.$(`.xfer[data-dir=in] .sname:text-is("${name}")`);
+      const state = row ? await row.evaluate((el) => el.closest('.xfer').getAttribute('data-state')) : null;
+      const label = row ? await row.evaluate((el) => el.closest('.xfer').querySelector('.label')?.textContent ?? '') : '';
+      results.push(`${name}=${state}`);
+      if (!/3/.test(label)) check(`every received row keeps its "File n of 3" label (${name})`, false, label.trim());
+    }
+    check('Accept all: every file of the group arrives done', results.every((r) => r.endsWith('=done')), results.join(' '));
+    await p.close();
+  },
+
+  async cancelqueue(b) {
+    // a queued file is cancelled by its own button, the rest by "Cancel the rest", the running one keeps going
+    const files = [await makeFile('cq-a-64MiB.bin', 64), await makeFile('cq-b-1MiB.bin', 1), await makeFile('cq-c-1MiB.bin', 1), await makeFile('cq-d-1MiB.bin', 1)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    await p.B.page.waitForSelector('.offer-accept', { timeout: 15000 });
+    await p.B.page.click('.offer-accept');
+    await p.A.page.waitForFunction(() => { const e = document.querySelector('.xfer[data-dir=out] progress'); return e && e.value > 2 * 1048576; }, null, { timeout: 60000 });
+    // every queued row has its own Cancel; three are waiting behind the running one
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=queued]').length >= 3, null, { timeout: 15000 });
+    const rows = await p.A.page.$$('.xfer[data-dir=out][data-state=queued] button');
+    check('the sender queue shows every waiting file with its own Cancel', rows.length >= 3, `${rows.length} buttons`);
+    await rows[0].click(); // per-file cancel
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=failed]').length >= 1, null, { timeout: 10000 });
+    const gone = await p.A.page.$('.xfer[data-dir=out][data-state=failed] .result');
+    check('a per-file cancel ends that row as cancelled', ((await gone?.textContent()) ?? '').includes('Cancelled'), ((await gone?.textContent()) ?? '').trim());
+    await p.A.page.click('.xfers button:has-text("Cancel the rest")');
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=failed]').length >= 3, null, { timeout: 10000 });
+    check('"Cancel the rest" ends every queued row', (await p.A.page.$$('.xfer[data-dir=out][data-state=failed]')).length >= 3);
+    await Promise.all([
+      p.A.page.waitForFunction(() => document.querySelector('.xfer[data-dir=out]')?.getAttribute('data-state') === 'done', null, { timeout: 120000 }),
+      p.B.page.waitForFunction(() => document.querySelector('.xfer[data-dir=in]')?.getAttribute('data-state') === 'done', null, { timeout: 120000 }),
+    ]);
+    check('the running file is untouched by both cancels and still arrives', (await state(p.A.page, 'out')) === 'done' && (await state(p.B.page, 'in')) === 'done');
+    check('the receiver only ever saw the one accepted file', (await p.B.page.$$('.xfer[data-dir=in]')).length === 1);
+    await p.close();
+  },
+
+  async saveall(b) {
+    // two received files become one ZIP; every row then says Saved and offers Save again
+    const files = [await makeFile('sa-a-2MiB.bin', 2), await makeFile('sa-b-3MiB.bin', 3)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    for (let i = 0; i < files.length; i++) {
+      await p.B.page.waitForSelector('.offer-accept:not([disabled])', { timeout: 15000 });
+      await p.B.page.click('.offer-accept');
+      await p.B.page.waitForFunction((n) => document.querySelectorAll('.xfer[data-dir=in][data-state=done], .xfer[data-dir=in][data-state=failed]').length >= n, i + 1, { timeout: 60000 });
+    }
+    await p.B.page.waitForSelector('.saveall button', { timeout: 10000 });
+    const [dl] = await Promise.all([p.B.page.waitForEvent('download'), p.B.page.click('.saveall button')]);
+    const dest = join(out, 'saveall.zip');
+    await dl.saveAs(dest);
+    const zip = readFileSync(dest);
+    const names = files.map((f) => f.split(/[\\/]/).pop());
+    check('Save all downloads one ZIP that carries both names', zip[0] === 0x50 && zip[1] === 0x4b && names.every((n) => zip.includes(n)),
+      `${dl.suggestedFilename()} ${zip.length} bytes`);
+    const saved = await p.B.page.$$('.xfer[data-dir=in] .save[disabled]');
+    const again = await p.B.page.$$('.xfer[data-dir=in] .save-again');
+    check('after Save all every row says Saved and offers Save again', saved.length === 2 && again.length === 2, `saved=${saved.length} again=${again.length}`);
+    check('the Save all row is gone once everything is saved', (await p.B.page.$('.saveall button')) === null);
+    await p.close();
+  },
+
+  async declinedall(b) {
+    // "Decline all" refuses this file and every later one of the group; the sender stops its queue
+    const files = [await makeFile('dg-a-2MiB.bin', 2), await makeFile('dg-b-2MiB.bin', 2), await makeFile('dg-c-2MiB.bin', 2)];
+    const p = await pair(b, { store: 'opfs' });
+    await p.A.page.setInputFiles('#pick', files);
+    await p.B.page.waitForSelector('.offer-accept-all', { timeout: 15000 });
+    await p.B.page.click('.offer .tbtn.ghost'); // Decline all
+    await p.A.page.waitForFunction(() => document.querySelectorAll('.xfer[data-dir=out][data-state=failed]').length >= 3, null, { timeout: 30000 });
+    const rows = await p.A.page.$$('.xfer[data-dir=out][data-state=failed]');
+    check('Decline all ends the whole group on the sender', rows.length === 3, `${rows.length} failed rows`);
+    const first = await p.A.page.$('.xfer[data-dir=out][data-state=failed] .result');
+    check('the refused file says the other device declined', ((await first?.textContent()) ?? '').toLowerCase().includes('declined'), ((await first?.textContent()) ?? '').trim());
+    await p.B.page.waitForTimeout(500);
+    check('the receiver got nothing to save and no later offer', (await p.B.page.$$('.xfer')).length === 0 && (await p.B.page.$$('.offer')).length === 0);
     await p.close();
   },
 
