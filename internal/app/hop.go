@@ -28,6 +28,7 @@ func (a *App) hopRoutes(m *http.ServeMux) {
 	m.HandleFunc("GET /hop/manifest", a.hop(a.hopManifest))
 	m.HandleFunc("GET /hop/stats", a.hop(a.hopStats))
 	m.HandleFunc("GET /hop/users/{sub}", a.hop(a.hopUser))
+	m.HandleFunc("POST /hop/users/{sub}/actions", a.hop(a.hopUserAction))
 	m.HandleFunc("POST /hop/events", a.hop(a.hopEvent))
 	m.HandleFunc("/hop/", a.hop(func(w http.ResponseWriter, r *http.Request, _ []byte) {
 		hopFail(w, http.StatusNotFound, "not_found", "no such endpoint")
@@ -126,6 +127,40 @@ func (a *App) hopUser(w http.ResponseWriter, r *http.Request, _ []byte) {
 	}
 	hopOK(w, map[string]any{"sub": u.Sub, "id": u.ID, "name": u.Name, "email": u.Email, "status": u.Status,
 		"created_at": iso(u.CreatedAt), "last_seen_at": iso(u.SeenAt), "content": map[string]int{}})
+}
+
+// hopUserAction runs one of the user actions the manifest lists. Only
+// revoke_sessions exists: it signs the person out of every browser here and
+// changes nothing else. An unknown action or an account that never signed in
+// here is refused without touching anything.
+func (a *App) hopUserAction(w http.ResponseWriter, r *http.Request, body []byte) {
+	var req struct {
+		Action string `json:"action"`
+		Reason string `json:"reason"`
+	}
+	if err := json.Unmarshal(body, &req); err != nil {
+		hopFail(w, http.StatusBadRequest, "bad_request", "the body must be JSON with an action")
+		return
+	}
+	if req.Action != "revoke_sessions" {
+		hopFail(w, http.StatusBadRequest, "unknown_action", "this app has no such action")
+		return
+	}
+	sub := r.PathValue("sub")
+	if _, err := a.db.UserBySub(sub); errors.Is(err, db.ErrNotFound) {
+		hopFail(w, http.StatusNotFound, "not_found", "this account never signed in here")
+		return
+	} else if err != nil {
+		hopServerErr(w, "action", err)
+		return
+	}
+	n, err := a.db.DeleteSessions(sub)
+	if err != nil {
+		hopServerErr(w, "action revoke_sessions", err)
+		return
+	}
+	log.Printf("hop action revoke_sessions sub=%s sessions=%d reason=%q", sub, n, clip(req.Reason, 120))
+	hopOK(w, map[string]any{"revoked": true, "sessions": n})
 }
 
 // ---------- account events from the hub ----------
