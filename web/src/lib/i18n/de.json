@@ -157,6 +157,7 @@
   "footer.licenses": "Lizenzen",
   "footer.source": "Quellcode",
   "footer.changelog": "Änderungsprotokoll",
+  "footer.help": "Hilfe",
   "footer.note": "Selbst gehostet, keine Tracker, keine Skripte Dritter.",
   "licenses.title": "Bibliotheken in diesem Build",
   "licenses.body": "Alle sind hier gebündelt oder eingebunden; nichts wird von einem fremden CDN geladen.",

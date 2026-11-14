@@ -9,6 +9,10 @@
 //	GET  /logout                       chained logout through FileHop's /auth/sso/logout
 //	POST /push?type=...&sub=...         a signed account event to FileHop /hop/events (as "helink")
 //	GET  /imperium/{path...}            a signed GET to FileHop /hop/{path} (as "imperium")
+//	POST /action?sub=...                a signed revoke_sessions action to FileHop /hop/users/{sub}/actions (as "imperium")
+//	GET  /announcements.json            the family announcements: the file named by STUB_ANNOUNCEMENTS, else none
+//
+// STUB_AUTO="sub|name|email" signs that account in without showing the form (for trying the app in a browser).
 //
 // Run (both share one throwaway secret; never a real one):
 //
@@ -124,6 +128,10 @@ func main() {
 			http.Redirect(w, r, q.Get("return_to")+"?"+url.Values{"error": {"login_required"}, "state": {q.Get("state")}}.Encode(), http.StatusFound)
 			return
 		}
+		if f := strings.SplitN(os.Getenv("STUB_AUTO"), "|", 3); len(f) == 3 {
+			issue(w, r, q.Get("return_to"), q.Get("state"), f[0], f[1], f[2], "active")
+			return
+		}
 		page.Execute(w, view{SignIn: true, Client: client, State: q.Get("state"), ReturnTo: q.Get("return_to")})
 	})
 	m.HandleFunc("POST /sso/{client}", func(w http.ResponseWriter, r *http.Request) {
@@ -154,6 +162,22 @@ func main() {
 			"type": r.FormValue("type"), "at": time.Now().UTC().Format(time.RFC3339), "data": data})
 		out := call("helink", "POST", "/hop/events", body)
 		http.Redirect(w, r, "/?out="+url.QueryEscape(r.FormValue("type")+" → "+out), http.StatusSeeOther)
+	})
+	m.HandleFunc("GET /announcements.json", func(w http.ResponseWriter, r *http.Request) {
+		doc := []byte(`{"version":1,"generated_at":"","items":[]}`)
+		if f := os.Getenv("STUB_ANNOUNCEMENTS"); f != "" {
+			if b, err := os.ReadFile(f); err == nil {
+				doc = b
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "public, max-age=300")
+		w.Write(doc)
+	})
+	m.HandleFunc("POST /action", func(w http.ResponseWriter, r *http.Request) {
+		sub := r.URL.Query().Get("sub")
+		out := call("imperium", "POST", "/hop/users/"+url.PathEscape(sub)+"/actions", []byte(`{"action":"revoke_sessions","reason":"stub"}`))
+		http.Redirect(w, r, "/?out="+url.QueryEscape("revoke_sessions "+sub+" → "+out), http.StatusSeeOther)
 	})
 	m.HandleFunc("GET /imperium/{path...}", func(w http.ResponseWriter, r *http.Request) {
 		out := call("imperium", "GET", "/hop/"+r.PathValue("path"), nil)

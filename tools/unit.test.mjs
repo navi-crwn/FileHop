@@ -1003,13 +1003,49 @@ test('for a signed-in person the logo, Convert and the main button of /send lead
   assert.match(src, /\{#if !dash\}<a href="\/dashboard">\{i18n\.t\('dash\.nav'\)\}<\/a>\{\/if\}/);
   assert.doesNotMatch(src, /href=\{dash \? '\/dashboard' : '\/'\}/);
 });
-test('"Part of Hop Easy Link" is the last element of the dashboard sidebar, and the first view has it too', () => {
+/* U-2: the sidebar foot is the same in every HOP app, one item per line in a fixed order, then "Part of Hop Easy Link";
+   FileHop writes it twice (the Svelte app and the first view the server paints on /send), and both must agree. */
+const footItems = (html) => {
+  const start = html.indexOf('<nav class="shell-side-foot"');
+  const nav = html.slice(start, html.indexOf('</nav>', start))
+    .replace(/\{\{href "([^"]*)"\}\}/g, '$1').replace(/\{withLang\('([^']*)'\)\}/g, '$1')
+    .replace(/\{\{t "([^"]*)"\}\}/g, '$1').replace(/\{i18n\.t\('([^']*)'\)\}/g, '$1');
+  return [...nav.matchAll(/<li><a href="?([^"\s>]*)"?[^>]*>([^<]*)<\/a><\/li>/g)].map((m) => [m[1], m[2]]);
+};
+const FOOT = [
+  ['https://hel.ink/help', 'footer.help'],
+  ['https://hel.ink/terms', 'footer.terms'],
+  ['/#privacy', 'footer.privacy'],
+  ['/changelog', 'footer.changelog'],
+  ['https://github.com/navi-crwn/FileHop', 'GitHub'],
+  ['https://hel.ink/announcements', 'announce.title']
+];
+test('the sidebar foot lists Help, Terms, Privacy, Changelog, GitHub, Announcement in that order, in the app and in the first view', () => {
   const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
   const from = src.indexOf('<aside class="shell-side"');
   const side = src.slice(from, src.indexOf('</aside>', from));
-  assert.match(side, /<div class="shell-side-foot">[\s\S]*<\/div>\s*<a class="ft-part" href="https:\/\/hel\.ink"/);
   const fv = readFileSync(new URL('../internal/app/firstview.html.tmpl', import.meta.url), 'utf8');
-  assert.match(fv, /<div class="shell-side-foot">[\s\S]*?<\/div><a class="ft-part" href="https:\/\/hel\.ink"[\s\S]*?<\/aside>/);
+  const fvSide = fv.slice(fv.indexOf('{{define "send"}}'));
+  assert.deepEqual(footItems(side), FOOT);
+  assert.deepEqual(footItems(fvSide), FOOT);
+  // nothing else in the foot: Source and Licenses live in the public footer
+  assert.doesNotMatch(side, /shell-side-foot[\s\S]*ft-link[\s\S]*<\/aside>/);
+  assert.doesNotMatch(fvSide, /shell-side-foot[\s\S]*ft-link[\s\S]*<\/aside>/);
+});
+test('"Part of Hop Easy Link" comes right after the foot, as the last element of the dashboard sidebar, and the first view has it too', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const from = src.indexOf('<aside class="shell-side"');
+  const side = src.slice(from, src.indexOf('</aside>', from));
+  assert.match(side, /<\/nav>\s*<a class="ft-part" href="https:\/\/hel\.ink"[\s\S]*<\/a>\s*$/);
+  assert.ok(side.indexOf('shell-side-foot') < side.indexOf('ft-part'));
+  const fv = readFileSync(new URL('../internal/app/firstview.html.tmpl', import.meta.url), 'utf8');
+  assert.match(fv, /<nav class="shell-side-foot"[\s\S]*?<\/nav><a class="ft-part" href="https:\/\/hel\.ink"[\s\S]*?<\/aside>/);
+});
+test('every language has the new Help word and the announcement label', () => {
+  for (const f of readdirSync(new URL('../web/src/lib/i18n/', import.meta.url)).filter((n) => n.endsWith('.json'))) {
+    const d = JSON.parse(readFileSync(new URL(`../web/src/lib/i18n/${f}`, import.meta.url), 'utf8'));
+    for (const k of ['footer.help', 'announce.title']) assert.ok(typeof d[k] === 'string' && d[k].trim(), `${f} lacks ${k}`);
+  }
 });
 
 test('the sign-in link of the top bar is shortened on a phone so a long word cannot push the bar past the screen', () => {

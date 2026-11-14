@@ -695,12 +695,16 @@
         <a href={familyHref(app)} rel="noopener"><img src={app.mark} alt="" width="18" height="18" />{app.name}</a>
       {/each}
     </nav>
-    <div class="shell-side-foot">
-      <a href="/#privacy">{i18n.t('footer.privacy')}</a>
-      <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
-      <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
-      <button class="ft-link" type="button" onclick={() => (licensesOpen = true)}>{i18n.t('footer.licenses')}</button>
-    </div>
+    <nav class="shell-side-foot" aria-label={i18n.t('footer.support')}>
+      <ul>
+        <li><a href="https://hel.ink/help" rel="noopener">{i18n.t('footer.help')}</a></li>
+        <li><a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a></li>
+        <li><a href="/#privacy">{i18n.t('footer.privacy')}</a></li>
+        <li><a href={withLang('/changelog')}>{i18n.t('footer.changelog')}</a></li>
+        <li><a href="https://github.com/navi-crwn/FileHop" rel="noopener">GitHub</a></li>
+        <li><a href="https://hel.ink/announcements" rel="noopener">{i18n.t('announce.title')}</a></li>
+      </ul>
+    </nav>
     <a class="ft-part" href="https://hel.ink" rel="noopener">
       <img src="/hop-id-mark.png" alt="" width="20" height="20" />
       <span>{#each i18n.t('footer.part_of').split('{name}') as part, i}{#if i > 0}<b>Hop Easy Link</b>{/if}{part}{/each}</span>

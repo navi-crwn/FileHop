@@ -157,6 +157,7 @@
   "footer.licenses": "Licences",
   "footer.source": "Code source",
   "footer.changelog": "Journal des modifications",
+  "footer.help": "Aide",
   "footer.note": "Auto-hébergé, sans traceur, sans script tiers.",
   "licenses.title": "Bibliothèques de cette version",
   "licenses.body": "Toutes sont embarquées ici ; rien n'est chargé depuis un CDN tiers.",

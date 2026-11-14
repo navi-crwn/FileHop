@@ -849,9 +849,12 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 .shell-nav a[aria-current="page"] { background: var(--panel-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
 .shell-nav a[aria-current="page"] svg { color: var(--amber-soft); }
 .shell-label { margin: 14px 12px 6px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
-.shell-side-foot { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: auto 0 0; padding: 12px 12px 4px; border-top: 1px solid var(--line-2); font-size: 12.5px; }
-.shell-side-foot a, .shell-side-foot .ft-link { color: var(--muted); font-size: 12.5px; text-decoration: none; }
-.shell-side-foot a:hover, .shell-side-foot .ft-link:hover { color: var(--text); }
+/* The foot of the sidebar, the same in every HOP app: Help, Terms, Privacy, Changelog, GitHub, Announcement, one per line,
+   small and muted, then "Part of Hop Easy Link". The whole sidebar scrolls, so on a phone the foot scrolls with the menu. */
+.shell-side-foot { margin: auto 0 0; padding: 10px 0 0; border-top: 1px solid var(--line-2); }
+.shell-side-foot ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.shell-side-foot a { display: flex; align-items: center; height: 30px; padding: 0 12px; color: var(--muted); font-size: 13px; font-weight: 400; text-decoration: none; }
+.shell-side-foot a:hover { color: var(--text); }
 .shell-body { margin-inline-start: var(--side); min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }
 .shell-top { top: 12px; margin: 12px 12px 0; padding: 0 10px; height: 56px; border: 1px solid var(--line-2); border-radius: 18px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
 .shell-burger { display: none; }

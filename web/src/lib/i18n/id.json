@@ -157,6 +157,7 @@
   "footer.licenses": "Lisensi",
   "footer.source": "Sumber",
   "footer.changelog": "Catatan perubahan",
+  "footer.help": "Bantuan",
   "footer.note": "Di-host sendiri, tanpa pelacak, tanpa skrip pihak ketiga.",
   "licenses.title": "Pustaka di build ini",
   "licenses.body": "Semuanya dibundel atau di-vendor di sini; tidak ada yang dimuat dari CDN pihak ketiga.",

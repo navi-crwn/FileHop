@@ -8,7 +8,9 @@ This app is standalone on purpose. It already has the shape the family needs, so
 |---|---|
 | App moved to `web/`, Go server embeds `web/dist` | done (`cmd/filehop`, `internal/app`, `web/embed.go`) |
 | Headers (COOP/COEP/CORP, CSP) from the Go handler | done, identical to section 3 except `connect-src 'self'` (no fetch to the hub is needed) |
-| `/healthz`, `/hop/health`, `manifest`, `stats`, `users/{sub}`, `events` | done, signed with HOP App Protocol v1 |
+| `/healthz`, `/hop/health`, `manifest`, `stats`, `users/{sub}`, `users/{sub}/actions` (`revoke_sessions`), `events` | done, signed with HOP App Protocol v1 |
+| Family announcement card | done; the Go server reads `{hub}/announcements.json?app=filehop` (2 s limit, kept 5 minutes, never blocks a page) and gives the items to signed-in browsers in `/api/v1/me`; the browser never asks the hub, so the CSP is unchanged |
+| Language addresses | done; `?lang=<code>` per public page with canonical and hreflang, `sitemap.xml` written by the server |
 | HOP ID sign-in, chained logout, account events | done; tested against `tools/hubstub`, not yet against the real hub |
 | nginx vhost, systemd unit, env, installer | done in `deploy/`; see `docs/DEPLOY.md` |
 | Three engines, `crossOriginIsolated` | Chromium, WebKit (Playwright), Firefox: 22/22 each; real Safari not yet |
