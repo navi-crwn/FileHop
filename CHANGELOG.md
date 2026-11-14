@@ -11,9 +11,13 @@ What changed in FileHop, written for the people who use it. The format follows [
 - **Dashboard, sidebar.** The line "Part of Hop Easy Link" now sits at the bottom of the sidebar on the dashboard and on the Send page, as in the other HOP apps. Reason: the dashboard had no such line, and it belongs with the family list.
 - **Dashboard, announcements.** A notice card can appear at the top of the dashboard. You can close it and it stays away for seven days. Nothing is shown, and no space is kept, while there is no announcement. Reason: every HOP dashboard should have a place for announcements.
 
+### Fixed
+
+- **Home page, top bar on phones.** In French and Spanish on a 375 px wide phone the Sign in button pushed the page sideways. A long sign-in word is now shortened on phones. Reason: the page could be dragged sideways and the button was cut off.
+
 ### Changed
 
-- **Send, changelog and the home page for signed-in people.** The logo, the Convert link, the main button, the Back link and the privacy link now lead to your dashboard when you are signed in, and to the home page when you are not. The account menu on the home page has a Dashboard entry. Reason: people who opened Send from the dashboard were taken to the public home page and had no way back.
+- **Send, changelog and the home page for signed-in people.** The logo, the Convert link, the main button, and the Back link now lead to your dashboard when you are signed in, and to the home page when you are not. The account menu on the home page has a Dashboard entry. Reason: people who opened Send from the dashboard were taken to the public home page and had no way back.
 - **Changelog page.** The page now shows one card per release with what changed, where, what it means for you and why, instead of a list of pull request titles. The text of the entries is in English; the page labels are in all nine languages. Reason: the old list was hard to read and showed internal wording.
 - **Changelog history.** Every earlier release was rewritten in the same plain form, and the page is up to date again (it had stopped at an older release).
 

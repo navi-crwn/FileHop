@@ -26,9 +26,14 @@
           "text": "A notice card can appear at the top of the dashboard. You can close it and it stays away for seven days. Nothing is shown, and no space is kept, while there is no announcement. Reason: every HOP dashboard should have a place for announcements."
         },
         {
+          "type": "fixed",
+          "where": "Home page, top bar on phones",
+          "text": "In French and Spanish on a 375 px wide phone the Sign in button pushed the page sideways. A long sign-in word is now shortened on phones. Reason: the page could be dragged sideways and the button was cut off."
+        },
+        {
           "type": "changed",
           "where": "Send, changelog and the home page for signed-in people",
-          "text": "The logo, the Convert link, the main button, the Back link and the privacy link now lead to your dashboard when you are signed in, and to the home page when you are not. The account menu on the home page has a Dashboard entry. Reason: people who opened Send from the dashboard were taken to the public home page and had no way back."
+          "text": "The logo, the Convert link, the main button, and the Back link now lead to your dashboard when you are signed in, and to the home page when you are not. The account menu on the home page has a Dashboard entry. Reason: people who opened Send from the dashboard were taken to the public home page and had no way back."
         },
         {
           "type": "changed",
