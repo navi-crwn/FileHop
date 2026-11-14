@@ -4,7 +4,7 @@
   import JobCard from './lib/components/JobCard.svelte';
   import FormatRing from './lib/components/FormatRing.svelte';
   import SettingsDrawer from './lib/components/SettingsDrawer.svelte';
-  import { i18n, guessLocale, chooseLocale, actionLabel, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
+  import { i18n, guessLocale, chooseLocale, withLang, actionLabel, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
   import { getPref, setPref } from './lib/util/prefs';
   import { Queue } from './lib/store/queue.svelte';
   import { Pool, hardwareSlots } from './lib/core/pool';
@@ -686,8 +686,8 @@
     </a>
     <nav class="shell-nav" aria-label="FileHop">
       <a href={home} aria-current={dash ? 'page' : undefined}><Icon name="refresh" size={18} />{i18n.t('dash.convert')}</a>
-      <a href="/send" aria-current={sendPage ? 'page' : undefined}><Icon name="upload" size={18} />{i18n.t('send.nav')}</a>
-      <a href="/changelog"><Icon name="text" size={18} />{i18n.t('footer.changelog')}</a>
+      <a href={withLang('/send')} aria-current={sendPage ? 'page' : undefined}><Icon name="upload" size={18} />{i18n.t('send.nav')}</a>
+      <a href={withLang('/changelog')}><Icon name="text" size={18} />{i18n.t('footer.changelog')}</a>
     </nav>
     <p class="shell-label">{i18n.t('footer.family')}</p>
     <nav class="shell-nav" aria-label={i18n.t('footer.family')}>
@@ -732,7 +732,7 @@
           <section class="dash-card" aria-labelledby="sendcard-h">
             <h2 id="sendcard-h">{i18n.t('dash.send_card_h')}</h2>
             <p class="acc-note">{i18n.t('dash.send_card_p')}</p>
-            <a class="tbtn" href="/send"><Icon name="upload" size={17} />{i18n.t('dash.send_card_cta')}</a>
+            <a class="tbtn" href={withLang('/send')}><Icon name="upload" size={17} />{i18n.t('dash.send_card_cta')}</a>
           </section>
           <section class="dash-card" aria-labelledby="acc-h">
             <h2 id="acc-h">{i18n.t('dash.account')}</h2>
@@ -764,7 +764,7 @@
 
     <span class="spacer"></span>
 
-    <a class="tbtn topnav-send" href="/send"><Icon name="upload" size={17} /><span class="tlabel">{i18n.t('send.nav')}</span></a>
+    <a class="tbtn topnav-send" href={withLang('/send')}><Icon name="upload" size={17} /><span class="tlabel">{i18n.t('send.nav')}</span></a>
 
     {@render tools()}
   </header>
@@ -780,7 +780,7 @@
             <button class="tbtn secondary lg" type="button" onclick={pickFiles}>
               <Icon name="upload" size={17} />{i18n.t('hero.cta')}
             </button>
-            <a class="tbtn lg" href="/send">
+            <a class="tbtn lg" href={withLang('/send')}>
               <Icon name="upload" size={17} />{i18n.t('home.send_cta')}
             </a>
             <button class="tbtn ghost" type="button" onclick={() => (settingsOpen = true)}>
@@ -815,7 +815,7 @@
               <li>{i18n.t('home.two_send_s2')}</li>
               <li>{i18n.t('home.two_send_s3')}</li>
             </ol>
-            <a class="tbtn secondary" href="/send">{i18n.t('home.two_send_cta')}<Icon name="arrow" size={16} /></a>
+            <a class="tbtn secondary" href={withLang('/send')}>{i18n.t('home.two_send_cta')}<Icon name="arrow" size={16} /></a>
           </article>
         </div>
       </section>
@@ -881,8 +881,8 @@
           <div class="ft-col">
             <h2 class="ft-h">{i18n.t('footer.support')}</h2>
             <nav aria-label={i18n.t('footer.support')}>
-              <a href="/send">{i18n.t('send.footer_link')}</a>
-              <a href="/changelog">{i18n.t('footer.changelog')}</a>
+              <a href={withLang('/send')}>{i18n.t('send.footer_link')}</a>
+              <a href={withLang('/changelog')}>{i18n.t('footer.changelog')}</a>
               <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
               <button class="ft-link" type="button" data-settings onclick={() => (settingsOpen = true)}>{i18n.t('nav.settings')}</button>
             </nav>

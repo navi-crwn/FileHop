@@ -725,7 +725,7 @@ test('the top bar has no app grid; the family list lives in the footer', () => {
   const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
   assert.ok(!/class="apps/.test(src) && !/SWITCHER/.test(src));
   assert.match(src, /\{#each FAMILY as app/);
-  assert.match(src, /href="\/changelog"/);
+  assert.match(src, /href=\{withLang\('\/changelog'\)\}/); // the link keeps the language of a per-language address
 });
 
 test('the changelog scripts list FileHop and the snapshot is FileHop only', () => {
@@ -861,11 +861,11 @@ test('every string the dashboard adds exists in all locales', () => {
   }
 });
 
-/* K-7: the sitemap lists the public pages only and robots.txt points to it. */
-test('sitemap.xml lists public pages only and robots.txt has the Sitemap line', () => {
+/* K-7: robots.txt points at the sitemap. The sitemap itself is written by the Go server (one entry per public page,
+   with the nine language alternates and x-default; internal/app/lang_test.go), so no static copy may linger. */
+test('robots.txt has the Sitemap line, and there is no static sitemap.xml left to go stale', () => {
   const pub = (f) => readFileSync(new URL(`../web/public/${f}`, import.meta.url), 'utf8');
-  const urls = [...pub('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.deepEqual(urls, ['https://file.hel.ink/', 'https://file.hel.ink/send', 'https://file.hel.ink/changelog']);
+  assert.equal(existsSync(new URL('../web/public/sitemap.xml', import.meta.url)), false);
   assert.match(pub('robots.txt'), /^Sitemap: https:\/\/file\.hel\.ink\/sitemap\.xml$/m);
   assert.match(pub('robots.txt'), /^Disallow: \/dashboard$/m);
 });

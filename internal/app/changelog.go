@@ -205,7 +205,13 @@ type changePage struct {
 	PageLabel         string
 	Previous, Next    string
 	Langs             []changeLink
+	Canonical         string         // this page's own address (the bare one for English or no ?lang=)
+	Hreflang          []hreflangLink // the nine alternates and x-default
+	Home              template.URL   // "/" that keeps a per-language address's language
 }
+
+// changeOrigin is the site address the changelog states, as index.html does for the other pages.
+const changeOrigin = "https://file.hel.ink"
 
 func changeURL(lang string, page int) string {
 	q := url.Values{}
@@ -228,6 +234,13 @@ func buildChangePage(r *http.Request) changePage {
 	p.PartPre, p.PartPost, _ = strings.Cut(p.T["footer.part_of"], "{name}")
 	p.Family = changeFamily
 	p.PageLabel = fmt.Sprintf(s.PageOf, page, pages)
+	explicit := explicitLang(r)
+	p.Canonical = changeOrigin + "/changelog"
+	if explicit {
+		p.Canonical = langAddress(changeOrigin, "/changelog", lang)
+	}
+	p.Hreflang = hreflangLinks(changeOrigin, "/changelog")
+	p.Home = template.URL("/" + langQuery(lang, explicit))
 	kinds := map[string]string{"tag": s.Release, "pr": s.PR, "commit": s.Commit}
 	for _, e := range all[(page-1)*changelogPerPage : min(page*changelogPerPage, len(all))] {
 		date := e.Date

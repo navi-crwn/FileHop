@@ -88,9 +88,7 @@ func TestPublicPagesAreReadableWithoutScripts(t *testing.T) {
 			t.Errorf("%s: title %q is also the title of %s", path, title, other)
 		}
 		titles[title] = path
-		if strings.Contains(body, "hreflang") {
-			t.Errorf("%s: hreflang without one address per language", path)
-		}
+		checkAlternates(t, path, body)
 	}
 	for _, p := range publicPages {
 		_, body := fetchPage(t, srv.URL+p.Path)
@@ -273,9 +271,15 @@ func TestPrivateAndUnknownRoutesAreNotIndexed(t *testing.T) {
 }
 
 func TestSitemapListsEveryPublicPageAndNothingElse(t *testing.T) {
-	b, err := fs.ReadFile(web.Dist(), "sitemap.xml")
+	srv := builtApp(t)
+	res, err := http.Get(srv.URL + "/sitemap.xml")
 	if err != nil {
 		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	b, _ := io.ReadAll(res.Body)
+	if res.StatusCode != 200 || !strings.HasPrefix(res.Header.Get("Content-Type"), "application/xml") {
+		t.Fatalf("sitemap.xml: %d %s", res.StatusCode, res.Header.Get("Content-Type"))
 	}
 	var got, want []string
 	for _, m := range regexp.MustCompile(`<loc>([^<]+)</loc>`).FindAllStringSubmatch(string(b), -1) {
@@ -301,8 +305,8 @@ func TestSitemapListsEveryPublicPageAndNothingElse(t *testing.T) {
 }
 
 // KONTRAK-SEO-BAHASA, FileHop: a page written in the visitor's language is in that one language from
-// <head> to body, varies on Cookie and Accept-Language, is private to the visitor, keeps the bare
-// canonical and has no hreflang. Checked with Accept-Language: ru and no cookie, on every public page.
+// <head> to body, varies on Cookie and Accept-Language, is private to the visitor and, asked without
+// ?lang=, keeps the bare canonical (with the ten alternates). Checked with Accept-Language: ru and no cookie, on every public page.
 func TestFirstViewIsInOneLanguageAndNeverShared(t *testing.T) {
 	srv := builtApp(t)
 	ru, en := appStrings("ru"), appStrings("en")
@@ -342,9 +346,7 @@ func TestFirstViewIsInOneLanguageAndNeverShared(t *testing.T) {
 				t.Errorf("%s: English %q left in a Russian page", p.Path, k)
 			}
 		}
-		if strings.Contains(body, "hreflang") {
-			t.Errorf("%s: hreflang", p.Path)
-		}
+		checkAlternates(t, p.Path, body)
 		if v := res.Header.Get("Vary"); !strings.Contains(v, "Cookie") || !strings.Contains(v, "Accept-Language") {
 			t.Errorf("%s: Vary %q", p.Path, v)
 		}
