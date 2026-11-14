@@ -13,6 +13,7 @@ What changed in FileHop, written for the people who use it. The format follows [
 
 ### Changed
 
+- **Dashboard, colours.** The bottom of the sidebar now has three colour choices, Classic, Mist and Sand, with the names in all nine languages. Mist and Sand recolour the accent and the soft background of the dashboard; Classic is the look you know. Your choice is remembered and shared with the other HOP apps that offer it; the public pages keep the classic look. Reason: one colour choice for the whole HOP family.
 - **Dashboard, announcements.** The notice card now shows the announcements written once on HOP ID for all HOP apps, instead of a list kept inside FileHop. Only signed-in people see it, one notice at a time. You can close a notice and it stays away for seven days; an urgent notice cannot be closed. The text is shown in the language it was written in. If HOP ID cannot be reached nothing is shown and the dashboard is not slowed down. Reason: one place to write an announcement for every HOP app.
 - **Dashboard and Send, sidebar.** The foot of the sidebar now lists Help, Terms, Privacy, Changelog, GitHub and Announcement, one under the other, followed by "Part of Hop Easy Link", the same as in the other HOP apps. Source and Licenses stay in the footer of the home page. Reason: every HOP dashboard should end in the same way, with the same words in every language.
 

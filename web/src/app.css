@@ -207,7 +207,7 @@ body.modal-open { overflow: hidden; }
 .mini, .chip { height: var(--hop-ctl-h-sm); padding: 0 12px; gap: 6px; font-size: 13px; }
 .tbtn.icon { width: var(--hop-ctl-h); padding: 0; }
 .mini.icon { width: var(--hop-ctl-h-sm); padding: 0; }
-.tbtn.primary, .mini.primary { background: var(--hop-accent); border-color: transparent; color: #fff; }
+.tbtn.primary, .mini.primary { background: var(--hop-accent); border-color: transparent; color: var(--pal-fg, #fff); }
 .tbtn.primary:hover, .mini.primary:hover { background: var(--hop-accent-hover); }
 .tbtn.secondary, .mini.secondary { background: var(--hop-fill); border-color: transparent; }
 .tbtn.secondary:hover, .mini.secondary:hover { background: var(--hop-fill-hover); }
@@ -642,7 +642,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 .acct > summary::-webkit-details-marker { display: none; }
 .acct .avatar {
   display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
-  background: var(--amber); color: #1c1917; font: 600 11px/1 'JetBrains Mono', ui-monospace, monospace;
+  background: var(--amber); color: var(--pal-fg, #1c1917); font: 600 11px/1 'JetBrains Mono', ui-monospace, monospace;
 }
 .acct-name { max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .acct-menu {
@@ -914,3 +914,43 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 
 /* On a phone the sign-in word ("Se connecter", "Iniciar sesión") must not push the top bar past the screen. */
 @media (max-width: 640px) { .tbtn.signin { max-width: 6.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; line-height: var(--hop-ctl-h); } }
+
+/* ---------- family colour palettes (dashboard only; theme.js sets data-palette from the hop_palette cookie) ----------
+   Classic = no attribute = the amber look above. Mist and Sand are the same in every HOP app: an accent and soft surfaces
+   (text and status colours do not change). FileHop's accent is --amber / --amber-soft / --hop-accent, so they are mapped here;
+   light-dark() picks by the colour-scheme the theme already sets. */
+:root[data-palette="mist"] {
+  --amber: light-dark(#3f4fc4, #9aaeff); --amber-soft: light-dark(#4f5bd5, #b4c2ff);
+  --accent: var(--amber); --on-accent: light-dark(#ffffff, #0a1022); --pal-fg: var(--on-accent);
+  --hop-accent: light-dark(#4f5bd5, #9aaeff); --hop-accent-hover: light-dark(#3f4fc4, #b4c2ff);
+  --violet: light-dark(#4f5bd5, #9aaeff); --cyan: light-dark(#2f74b8, #86c8f3);
+  --grad: linear-gradient(115deg, light-dark(#4f5bd5, #9aaeff), light-dark(#2f74b8, #86c8f3));
+  --bg: light-dark(#f4f6fc, #0d1120); --bg-2: light-dark(#eef1fa, #1a2138); --panel: light-dark(#ffffff, #141a2e); --panel-2: light-dark(#eef1fa, #1a2138);
+  --line: light-dark(#dde2f1, #262e4a); --line-2: color-mix(in srgb, var(--line) 80%, var(--text) 20%);
+}
+:root[data-palette="sand"] {
+  --amber: light-dark(#a8481f, #f3b48c); --amber-soft: light-dark(#b4532a, #f3b8c4);
+  --accent: var(--amber); --on-accent: light-dark(#ffffff, #1b0f0a); --pal-fg: var(--on-accent);
+  --hop-accent: light-dark(#b4532a, #f3b48c); --hop-accent-hover: light-dark(#a8481f, #f8c9a8);
+  --violet: light-dark(#b4532a, #f3b48c); --cyan: light-dark(#a2406f, #ea9fb0);
+  --grad: linear-gradient(115deg, light-dark(#b4532a, #f3b48c), light-dark(#a2406f, #ea9fb0));
+  --bg: light-dark(#faf6f1, #17110d); --bg-2: light-dark(#f5eee6, #271f19); --panel: light-dark(#ffffff, #1f1814); --panel-2: light-dark(#f5eee6, #271f19);
+  --line: light-dark(#ece2d6, #3a2e25); --line-2: color-mix(in srgb, var(--line) 80%, var(--text) 20%);
+}
+/* a change of palette happens at once, without any transition */
+:root.pal-swap *, :root.pal-swap *::before, :root.pal-swap *::after { transition: none !important; }
+
+/* the palette picker at the foot of the dashboard sidebar, above the foot list */
+.shell-pal { padding: 6px 12px 10px; margin-top: auto; }
+.shell-pal + .shell-side-foot { margin-top: 0; }
+.shell-pal .shell-label { margin: 8px 0 6px; padding: 0; }
+.pal-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pal-row button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 52px; padding: 6px 4px; border: 1px solid var(--line-2); border-radius: 10px; background: transparent; color: var(--muted); font: inherit; font-size: 11.5px; cursor: pointer; }
+.pal-row button:hover { color: var(--text); background: var(--panel-2); }
+.pal-row button[aria-pressed="true"] { color: var(--text); border-color: var(--amber); box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 30%, transparent); }
+.pal-row button:focus-visible { outline: 2px solid var(--amber-soft); outline-offset: 2px; }
+.pal-row i { width: 18px; height: 18px; border-radius: 50%; flex: none; }
+.pal-row span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sw-classic { background: linear-gradient(135deg, #f59e0b, #fb923c); }
+.sw-mist { background: linear-gradient(135deg, #4f5bd5, #86c8f3); }
+.sw-sand { background: linear-gradient(135deg, #b4532a, #a2406f); }

@@ -27,6 +27,11 @@
         },
         {
           "type": "changed",
+          "where": "Dashboard, colours",
+          "text": "The bottom of the sidebar now has three colour choices, Classic, Mist and Sand, with the names in all nine languages. Mist and Sand recolour the accent and the soft background of the dashboard; Classic is the look you know. Your choice is remembered and shared with the other HOP apps that offer it; the public pages keep the classic look. Reason: one colour choice for the whole HOP family."
+        },
+        {
+          "type": "changed",
           "where": "Dashboard, announcements",
           "text": "The notice card now shows the announcements written once on HOP ID for all HOP apps, instead of a list kept inside FileHop. Only signed-in people see it, one notice at a time. You can close a notice and it stays away for seven days; an urgent notice cannot be closed. The text is shown in the language it was written in. If HOP ID cannot be reached nothing is shown and the dashboard is not slowed down. Reason: one place to write an announcement for every HOP app."
         },

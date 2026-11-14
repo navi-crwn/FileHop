@@ -931,6 +931,41 @@ test('theme.js reads hop_theme first, moves the old key into it once, and leaves
 
 
 
+/* U-3: the family palette (hop_palette) is applied by theme.js before paint, on the dashboard only; the cookie is written like hop_theme. */
+test('theme.js sets data-palette from hop_palette on the dashboard only, and anything but mist/sand is classic (no attribute)', async () => {
+  const { runInNewContext } = await import('node:vm');
+  const src = readFileSync(new URL('../web/public/theme.js', import.meta.url), 'utf8');
+  const pal = (cookie, path) => {
+    const document = { documentElement: { dataset: {} } };
+    Object.defineProperty(document, 'cookie', { get: () => cookie, set: () => {} });
+    runInNewContext(src, { document, location: { hostname: 'localhost', pathname: path }, localStorage: { getItem: () => null } });
+    return document.documentElement.dataset.palette;
+  };
+  assert.equal(pal('hop_palette=mist', '/dashboard'), 'mist');
+  assert.equal(pal('hop_theme=dark; hop_palette=sand', '/dashboard'), 'sand');
+  for (const junk of ['classic', 'neon', '', 'MIST', 'mist%20', '<x>']) assert.equal(pal('hop_palette=' + junk, '/dashboard'), undefined, junk);
+  assert.equal(pal('', '/dashboard'), undefined);
+  for (const path of ['/', '/send', '/changelog', '/dashboardx']) assert.equal(pal('hop_palette=mist', path), undefined, 'public page ' + path);
+});
+test('the palette picker is in the dashboard sidebar only, above the foot, writes hop_palette, and has no transition on a switch', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const side = src.slice(src.indexOf('<aside class="shell-side"'), src.indexOf('</aside>'));
+  assert.match(side, /\{#if dash\}\s*<div class="shell-pal"[\s\S]*?\{\/if\}\s*<nav class="shell-side-foot"/);
+  assert.match(src, /setPref\('hop_palette', v\)/);
+  const css = readFileSync(new URL('../web/src/app.css', import.meta.url), 'utf8');
+  assert.match(css, /:root\.pal-swap \*,[\s\S]*transition: none !important/);
+  for (const f of readdirSync(new URL('../web/src/lib/i18n/', import.meta.url)).filter((n) => n.endsWith('.json'))) {
+    const d = JSON.parse(readFileSync(new URL(`../web/src/lib/i18n/${f}`, import.meta.url), 'utf8'));
+    for (const k of ['palette.label', 'palette.classic', 'palette.mist', 'palette.sand']) assert.ok(typeof d[k] === 'string' && d[k].trim(), `${f} lacks ${k}`);
+  }
+});
+test('the frozen Mist and Sand values are in the stylesheet and Classic has no rule', () => {
+  const css = readFileSync(new URL('../web/src/app.css', import.meta.url), 'utf8');
+  for (const v of ['#f4f6fc, #0d1120', '#ffffff, #141a2e', '#eef1fa, #1a2138', '#dde2f1, #262e4a', '#faf6f1, #17110d', '#ffffff, #1f1814', '#f5eee6, #271f19', '#ece2d6, #3a2e25']) assert.ok(css.includes(v), v);
+  assert.doesNotMatch(css, /data-palette="classic"/);
+  assert.doesNotMatch(css, /palette-depth|hop_palette_depth/);
+});
+
 /* The family notice card of the dashboard: the items come from the hub through /api/v1/me, nothing is kept in the code;
    closing hides a notice for seven days (key ann-<id>); a critical one cannot be closed; text is drawn as plain text. */
 const { default: Announcement } = await import('file://' + join(dir, 'Announcement.mjs').replace(/\\/g, '/'));

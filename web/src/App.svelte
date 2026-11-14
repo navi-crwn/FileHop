@@ -148,6 +148,19 @@
     return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
 
+  /* The family colour palette: classic | mist | sand, in the hop_palette cookie (theme.js applies it before paint). */
+  let palette = $state<'classic' | 'mist' | 'sand'>(
+    document.documentElement.dataset.palette === 'mist' ? 'mist' : document.documentElement.dataset.palette === 'sand' ? 'sand' : 'classic'
+  );
+  function pickPalette(v: 'classic' | 'mist' | 'sand') {
+    const root = document.documentElement;
+    root.classList.add('pal-swap');
+    if (v === 'classic') delete root.dataset.palette; else root.dataset.palette = v;
+    palette = v;
+    setPref('hop_palette', v); // classic is written too, so a choice made elsewhere is overridden
+    setTimeout(() => root.classList.remove('pal-swap'), 80);
+  }
+
   function toggleTheme() {
     theme = theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = theme;
@@ -695,6 +708,16 @@
         <a href={familyHref(app)} rel="noopener"><img src={app.mark} alt="" width="18" height="18" />{app.name}</a>
       {/each}
     </nav>
+    {#if dash}
+      <div class="shell-pal" role="group" aria-label={i18n.t('palette.label')}>
+        <p class="shell-label">{i18n.t('palette.label')}</p>
+        <div class="pal-row">
+          {#each ['classic', 'mist', 'sand'] as const as v (v)}
+            <button type="button" aria-pressed={palette === v} onclick={() => pickPalette(v)}><i class="sw-{v}"></i><span>{i18n.t('palette.' + v)}</span></button>
+          {/each}
+        </div>
+      </div>
+    {/if}
     <nav class="shell-side-foot" aria-label={i18n.t('footer.support')}>
       <ul>
         <li><a href="https://hel.ink/help" rel="noopener">{i18n.t('footer.help')}</a></li>
