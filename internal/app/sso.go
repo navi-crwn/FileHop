@@ -266,6 +266,9 @@ func (a *App) apiMe(w http.ResponseWriter, r *http.Request) {
 		out["signed_in"] = true
 		out["name"] = u.Name
 		out["email"] = u.Email
+		if items := a.ann.Items(); len(items) > 0 {
+			out["announcements"] = items
+		}
 		if a.pixelEnabled() {
 			out["pixelhop"] = map[string]any{"url": a.cfg.PixelHopURL, "max": a.pixelMax()}
 		}

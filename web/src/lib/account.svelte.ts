@@ -5,6 +5,8 @@
    answer with the HTML shell instead, which is read as "sign-in not set up" and
    hides the control, so the standalone build keeps working unchanged. */
 
+import { parseAnnouncements, type Announcement } from './announcements';
+
 export interface Account {
   ready: boolean;
   sso: boolean;
@@ -16,6 +18,8 @@ export interface Account {
   logoutUrl: string;
   /** "Save to PixelHop" is available: PixelHop's address and the largest file it takes; null when off */
   pixelhop: { url: string; max: number } | null;
+  /** the family notices the hub has live for this app (a member only); empty means no card */
+  announcements: Announcement[];
 }
 
 export const account: Account = $state({
@@ -27,7 +31,8 @@ export const account: Account = $state({
   email: '',
   hubUrl: '',
   logoutUrl: '',
-  pixelhop: null
+  pixelhop: null,
+  announcements: []
 });
 
 export async function loadAccount(): Promise<void> {
@@ -42,6 +47,7 @@ export async function loadAccount(): Promise<void> {
     account.email = typeof me.email === 'string' ? me.email : '';
     account.hubUrl = typeof me.hub_url === 'string' ? me.hub_url : '';
     account.logoutUrl = typeof me.logout_url === 'string' ? me.logout_url : '';
+    account.announcements = account.signedIn ? parseAnnouncements(me.announcements) : [];
     const px = me.pixelhop;
     account.pixelhop = account.signedIn && px && typeof px.url === 'string' && typeof px.max === 'number' ? { url: px.url, max: px.max } : null;
   } catch {

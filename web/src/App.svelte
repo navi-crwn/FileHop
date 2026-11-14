@@ -4,7 +4,7 @@
   import JobCard from './lib/components/JobCard.svelte';
   import FormatRing from './lib/components/FormatRing.svelte';
   import SettingsDrawer from './lib/components/SettingsDrawer.svelte';
-  import { i18n, guessLocale, chooseLocale, actionLabel, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
+  import { i18n, guessLocale, chooseLocale, withLang, actionLabel, LOCALES, LOCALE_NAMES } from './lib/i18n/index.svelte';
   import { getPref, setPref } from './lib/util/prefs';
   import { Queue } from './lib/store/queue.svelte';
   import { Pool, hardwareSlots } from './lib/core/pool';
@@ -146,6 +146,19 @@
       } catch { /* ignore */ }
     }
     return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  /* The family colour palette: classic | mist | sand, in the hop_palette cookie (theme.js applies it before paint). */
+  let palette = $state<'classic' | 'mist' | 'sand'>(
+    document.documentElement.dataset.palette === 'mist' ? 'mist' : document.documentElement.dataset.palette === 'sand' ? 'sand' : 'classic'
+  );
+  function pickPalette(v: 'classic' | 'mist' | 'sand') {
+    const root = document.documentElement;
+    root.classList.add('pal-swap');
+    if (v === 'classic') delete root.dataset.palette; else root.dataset.palette = v;
+    palette = v;
+    setPref('hop_palette', v); // classic is written too, so a choice made elsewhere is overridden
+    setTimeout(() => root.classList.remove('pal-swap'), 80);
   }
 
   function toggleTheme() {
@@ -686,8 +699,8 @@
     </a>
     <nav class="shell-nav" aria-label="FileHop">
       <a href={home} aria-current={dash ? 'page' : undefined}><Icon name="refresh" size={18} />{i18n.t('dash.convert')}</a>
-      <a href="/send" aria-current={sendPage ? 'page' : undefined}><Icon name="upload" size={18} />{i18n.t('send.nav')}</a>
-      <a href="/changelog"><Icon name="text" size={18} />{i18n.t('footer.changelog')}</a>
+      <a href={withLang('/send')} aria-current={sendPage ? 'page' : undefined}><Icon name="upload" size={18} />{i18n.t('send.nav')}</a>
+      <a href={withLang('/changelog')}><Icon name="text" size={18} />{i18n.t('footer.changelog')}</a>
     </nav>
     <p class="shell-label">{i18n.t('footer.family')}</p>
     <nav class="shell-nav" aria-label={i18n.t('footer.family')}>
@@ -695,12 +708,26 @@
         <a href={familyHref(app)} rel="noopener"><img src={app.mark} alt="" width="18" height="18" />{app.name}</a>
       {/each}
     </nav>
-    <div class="shell-side-foot">
-      <a href="/#privacy">{i18n.t('footer.privacy')}</a>
-      <a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a>
-      <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
-      <button class="ft-link" type="button" onclick={() => (licensesOpen = true)}>{i18n.t('footer.licenses')}</button>
-    </div>
+    {#if dash}
+      <div class="shell-pal" role="group" aria-label={i18n.t('palette.label')}>
+        <p class="shell-label">{i18n.t('palette.label')}</p>
+        <div class="pal-row">
+          {#each ['classic', 'mist', 'sand'] as const as v (v)}
+            <button type="button" aria-pressed={palette === v} onclick={() => pickPalette(v)}><i class="sw-{v}"></i><span>{i18n.t('palette.' + v)}</span></button>
+          {/each}
+        </div>
+      </div>
+    {/if}
+    <nav class="shell-side-foot" aria-label={i18n.t('footer.support')}>
+      <ul>
+        <li><a href="https://hel.ink/help" rel="noopener">{i18n.t('footer.help')}</a></li>
+        <li><a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a></li>
+        <li><a href="/#privacy">{i18n.t('footer.privacy')}</a></li>
+        <li><a href={withLang('/changelog')}>{i18n.t('footer.changelog')}</a></li>
+        <li><a href="https://github.com/navi-crwn/FileHop" rel="noopener">GitHub</a></li>
+        <li><a href="https://hel.ink/announcements" rel="noopener">{i18n.t('announce.title')}</a></li>
+      </ul>
+    </nav>
     <a class="ft-part" href="https://hel.ink" rel="noopener">
       <img src="/hop-id-mark.png" alt="" width="20" height="20" />
       <span>{#each i18n.t('footer.part_of').split('{name}') as part, i}{#if i > 0}<b>Hop Easy Link</b>{/if}{part}{/each}</span>
@@ -722,7 +749,7 @@
       {#if sendPage}
         {#await import('./lib/send/Send.svelte') then m}<m.default />{/await}
       {:else}
-      <Announcement locale={i18n.locale} />
+      <Announcement />
       <div class="dash-grid">
         <div class="dash-work">
           {@render dropzone()}
@@ -732,7 +759,7 @@
           <section class="dash-card" aria-labelledby="sendcard-h">
             <h2 id="sendcard-h">{i18n.t('dash.send_card_h')}</h2>
             <p class="acc-note">{i18n.t('dash.send_card_p')}</p>
-            <a class="tbtn" href="/send"><Icon name="upload" size={17} />{i18n.t('dash.send_card_cta')}</a>
+            <a class="tbtn" href={withLang('/send')}><Icon name="upload" size={17} />{i18n.t('dash.send_card_cta')}</a>
           </section>
           <section class="dash-card" aria-labelledby="acc-h">
             <h2 id="acc-h">{i18n.t('dash.account')}</h2>
@@ -764,7 +791,7 @@
 
     <span class="spacer"></span>
 
-    <a class="tbtn topnav-send" href="/send"><Icon name="upload" size={17} /><span class="tlabel">{i18n.t('send.nav')}</span></a>
+    <a class="tbtn topnav-send" href={withLang('/send')}><Icon name="upload" size={17} /><span class="tlabel">{i18n.t('send.nav')}</span></a>
 
     {@render tools()}
   </header>
@@ -780,7 +807,7 @@
             <button class="tbtn secondary lg" type="button" onclick={pickFiles}>
               <Icon name="upload" size={17} />{i18n.t('hero.cta')}
             </button>
-            <a class="tbtn lg" href="/send">
+            <a class="tbtn lg" href={withLang('/send')}>
               <Icon name="upload" size={17} />{i18n.t('home.send_cta')}
             </a>
             <button class="tbtn ghost" type="button" onclick={() => (settingsOpen = true)}>
@@ -815,7 +842,7 @@
               <li>{i18n.t('home.two_send_s2')}</li>
               <li>{i18n.t('home.two_send_s3')}</li>
             </ol>
-            <a class="tbtn secondary" href="/send">{i18n.t('home.two_send_cta')}<Icon name="arrow" size={16} /></a>
+            <a class="tbtn secondary" href={withLang('/send')}>{i18n.t('home.two_send_cta')}<Icon name="arrow" size={16} /></a>
           </article>
         </div>
       </section>
@@ -881,8 +908,8 @@
           <div class="ft-col">
             <h2 class="ft-h">{i18n.t('footer.support')}</h2>
             <nav aria-label={i18n.t('footer.support')}>
-              <a href="/send">{i18n.t('send.footer_link')}</a>
-              <a href="/changelog">{i18n.t('footer.changelog')}</a>
+              <a href={withLang('/send')}>{i18n.t('send.footer_link')}</a>
+              <a href={withLang('/changelog')}>{i18n.t('footer.changelog')}</a>
               <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
               <button class="ft-link" type="button" data-settings onclick={() => (settingsOpen = true)}>{i18n.t('nav.settings')}</button>
             </nav>

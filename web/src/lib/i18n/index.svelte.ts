@@ -44,18 +44,50 @@ export function isLocale(v: string): v is Locale {
   return (LOCALES as readonly string[]).includes(v);
 }
 
+/** The language a browser language tag names (de-AT -> de, pt -> pt-BR), the way the server reads Accept-Language. */
+function matchTag(tag: string): Locale | null {
+  const exact = LOCALES.find(l => l.toLowerCase() === tag.toLowerCase());
+  if (exact) return exact;
+  const base = tag.split('-')[0].toLowerCase();
+  return LOCALES.find(l => l.split('-')[0].toLowerCase() === base) ?? null;
+}
+
+/** The language the address asks for (?lang=de): a per-language address, which wins over the cookie. */
+export function urlLocale(): Locale | null {
+  try {
+    const v = new URLSearchParams(location.search).get('lang');
+    return v ? matchTag(v.trim()) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function guessLocale(): Locale {
+  const fromUrl = urlLocale();
+  if (fromUrl) {
+    // an address in a language is a choice: it is remembered like the menu does, and ?lang=en returns to English
+    setPref('hop_lang', fromUrl);
+    storeLocale(fromUrl);
+    return fromUrl;
+  }
   const stored = readStored();
   if (stored && isLocale(stored)) return stored;
   const tags = navigator.languages ?? [navigator.language];
   for (const tag of tags) {
-    const exact = LOCALES.find(l => l.toLowerCase() === tag.toLowerCase());
-    if (exact) return exact;
-    const base = tag.split('-')[0].toLowerCase();
-    const byBase = LOCALES.find(l => l.split('-')[0].toLowerCase() === base);
-    if (byBase) return byBase;
+    const l = matchTag(tag);
+    if (l) return l;
   }
   return 'en';
+}
+
+/** An internal link keeps the language of the address: on /?lang=de the links to /send and /changelog are
+    /send?lang=de and /changelog?lang=de, so a visitor (or a crawler) who came in German stays in German.
+    On a bare address, and in English, the links stay bare (English lives at the bare address). */
+export function withLang(path: string): string {
+  if (!urlLocale() || i18n.locale === 'en') return path;
+  const hash = path.indexOf('#');
+  const [p, h] = hash < 0 ? [path, ''] : [path.slice(0, hash), path.slice(hash)];
+  return p + (p.includes('?') ? '&' : '?') + 'lang=' + i18n.locale + h;
 }
 
 /** The language chosen before: the family cookie hop_lang (any HOP app), then this app's own old key,
@@ -73,6 +105,16 @@ function readStored(): string | null {
 export function chooseLocale(l: Locale): void {
   setPref('hop_lang', l);
   storeLocale(l);
+  // on a per-language address the address follows the choice, or a reload would bring the old language back
+  try {
+    const u = new URL(location.href);
+    if (u.searchParams.has('lang')) {
+      u.searchParams.set('lang', l);
+      history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+    }
+  } catch {
+    /* no address bar to keep up */
+  }
 }
 
 function storeLocale(l: string): void {

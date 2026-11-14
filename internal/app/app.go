@@ -49,6 +49,8 @@ type App struct {
 	nonces  hop.Nonces
 	started time.Time
 	hubUp   func() bool // is the hub reachable (cached); replaced in tests
+	ann     *annSource  // family announcements from the hub (announce.go)
+	origin  string      // the site address index.html states (canonical, sitemap)
 	send    sendHub
 	px      pixelGate
 }
@@ -60,7 +62,13 @@ func New(cfg Config, d *db.DB, static fs.FS) (*App, error) {
 		return nil, err
 	}
 	a := &App{cfg: cfg, db: d, static: static, index: index, pages: buildPages(index), used: usedTickets{m: map[string]int64{}}, started: time.Now()}
+	if m := pageOriginRe.FindSubmatch(index); m != nil {
+		a.origin = string(m[1])
+	}
 	a.hubUp = newHubProbe(cfg.SSOURL).Up
+	if cfg.SSOEnabled() {
+		a.ann = newAnnSource(cfg.SSOURL)
+	}
 	return a, nil
 }
 
@@ -80,6 +88,7 @@ func (a *App) Handler() http.Handler {
 	a.hopRoutes(m)
 
 	m.HandleFunc("GET /changelog", a.changelog)
+	m.HandleFunc("GET /sitemap.xml", a.sitemap)
 	m.HandleFunc("GET /dashboard", a.dashboard)
 	m.HandleFunc("GET /dashboard/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/dashboard", http.StatusMovedPermanently)

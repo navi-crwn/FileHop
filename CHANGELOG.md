@@ -4,6 +4,23 @@ What changed in FileHop, written for the people who use it. The format follows [
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-14 - One address per language, family announcements, a tidier sidebar
+
+### Added
+
+- **Every public page, language addresses.** Each public page now has its own address for each of the nine languages, for example /send?lang=de for the German Send page; English keeps the plain address. A link to a page in a language opens it in that language, even if your browser or your saved choice says another one, and links inside the page keep that language. The language menu keeps the address in step with your choice. Reason: search engines and people could only reach FileHop in one language per address, and a shared link could open in the wrong language.
+- **Search engines, sitemap.** The site map now lists every public page together with its address in each language. Reason: so that all nine languages can be found, not only the one a crawler happened to receive.
+
+### Changed
+
+- **Dashboard, colours.** The bottom of the sidebar now has three colour choices, Classic, Mist and Sand, with the names in all nine languages. Mist and Sand recolour the accent and the soft background of the dashboard; Classic is the look you know. Your choice is remembered and shared with the other HOP apps that offer it; the public pages keep the classic look. Reason: one colour choice for the whole HOP family.
+- **Dashboard, announcements.** The notice card now shows the announcements written once on HOP ID for all HOP apps, instead of a list kept inside FileHop. Only signed-in people see it, one notice at a time. You can close a notice and it stays away for seven days; an urgent notice cannot be closed. The text is shown in the language it was written in. If HOP ID cannot be reached nothing is shown and the dashboard is not slowed down. Reason: one place to write an announcement for every HOP app.
+- **Dashboard and Send, sidebar.** The foot of the sidebar now lists Help, Terms, Privacy, Changelog, GitHub and Announcement, one under the other, followed by "Part of Hop Easy Link", the same as in the other HOP apps. Source and Licenses stay in the footer of the home page. Reason: every HOP dashboard should end in the same way, with the same words in every language.
+
+### Fixed
+
+- **HOP admin console, sign out everywhere.** The "end all sessions" action that FileHop already announced to the admin console now works: the account is signed out of every browser here and nothing else changes. Reason: the action was listed but nothing answered it.
+
 ## [1.2.3] - 2026-11-14 - Back to your dashboard, announcements, a calmer changelog
 
 ### Added

@@ -15,6 +15,10 @@ try {
   }
   if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
   if (/(?:^|; )hop_ui=clean(?:;|$)/.test(document.cookie)) document.documentElement.dataset.ui = 'clean';
+  /* The family colour palette (hop_palette: classic | mist | sand), on the dashboard only: the public pages stay classic.
+     Classic, anything else or no cookie means no attribute. Only scripts write the cookie; the server never reads it. */
+  var pm = document.cookie.match(/(?:^|; )hop_palette=([^;]*)/), pal = pm ? decodeURIComponent(pm[1]) : null;
+  if ((pal === 'mist' || pal === 'sand') && /^\/dashboard(\/|$)/.test(location.pathname)) document.documentElement.dataset.palette = pal;
 } catch (e) {
   /* cookies blocked: fall back to the system preference in CSS */
 }

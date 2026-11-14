@@ -24,10 +24,12 @@ place.
 
 The words are the app's own dictionaries (web/src/lib/i18n); nothing is
 written here. A crawler, which sends no cookie, gets English; a visitor gets
-the language the app is about to show (pageLang). The whole page, head
-included, is in that one language; the answer varies on Cookie and
-Accept-Language and is private, so no shared cache hands one visitor's
-language to another (KONTRAK-SEO-BAHASA, FileHop).
+the language the app is about to show (pageLang): ?lang= first, then the
+cookie, then Accept-Language. The whole page, head included, is in that one
+language; the answer varies on Cookie and Accept-Language and is private, so
+no shared cache hands one visitor's language to another. Each language also
+has its own address, ?lang=<code>, with canonical and hreflang (langpages.go,
+KONTRAK-SEO-BAHASA).
 */
 
 type publicPage struct {
@@ -59,6 +61,7 @@ var firstViewSrc string
 // firstViewTmpl is parsed once; each language renders a clone with its own words.
 var firstViewTmpl = template.Must(template.New("firstview").Funcs(template.FuncMap{
 	"t": func(string) string { return "" }, "hint": func() template.HTML { return "" }, "partOf": func() template.HTML { return "" },
+	"href": func(p string) template.URL { return template.URL(p) },
 	"icon": firstViewIcon,
 }).Parse(firstViewSrc))
 
@@ -127,7 +130,20 @@ var (
 	heroBreakRe   = regexp.MustCompile(`[、，。]$`)
 )
 
-// buildPages is the shell as each public route is served, per language (lang -> path -> page). The
+// How a page is written: bare (a request without ?lang=: the bare canonical), explicit (a request with ?lang=:
+// its own address is the canonical, and the links keep the language) and unindexed (a route the server does
+// not know: the home page's first view, marked noindex, so no hreflang).
+const (
+	modeBare = iota
+	modeExplicit
+	modeUnindexed
+)
+
+// unindexedKey is the key, per language, of the page any unknown route gets. The other keys are the route
+// for a bare request and "?"+route for an explicit one.
+const unindexedKey = "!"
+
+// buildPages is the shell as each public route is served, per language (lang -> key -> page). The
 // site's address is the one index.html already states; without it the shell is served as it is.
 func buildPages(index []byte) map[string]map[string][]byte {
 	m := pageOriginRe.FindSubmatch(index)
@@ -139,15 +155,21 @@ func buildPages(index []byte) map[string]map[string][]byte {
 		dict := appStrings(lang)
 		out[lang] = map[string][]byte{}
 		for _, p := range publicPages {
-			out[lang][p.Path] = renderPage(index, string(m[1]), p, lang, dict)
+			out[lang][p.Path] = renderPage(index, string(m[1]), p, lang, dict, modeBare)
+			out[lang]["?"+p.Path] = renderPage(index, string(m[1]), p, lang, dict, modeExplicit)
 		}
+		out[lang][unindexedKey] = renderPage(index, string(m[1]), publicPages[0], lang, dict, modeUnindexed)
 	}
 	return out
 }
 
-func renderPage(index []byte, origin string, p publicPage, lang string, dict map[string]string) []byte {
+func renderPage(index []byte, origin string, p publicPage, lang string, dict map[string]string, mode int) []byte {
 	text := func(key string) string { return html.EscapeString(strings.TrimSpace(dict[key])) }
 	url := origin + p.Path
+	canon := url
+	if mode == modeExplicit {
+		canon = langAddress(origin, p.Path, lang)
+	}
 	b := pageLangRe.ReplaceAllLiteral(index, []byte(`<html lang="`+lang+`">`))
 	if t := text(p.Title); t != "" {
 		b = pageTitleRe.ReplaceAllLiteral(b, []byte("<title>"+t+"</title>"))
@@ -158,29 +180,39 @@ func renderPage(index []byte, origin string, p publicPage, lang string, dict map
 		b = pageDescRe.ReplaceAllLiteral(b, []byte(`<meta name="description" content="`+d+`">`))
 		b = pageOGDescRe.ReplaceAllLiteral(b, []byte(`<meta property="og:description" content="`+d+`">`))
 	}
-	b = pageOGURLRe.ReplaceAllLiteral(b, []byte(`<meta property="og:url" content="`+url+`">`))
+	b = pageOGURLRe.ReplaceAllLiteral(b, []byte(`<meta property="og:url" content="`+canon+`">`))
 
-	canonical := `<link rel="canonical" href="` + url + `">`
+	links := `<link rel="canonical" href="` + canon + `">`
+	if mode != modeUnindexed {
+		links += hreflangHTML(origin, p.Path)
+	}
 	head := pageStyle
 	if pageCanonRe.Match(b) {
-		b = pageCanonRe.ReplaceAllLiteral(b, []byte(canonical))
+		b = pageCanonRe.ReplaceAllLiteral(b, []byte(links))
 	} else {
-		head = canonical + "\n" + head
+		head = links + "\n" + head
 	}
 	if p.App {
 		head += "\n" + appData(b, origin)
 	}
 	b = bytes.Replace(b, []byte("</head>"), []byte(head+"\n</head>"), 1)
-	return bytes.Replace(b, []byte(pageMount), []byte(`<div id="root">`+firstView(p.View, lang, dict)+`</div>`), 1)
+	return bytes.Replace(b, []byte(pageMount), []byte(`<div id="root">`+firstView(p.View, lang, dict, langQuery(lang, mode == modeExplicit))+`</div>`), 1)
 }
 
 // firstView renders one view of firstview.html.tmpl in one language.
-func firstView(view, lang string, dict map[string]string) string {
+// q is the query an internal link carries ("?lang=de" on a per-language address, else nothing).
+func firstView(view, lang string, dict map[string]string, q string) string {
 	t := func(k string) string { return dict[k] }
 	partPre, partPost, _ := strings.Cut(t("footer.part_of"), "{name}")
 	hintPre, hintPost, _ := strings.Cut(t("drop.hint"), "{kbd}")
 	tm := template.Must(firstViewTmpl.Clone()).Funcs(template.FuncMap{
 		"t": t,
+		"href": func(p string) template.URL {
+			if i := strings.Index(p, "#"); i >= 0 {
+				return template.URL(p[:i] + q + p[i:])
+			}
+			return template.URL(p + q)
+		},
 		"hint": func() template.HTML {
 			return template.HTML(html.EscapeString(hintPre) + "<kbd>Ctrl/⌘ V</kbd>" + html.EscapeString(hintPost))
 		},
@@ -233,15 +265,18 @@ func (a *App) shell(name string, r *http.Request, h http.Header) []byte {
 	if name == "index.html" {
 		route = "/"
 	}
+	key := route
 	if route != "/" && !isPublicPage(route) {
 		h.Set("X-Robots-Tag", "noindex")
-		route = "/"
+		key = unindexedKey
+	} else if explicitLang(r) {
+		key = "?" + route
 	}
 	if a.pages == nil {
 		return a.index
 	}
 	h.Add("Vary", "Cookie, Accept-Language")
-	return a.pages[pageLang(r)][route]
+	return a.pages[pageLang(r)][key]
 }
 
 func isPublicPage(route string) bool {
@@ -253,9 +288,13 @@ func isPublicPage(route string) bool {
 	return false
 }
 
-// pageLang is the language the app will show, as far as the server can tell: the family cookie, then the
-// browser's languages. The app also reads its old localStorage key, which the server cannot see.
+// pageLang is the language the app will show, as far as the server can tell: the address (?lang=), then the
+// family cookie, then the browser's languages. The app also reads its old localStorage key, which the server
+// cannot see.
 func pageLang(r *http.Request) string {
+	if l := matchLang(r.URL.Query().Get("lang")); l != "" {
+		return l
+	}
 	if l := cookieLang(r); l != "" {
 		return l
 	}

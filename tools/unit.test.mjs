@@ -725,7 +725,7 @@ test('the top bar has no app grid; the family list lives in the footer', () => {
   const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
   assert.ok(!/class="apps/.test(src) && !/SWITCHER/.test(src));
   assert.match(src, /\{#each FAMILY as app/);
-  assert.match(src, /href="\/changelog"/);
+  assert.match(src, /href=\{withLang\('\/changelog'\)\}/); // the link keeps the language of a per-language address
 });
 
 test('the changelog scripts list FileHop and the snapshot is FileHop only', () => {
@@ -861,11 +861,11 @@ test('every string the dashboard adds exists in all locales', () => {
   }
 });
 
-/* K-7: the sitemap lists the public pages only and robots.txt points to it. */
-test('sitemap.xml lists public pages only and robots.txt has the Sitemap line', () => {
+/* K-7: robots.txt points at the sitemap. The sitemap itself is written by the Go server (one entry per public page,
+   with the nine language alternates and x-default; internal/app/lang_test.go), so no static copy may linger. */
+test('robots.txt has the Sitemap line, and there is no static sitemap.xml left to go stale', () => {
   const pub = (f) => readFileSync(new URL(`../web/public/${f}`, import.meta.url), 'utf8');
-  const urls = [...pub('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.deepEqual(urls, ['https://file.hel.ink/', 'https://file.hel.ink/send', 'https://file.hel.ink/changelog']);
+  assert.equal(existsSync(new URL('../web/public/sitemap.xml', import.meta.url)), false);
   assert.match(pub('robots.txt'), /^Sitemap: https:\/\/file\.hel\.ink\/sitemap\.xml$/m);
   assert.match(pub('robots.txt'), /^Disallow: \/dashboard$/m);
 });
@@ -931,36 +931,103 @@ test('theme.js reads hop_theme first, moves the old key into it once, and leaves
 
 
 
-/* The notice card of the dashboard (F-3): a fixed list in the code, empty by default; closing hides it for seven days. */
+/* U-3: the family palette (hop_palette) is applied by theme.js before paint, on the dashboard only; the cookie is written like hop_theme. */
+test('theme.js sets data-palette from hop_palette on the dashboard only, and anything but mist/sand is classic (no attribute)', async () => {
+  const { runInNewContext } = await import('node:vm');
+  const src = readFileSync(new URL('../web/public/theme.js', import.meta.url), 'utf8');
+  const pal = (cookie, path) => {
+    const document = { documentElement: { dataset: {} } };
+    Object.defineProperty(document, 'cookie', { get: () => cookie, set: () => {} });
+    runInNewContext(src, { document, location: { hostname: 'localhost', pathname: path }, localStorage: { getItem: () => null } });
+    return document.documentElement.dataset.palette;
+  };
+  assert.equal(pal('hop_palette=mist', '/dashboard'), 'mist');
+  assert.equal(pal('hop_theme=dark; hop_palette=sand', '/dashboard'), 'sand');
+  for (const junk of ['classic', 'neon', '', 'MIST', 'mist%20', '<x>']) assert.equal(pal('hop_palette=' + junk, '/dashboard'), undefined, junk);
+  assert.equal(pal('', '/dashboard'), undefined);
+  for (const path of ['/', '/send', '/changelog', '/dashboardx']) assert.equal(pal('hop_palette=mist', path), undefined, 'public page ' + path);
+});
+test('the palette picker is in the dashboard sidebar only, above the foot, writes hop_palette, and has no transition on a switch', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const side = src.slice(src.indexOf('<aside class="shell-side"'), src.indexOf('</aside>'));
+  assert.match(side, /\{#if dash\}\s*<div class="shell-pal"[\s\S]*?\{\/if\}\s*<nav class="shell-side-foot"/);
+  assert.match(src, /setPref\('hop_palette', v\)/);
+  const css = readFileSync(new URL('../web/src/app.css', import.meta.url), 'utf8');
+  assert.match(css, /:root\.pal-swap \*,[\s\S]*transition: none !important/);
+  for (const f of readdirSync(new URL('../web/src/lib/i18n/', import.meta.url)).filter((n) => n.endsWith('.json'))) {
+    const d = JSON.parse(readFileSync(new URL(`../web/src/lib/i18n/${f}`, import.meta.url), 'utf8'));
+    for (const k of ['palette.label', 'palette.classic', 'palette.mist', 'palette.sand']) assert.ok(typeof d[k] === 'string' && d[k].trim(), `${f} lacks ${k}`);
+  }
+});
+test('the frozen Mist and Sand values are in the stylesheet and Classic has no rule', () => {
+  const css = readFileSync(new URL('../web/src/app.css', import.meta.url), 'utf8');
+  for (const v of ['#f4f6fc, #0d1120', '#ffffff, #141a2e', '#eef1fa, #1a2138', '#dde2f1, #262e4a', '#faf6f1, #17110d', '#ffffff, #1f1814', '#f5eee6, #271f19', '#ece2d6, #3a2e25']) assert.ok(css.includes(v), v);
+  assert.doesNotMatch(css, /data-palette="classic"/);
+  assert.doesNotMatch(css, /palette-depth|hop_palette_depth/);
+});
+
+/* The family notice card of the dashboard: the items come from the hub through /api/v1/me, nothing is kept in the code;
+   closing hides a notice for seven days (key ann-<id>); a critical one cannot be closed; text is drawn as plain text. */
 const { default: Announcement } = await import('file://' + join(dir, 'Announcement.mjs').replace(/\\/g, '/'));
-const { ANNOUNCEMENTS, announceKey } = await import('file://' + join(dir, 'announcements.mjs').replace(/\\/g, '/'));
-const sample = [{ id: 'maint', text: { en: 'Maintenance on Sunday.', de: 'Wartung am Sonntag.' } }];
+const annMod = await import('file://' + join(dir, 'announcements.mjs').replace(/\\/g, '/'));
+const { announceKey, parseAnnouncements } = annMod;
+const draw = (items) => withStorage({}, () => render(Announcement, { props: { items } }).body).replace(/<!--.*?-->/g, '');
+const note = (o = {}) => ({ id: '12', level: 'info', title: 'Scheduled maintenance', body: 'Sunday 02:00 UTC.', closable: true, ...o });
 function withStorage(map, fn) {
   const had = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k) => map[k] ?? null, setItem: (k, v) => { map[k] = v; } } });
   try { return fn(); } finally { if (had) Object.defineProperty(globalThis, 'localStorage', had); else delete globalThis.localStorage; }
 }
-test('the dashboard has no notice card and no empty space while the list is empty', () => {
-  assert.deepEqual(ANNOUNCEMENTS, []);
+test('no data means no card and no empty space: the code holds no list of notices', () => {
+  assert.equal(annMod.ANNOUNCEMENTS, undefined);
   assert.doesNotMatch(render(Announcement, { props: {} }).body, /announce/);
   assert.doesNotMatch(render(Announcement, { props: { items: [] } }).body, /announce/);
+  assert.deepEqual(parseAnnouncements(undefined), []);
+  assert.deepEqual(parseAnnouncements('x'), []);
+  assert.deepEqual(parseAnnouncements([null, 3, { id: '', title: 'x' }, { id: '1', title: '' }]), []);
 });
-test('a notice is drawn with its title, its text in the language and a labelled close button', () => {
-  const body = withStorage({}, () => render(Announcement, { props: { items: sample, locale: 'de' } }).body);
+test('a notice is drawn with its title, its text as the hub wrote it and a labelled close button', () => {
+  const body = draw([note()]);
   assert.match(body, /class="announce"/);
-  assert.match(body, /Wartung am Sonntag\./);
   assert.match(body, /<h2[^>]*>Announcement<\/h2>/);
+  assert.match(body, /<strong>Scheduled maintenance<\/strong> Sunday 02:00 UTC\./);
   assert.match(body, /<button[^>]*class="announce-x"[^>]*aria-label="Close announcement"/);
-  // English when there is no text for the language
-  assert.match(withStorage({}, () => render(Announcement, { props: { items: sample, locale: 'ja' } }).body), /Maintenance on Sunday\./);
+  // the same single-language text in every interface language
+  assert.match(withStorage({}, () => render(Announcement, { props: { items: [note()], locale: 'ja' } }).body), /Sunday 02:00 UTC\./);
 });
-test('a closed notice stays away for seven days and then comes back', () => {
+test('the title links to the notice when the hub gave a link, and html in the text is shown as text', () => {
+  const linked = draw([note({ url: 'https://hel.ink/announcements/12' })]);
+  assert.match(linked, /<strong><a href="https:\/\/hel\.ink\/announcements\/12" rel="noopener">Scheduled maintenance<\/a><\/strong>/);
+  const evil = draw([note({ title: '<b>Hi</b>', body: '<img src=x onerror=alert(1)>' })]);
+  assert.doesNotMatch(evil, /<img|<b>/);
+  assert.match(evil, /&lt;img src=x onerror=alert\(1\)>/);
+  // the page only keeps http(s) links
+  assert.equal(parseAnnouncements([{ id: '1', title: 't', url: 'javascript:alert(1)' }])[0].url, undefined);
+});
+test('a critical notice has no close button and is shown even if a closed mark exists', () => {
+  const crit = note({ id: '9', level: 'critical', closable: false });
+  const body = withStorage({ [announceKey('9')]: String(Date.now()) }, () => render(Announcement, { props: { items: [crit] } }).body);
+  assert.match(body, /class="announce"/);
+  assert.doesNotMatch(body, /announce-x/);
+  // the page never trusts closable:true on a critical notice
+  assert.equal(parseAnnouncements([{ id: '9', title: 't', level: 'critical', closable: true }])[0].closable, false);
+});
+test('a closed notice stays away for seven days (key ann-<id>) and then comes back', () => {
   const day = 864e5;
-  assert.doesNotMatch(withStorage({ [announceKey('maint')]: String(Date.now() - day) }, () => render(Announcement, { props: { items: sample } }).body), /announce/);
-  assert.match(withStorage({ [announceKey('maint')]: String(Date.now() - 8 * day) }, () => render(Announcement, { props: { items: sample } }).body), /class="announce"/);
-  // another notice is not hidden by the first one being closed
-  const two = [...sample, { id: 'next', text: { en: 'Second notice.' } }];
-  assert.match(withStorage({ [announceKey('maint')]: String(Date.now()) }, () => render(Announcement, { props: { items: two } }).body), /Second notice\./);
+  assert.equal(announceKey('12'), 'ann-12');
+  assert.doesNotMatch(withStorage({ [announceKey('12')]: String(Date.now() - day) }, () => render(Announcement, { props: { items: [note()] } }).body), /announce/);
+  assert.match(withStorage({ [announceKey('12')]: String(Date.now() - 8 * day) }, () => render(Announcement, { props: { items: [note()] } }).body), /class="announce"/);
+  // closing one does not close the next, and only one card is drawn at a time
+  const two = [note(), note({ id: '13', title: 'Second notice' })];
+  const body = withStorage({ [announceKey('12')]: String(Date.now()) }, () => render(Announcement, { props: { items: two } }).body);
+  assert.match(body, /Second notice/);
+  assert.equal((withStorage({}, () => render(Announcement, { props: { items: two } }).body).match(/class="announce"/g) ?? []).length, 1);
+});
+test('the card sits only on the dashboard (not on /send) and nothing in the code lists notices', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  assert.match(src, /\{:else\}\s*<Announcement \/>/);
+  const a = readFileSync(new URL('../web/src/lib/announcements.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(a, /VITE_DEMO|ANNOUNCEMENTS/);
 });
 test('for a signed-in person the logo, Convert and the main button of /send lead to the dashboard, and the account menu has a Dashboard entry', () => {
   const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
@@ -971,13 +1038,49 @@ test('for a signed-in person the logo, Convert and the main button of /send lead
   assert.match(src, /\{#if !dash\}<a href="\/dashboard">\{i18n\.t\('dash\.nav'\)\}<\/a>\{\/if\}/);
   assert.doesNotMatch(src, /href=\{dash \? '\/dashboard' : '\/'\}/);
 });
-test('"Part of Hop Easy Link" is the last element of the dashboard sidebar, and the first view has it too', () => {
+/* U-2: the sidebar foot is the same in every HOP app, one item per line in a fixed order, then "Part of Hop Easy Link";
+   FileHop writes it twice (the Svelte app and the first view the server paints on /send), and both must agree. */
+const footItems = (html) => {
+  const start = html.indexOf('<nav class="shell-side-foot"');
+  const nav = html.slice(start, html.indexOf('</nav>', start))
+    .replace(/\{\{href "([^"]*)"\}\}/g, '$1').replace(/\{withLang\('([^']*)'\)\}/g, '$1')
+    .replace(/\{\{t "([^"]*)"\}\}/g, '$1').replace(/\{i18n\.t\('([^']*)'\)\}/g, '$1');
+  return [...nav.matchAll(/<li><a href="?([^"\s>]*)"?[^>]*>([^<]*)<\/a><\/li>/g)].map((m) => [m[1], m[2]]);
+};
+const FOOT = [
+  ['https://hel.ink/help', 'footer.help'],
+  ['https://hel.ink/terms', 'footer.terms'],
+  ['/#privacy', 'footer.privacy'],
+  ['/changelog', 'footer.changelog'],
+  ['https://github.com/navi-crwn/FileHop', 'GitHub'],
+  ['https://hel.ink/announcements', 'announce.title']
+];
+test('the sidebar foot lists Help, Terms, Privacy, Changelog, GitHub, Announcement in that order, in the app and in the first view', () => {
   const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
   const from = src.indexOf('<aside class="shell-side"');
   const side = src.slice(from, src.indexOf('</aside>', from));
-  assert.match(side, /<div class="shell-side-foot">[\s\S]*<\/div>\s*<a class="ft-part" href="https:\/\/hel\.ink"/);
   const fv = readFileSync(new URL('../internal/app/firstview.html.tmpl', import.meta.url), 'utf8');
-  assert.match(fv, /<div class="shell-side-foot">[\s\S]*?<\/div><a class="ft-part" href="https:\/\/hel\.ink"[\s\S]*?<\/aside>/);
+  const fvSide = fv.slice(fv.indexOf('{{define "send"}}'));
+  assert.deepEqual(footItems(side), FOOT);
+  assert.deepEqual(footItems(fvSide), FOOT);
+  // nothing else in the foot: Source and Licenses live in the public footer
+  assert.doesNotMatch(side, /shell-side-foot[\s\S]*ft-link[\s\S]*<\/aside>/);
+  assert.doesNotMatch(fvSide, /shell-side-foot[\s\S]*ft-link[\s\S]*<\/aside>/);
+});
+test('"Part of Hop Easy Link" comes right after the foot, as the last element of the dashboard sidebar, and the first view has it too', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const from = src.indexOf('<aside class="shell-side"');
+  const side = src.slice(from, src.indexOf('</aside>', from));
+  assert.match(side, /<\/nav>\s*<a class="ft-part" href="https:\/\/hel\.ink"[\s\S]*<\/a>\s*$/);
+  assert.ok(side.indexOf('shell-side-foot') < side.indexOf('ft-part'));
+  const fv = readFileSync(new URL('../internal/app/firstview.html.tmpl', import.meta.url), 'utf8');
+  assert.match(fv, /<nav class="shell-side-foot"[\s\S]*?<\/nav><a class="ft-part" href="https:\/\/hel\.ink"[\s\S]*?<\/aside>/);
+});
+test('every language has the new Help word and the announcement label', () => {
+  for (const f of readdirSync(new URL('../web/src/lib/i18n/', import.meta.url)).filter((n) => n.endsWith('.json'))) {
+    const d = JSON.parse(readFileSync(new URL(`../web/src/lib/i18n/${f}`, import.meta.url), 'utf8'));
+    for (const k of ['footer.help', 'announce.title']) assert.ok(typeof d[k] === 'string' && d[k].trim(), `${f} lacks ${k}`);
+  }
 });
 
 test('the sign-in link of the top bar is shortened on a phone so a long word cannot push the bar past the screen', () => {

@@ -105,6 +105,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("app: %v (run `npm run build` first)", err)
 	}
+	a.WarmAnnouncements()
 
 	srv := &http.Server{
 		Addr:              *addr,
