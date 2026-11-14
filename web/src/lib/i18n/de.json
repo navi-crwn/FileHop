@@ -327,5 +327,8 @@
   "save.err_failed": "Speichern in PixelHop fehlgeschlagen. FileHop hat nichts behalten.",
   "save.err_unsure": "PixelHop hat nicht rechtzeitig geantwortet. Die Datei ist vielleicht schon in deiner PixelHop-Bibliothek: sieh dort nach, bevor du es noch einmal versuchst.",
   "save.err_busy": "FileHop speichert gerade andere Dateien. Versuche es gleich noch einmal.",
-  "send.err_handshake_stalled": "Die beiden Geräte haben sich verbunden, die gegenseitige Prüfung aber nicht abgeschlossen. Beginne neu."
+  "send.err_handshake_stalled": "Die beiden Geräte haben sich verbunden, die gegenseitige Prüfung aber nicht abgeschlossen. Beginne neu.",
+  "dash.nav": "Dashboard",
+  "announce.title": "Ankündigung",
+  "announce.close": "Ankündigung schließen"
 }

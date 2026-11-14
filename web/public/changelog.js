@@ -52,6 +52,8 @@
       }
       var d = acct.dataset;
       if (me.signed_in) {
+        // a signed-in person goes back to the dashboard, not to the public home page
+        document.querySelectorAll('a.brand, #add, p.back a').forEach(function (a) { a.href = '/dashboard'; });
         var name = me.name || me.email || '';
         var ini = (name.match(/\S/g) || ['?']).slice(0, 2).join('').toUpperCase();
         var det = document.createElement('details');
@@ -66,6 +68,7 @@
         var p = document.createElement('p'); p.append(d.in, document.createElement('br'));
         var st = document.createElement('strong'); st.textContent = me.email || name; p.append(st);
         menu.append(p);
+        var dsh = document.createElement('a'); dsh.href = '/dashboard'; dsh.textContent = d.dash; menu.append(dsh);
         if (hub) { var h = document.createElement('a'); h.href = hub; h.textContent = d.hub; menu.append(h); }
         var o = document.createElement('a'); o.href = me.logout_url || '/auth/sso/logout'; o.textContent = d.out; menu.append(o);
         det.append(sum, menu);

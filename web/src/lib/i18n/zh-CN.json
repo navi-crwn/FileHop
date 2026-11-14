@@ -327,5 +327,8 @@
   "save.err_failed": "无法保存到 PixelHop。FileHop 没有保留任何内容。",
   "save.err_unsure": "PixelHop 未能及时响应。文件可能已在你的 PixelHop 图库中：请先查看，再决定是否重试。",
   "save.err_busy": "FileHop 正忙于保存其他文件，请稍后再试。",
-  "send.err_handshake_stalled": "两台设备已连接，但没有完成互相核对。请重新开始。"
+  "send.err_handshake_stalled": "两台设备已连接，但没有完成互相核对。请重新开始。",
+  "dash.nav": "仪表盘",
+  "announce.title": "公告",
+  "announce.close": "关闭公告"
 }

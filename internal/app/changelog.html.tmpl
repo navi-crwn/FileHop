@@ -47,7 +47,7 @@
   <button class="icon" type="button" id="theme" aria-label="{{.S.Theme}}" title="{{.S.Theme}}">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
   </button>
-  <div id="acct" hidden data-in="{{index .T "account.signed_in_as"}}" data-hub="{{index .T "account.hop_id"}}" data-out="{{index .T "account.sign_out"}}" data-sign="{{index .T "account.sign_in"}}" data-menu="{{index .T "account.menu"}}"></div>
+  <div id="acct" hidden data-in="{{index .T "account.signed_in_as"}}" data-hub="{{index .T "account.hop_id"}}" data-out="{{index .T "account.sign_out"}}" data-sign="{{index .T "account.sign_in"}}" data-menu="{{index .T "account.menu"}}" data-dash="{{index .T "dash.nav"}}"></div>
 </header>
 <main id="main">
   <div class="wrap">
@@ -55,12 +55,29 @@
     <p class="lead">{{.S.Lead}}</p>
     <ol class="log">
       {{- range .Rows}}
+      {{- if .Groups}}
+      <li class="rel">
+        <div class="relhead"><code class="ref">{{.ID}}</code><time datetime="{{.Date}}">{{.Date}}</time></div>
+        <h2>{{.Title}}</h2>
+        {{- with .Summary}}<p class="sum">{{.}}</p>{{end}}
+        {{- range .Groups}}
+        <h3>{{.Label}}</h3>
+        <ul>
+          {{- range .Items}}
+          <li><b>{{.Where}}.</b> {{.Text}}</li>
+          {{- end}}
+        </ul>
+        {{- end}}
+        <p class="det"><a href="{{.URL}}" rel="noopener">{{$.S.Details}} &rarr;</a></p>
+      </li>
+      {{- else}}
       <li>
         <time datetime="{{.Date}}">{{.Date}}</time>
         <span class="kind">{{.Kind}}</span>
         <a class="what" href="{{.URL}}" rel="noopener">{{.Title}}</a>
         <code class="ref">{{.ID}}</code>
       </li>
+      {{- end}}
       {{- end}}
     </ol>
     <nav class="pager" aria-label="{{.PageLabel}}">

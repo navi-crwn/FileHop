@@ -1,719 +1,334 @@
 {
-  "schema": 1,
+  "schema": 2,
   "sources": {
-    "FileHop": "52c6d328f468dad574a1d425d320cc1a3275232e"
+    "FileHop": "1.2.3"
   },
   "entries": [
     {
-      "kind": "commit",
-      "date": "2026-11-10T23:45:38+07:00",
-      "title": "Merge pull request #14: Add a signed-in /dashboard and re-check stale HOP ID sessions with a silent hub round trip",
-      "url": "https://github.com/navi-crwn/FileHop/commit/52c6d328f468dad574a1d425d320cc1a3275232e",
-      "id": "52c6d328",
+      "kind": "tag",
+      "date": "2026-11-14T00:00:00Z",
+      "title": "Back to your dashboard, announcements, a calmer changelog",
+      "url": "https://github.com/navi-crwn/FileHop/releases/tag/v1.2.3",
+      "id": "v1.2.3",
       "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-10T16:45:38Z",
-      "title": "Add a signed-in /dashboard and re-check stale HOP ID sessions with a silent hub round trip",
-      "url": "https://github.com/navi-crwn/FileHop/pull/14",
-      "id": "#14",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T17:28:46+01:00",
-      "title": "Check the changelog page for the eyebrow element, not the word",
-      "url": "https://github.com/navi-crwn/FileHop/commit/2921b4e3496f654ac4173a5cdd4a73189d5fa830",
-      "id": "2921b4e3",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T17:25:28+01:00",
-      "title": "Rebuild the changelog snapshot",
-      "url": "https://github.com/navi-crwn/FileHop/commit/6d579bd513bd7e53421331a0e5198b6b74842587",
-      "id": "6d579bd5",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T16:44:40+01:00",
-      "title": "Keep the quiet re-check from dropping work or depending on a down hub",
-      "url": "https://github.com/navi-crwn/FileHop/commit/2accb24da4586851a130302cae585d7ec81e3fef",
-      "id": "2accb24d",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T16:39:09+01:00",
-      "title": "Re-check a stale session with a silent hub round trip",
-      "url": "https://github.com/navi-crwn/FileHop/commit/87864fdc3e1501a4ed05ccb15234713c15cca847",
-      "id": "87864fdc",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T16:25:39+01:00",
-      "title": "Add a signed-in dashboard and stop showing a stale HOP ID account",
-      "url": "https://github.com/navi-crwn/FileHop/commit/e06460ed46f9b54b600b6199d87ab0c387963475",
-      "id": "e06460ed",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-10T15:12:28Z",
-      "title": "Add an X button at the right end of every file row",
-      "url": "https://github.com/navi-crwn/FileHop/pull/13",
-      "id": "#13",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T22:12:27+07:00",
-      "title": "Merge pull request #13: Add an X button at the right end of every file row",
-      "url": "https://github.com/navi-crwn/FileHop/commit/f5fa9bbb202d2b26b0592348c2521ee1ceb95110",
-      "id": "f5fa9bbb",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T16:05:28+01:00",
-      "title": "Add an X button at the right end of every file row",
-      "url": "https://github.com/navi-crwn/FileHop/commit/e012401f0fe9f25fc0fc08329e3853d6945c0435",
-      "id": "e012401f",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-10T14:51:09Z",
-      "title": "Add a real /changelog page, og:image, and remove the top bar app grid",
-      "url": "https://github.com/navi-crwn/FileHop/pull/12",
-      "id": "#12",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T21:51:08+07:00",
-      "title": "Merge pull request #12: Add a real /changelog page, og:image, and remove the top bar app grid",
-      "url": "https://github.com/navi-crwn/FileHop/commit/8ed6cb7b27d52d0fbae257aec6d6979e26bc872b",
-      "id": "8ed6cb7b",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T15:05:24+01:00",
-      "title": "Changelog page: family top bar and footer, no eyebrow label",
-      "url": "https://github.com/navi-crwn/FileHop/commit/ef27b89bbdd2f52cec4f8964dd37af0306c459ac",
-      "id": "ef27b89b",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T14:50:09+01:00",
-      "title": "Add a real /changelog page, og:image, and drop the top bar app grid",
-      "url": "https://github.com/navi-crwn/FileHop/commit/623d01b240ae465ee2f6eab48e3144b5c3311973",
-      "id": "623d01b2",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-10T07:40:11Z",
-      "title": "Sync repository with what is live (2026-11-10)",
-      "url": "https://github.com/navi-crwn/FileHop/pull/10",
-      "id": "#10",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T14:40:10+07:00",
-      "title": "Merge pull request #10: Sync repository with what is live (2026-11-10)",
-      "url": "https://github.com/navi-crwn/FileHop/commit/9487ae0f9491c6e08643a3d093acc31f4dfd2cac",
-      "id": "9487ae0f",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T08:33:17+01:00",
-      "title": "README screenshots: retake from current main",
-      "url": "https://github.com/navi-crwn/FileHop/commit/2820822de544c243c8283ce699a4c389d28dcd5f",
-      "id": "2820822d",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T14:15:31+07:00",
-      "title": "Merge pull request #11: Round 4: formats bento closes with a strip",
-      "url": "https://github.com/navi-crwn/FileHop/commit/ff0297751a6e056eba657e262cb8540382b0a1f5",
-      "id": "ff029775",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-10T07:15:31Z",
-      "title": "Round 4: formats bento closes with a strip",
-      "url": "https://github.com/navi-crwn/FileHop/pull/11",
-      "id": "#11",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T08:05:57+01:00",
-      "title": "Add the family app switcher to the top bar",
-      "url": "https://github.com/navi-crwn/FileHop/commit/e4362d0addfcc4b65380780ada03a9beff38c14f",
-      "id": "e4362d0a",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T07:58:44+01:00",
-      "title": "Use the hop-assets v8 bento and 3D engine",
-      "url": "https://github.com/navi-crwn/FileHop/commit/140497ffd301780527ee30686b6ea3a2edbb4656",
-      "id": "140497ff",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T07:43:48+01:00",
-      "title": "Close the formats bento with the not-yet note as a full-width strip",
-      "url": "https://github.com/navi-crwn/FileHop/commit/1120d6d040b5ca2238704dd4b0bbb00b9c82ec3a",
-      "id": "1120d6d0",
-      "app": "FileHop",
-      "repo": "FileHop"
+      "repo": "FileHop",
+      "version": "1.2.3",
+      "summary": "",
+      "items": [
+        {
+          "type": "added",
+          "where": "Dashboard, sidebar",
+          "text": "The line \"Part of Hop Easy Link\" now sits at the bottom of the sidebar on the dashboard and on the Send page, as in the other HOP apps. Reason: the dashboard had no such line, and it belongs with the family list."
+        },
+        {
+          "type": "added",
+          "where": "Dashboard, announcements",
+          "text": "A notice card can appear at the top of the dashboard. You can close it and it stays away for seven days. Nothing is shown, and no space is kept, while there is no announcement. Reason: every HOP dashboard should have a place for announcements."
+        },
+        {
+          "type": "fixed",
+          "where": "Home page, top bar on phones",
+          "text": "In French and Spanish on a 375 px wide phone the Sign in button pushed the page sideways. A long sign-in word is now shortened on phones. Reason: the page could be dragged sideways and the button was cut off."
+        },
+        {
+          "type": "changed",
+          "where": "Send, changelog and the home page for signed-in people",
+          "text": "The logo, the Convert link, the main button, and the Back link now lead to your dashboard when you are signed in, and to the home page when you are not. The account menu on the home page has a Dashboard entry. Reason: people who opened Send from the dashboard were taken to the public home page and had no way back."
+        },
+        {
+          "type": "changed",
+          "where": "Changelog page",
+          "text": "The page now shows one card per release with what changed, where, what it means for you and why, instead of a list of pull request titles. The text of the entries is in English; the page labels are in all nine languages. Reason: the old list was hard to read and showed internal wording."
+        },
+        {
+          "type": "changed",
+          "where": "Changelog history",
+          "text": "Every earlier release was rewritten in the same plain form, and the page is up to date again (it had stopped at an older release)."
+        }
+      ]
     },
     {
       "kind": "tag",
-      "date": "2026-11-10T13:04:22+07:00",
-      "title": "v1.0.0",
+      "date": "2026-11-13T00:00:00Z",
+      "title": "Send several files at once, a calmer Send page",
+      "url": "https://github.com/navi-crwn/FileHop/releases/tag/v1.2.2",
+      "id": "v1.2.2",
+      "app": "FileHop",
+      "repo": "FileHop",
+      "version": "1.2.2",
+      "summary": "",
+      "items": [
+        {
+          "type": "added",
+          "where": "Home page, Send",
+          "text": "A \"Send a file\" button beside \"Add files\", a Send link in the top bar and a short band that explains both halves of FileHop: convert here and nothing is uploaded, send device to device and nothing is stored. The same three places are in the page that loads before the app, in every language. Reason: many visitors did not know Send existed."
+        },
+        {
+          "type": "added",
+          "where": "Send, groups of files",
+          "text": "\"Accept all\" and \"Decline all\" deal with a whole run of offered files at once, so a folder of ten files is one press instead of ten. They only reach the group on offer; the next group, a single file or an offer from an older device asks again. A file the other device withdraws while the save window is open is dropped, so nothing is left waiting. Reason: accepting ten files one by one was tedious."
+        },
+        {
+          "type": "added",
+          "where": "Send, cancel",
+          "text": "Every offered file has a cancel button, and \"Cancel the rest\" appears while more than one file is on its way. The sender sees its own queue. Reason: a long queue could not be stopped."
+        },
+        {
+          "type": "added",
+          "where": "Send, save all",
+          "text": "\"Save all\" packs the files received in one go into a single ZIP on your device, up to 512 MiB; nothing is uploaded. The files are read as a stream, names that differ only in capitals are kept apart, the button says so when one file failed (for example \"3 of 4\"), and if the ZIP cannot be made the page says so and every file keeps its own Save link. Reason: saving many files one by one was tedious."
+        },
+        {
+          "type": "changed",
+          "where": "Send, layout",
+          "text": "The page has two columns, Connection (code, QR code, pairing number, route) and Transfers (queue and received files), with the three \"How it works\" steps below. On a phone it is one column with Connection first. The words are in all nine languages. Reason: the page had empty gaps and the steps were hard to find."
+        },
+        {
+          "type": "changed",
+          "where": "Send, groups on the wire",
+          "text": "A sender now announces how many files and how many bytes are coming before the first one, so the receiver can say how much to expect and refuse a group above 512 MiB before anything is written. One file is not a group and is limited only by the per-file limit. Older devices still pair and transfer as before. Reason: the receiver could not tell how much was coming."
+        },
+        {
+          "type": "changed",
+          "where": "Dashboard",
+          "text": "The dashboard is centred in one column like the other apps, with a Send card next to the account card that says files go straight from one device to the other and are never stored. Reason: Send had no door from the dashboard."
+        }
+      ]
+    },
+    {
+      "kind": "tag",
+      "date": "2026-11-12T00:00:00Z",
+      "title": "Fixes for saving to PixelHop and for Send",
+      "url": "https://github.com/navi-crwn/FileHop/releases/tag/v1.2.1",
+      "id": "v1.2.1",
+      "app": "FileHop",
+      "repo": "FileHop",
+      "version": "1.2.1",
+      "summary": "",
+      "items": [
+        {
+          "type": "fixed",
+          "where": "Save to PixelHop",
+          "text": "The page reported a failure although PixelHop had stored the file. A stored file is now always reported as saved, and when PixelHop does not answer in time the page asks you to look in PixelHop before trying again. Reason: PixelHop answers with an address on its own link host, which FileHop did not accept."
+        },
+        {
+          "type": "fixed",
+          "where": "Send, old codes",
+          "text": "The code of a device that left is dead at once, so an old QR code says the room does not exist instead of leaving the second device waiting. Opening a new code while on Send starts over with it, asking first during a pairing or a transfer. Reason: old codes kept devices waiting for nothing."
+        },
+        {
+          "type": "fixed",
+          "where": "Send, several files",
+          "text": "Receiving the next file no longer deletes the earlier ones from the browser's private storage, so their Save links keep working until the page is closed. Reason: earlier files failed with \"download failed\"."
+        },
+        {
+          "type": "changed",
+          "where": "Theme and language",
+          "text": "The theme and the language follow the choice made in any HOP app on hel.ink. A language is stored only when you pick one; it is never guessed from the browser. Reason: a choice made in one app was not followed in the next."
+        },
+        {
+          "type": "changed",
+          "where": "Home page and Send, first view",
+          "text": "The page is drawn in your theme and language before the app loads, so it is readable at once and by search engines; without scripts it says that FileHop needs JavaScript. Reason: the page used to be blank until the app arrived."
+        }
+      ]
+    },
+    {
+      "kind": "tag",
+      "date": "2026-11-12T00:00:00Z",
+      "title": "Send a file from one device to another",
+      "url": "https://github.com/navi-crwn/FileHop/releases/tag/v1.2.0",
+      "id": "v1.2.0",
+      "app": "FileHop",
+      "repo": "FileHop",
+      "version": "1.2.0",
+      "summary": "",
+      "items": [
+        {
+          "type": "added",
+          "where": "Send",
+          "text": "A new page, Send, sends a file straight from one device to another. Nothing is uploaded or stored; the server only introduces the two browsers. A room is a six-digit code, valid for ten minutes, for exactly two devices. Pairing is by QR code or by typing the code, and guests can send. Reason: people wanted to move a file between their own devices without an upload."
+        },
+        {
+          "type": "added",
+          "where": "Send, pairing check",
+          "text": "Both people compare a six-digit number and press Match; no file can flow before both have. Reason: this shows that nobody sits between the two devices."
+        },
+        {
+          "type": "added",
+          "where": "Send, transfer",
+          "text": "Files travel over one reliable connection with flow control, a check of every file against what the sender announced, and an explicit accept, decline or cancel for each file. A file that does not match is never offered for saving. Reason: files must arrive complete and unchanged."
+        },
+        {
+          "type": "added",
+          "where": "Send, saving",
+          "text": "Files are saved through the browser's save window where it exists, otherwise through the browser's private storage, otherwise from memory up to 512 MiB. Reason: browsers differ in how they can write large files."
+        },
+        {
+          "type": "added",
+          "where": "Send, names and failures",
+          "text": "File names from the other device are cleaned before they are shown. After 20 seconds without a connection the page stops and offers three ways out (same Wi-Fi, a phone hotspot, PixelHop or NoteHop), and a warning that files are not scanned is always on screen. Reason: unclear failures and unsafe names."
+        },
+        {
+          "type": "added",
+          "where": "Save to PixelHop",
+          "text": "A finished image or PDF can be saved to your PixelHop library, for signed-in people only. It asks first, in nine languages, and says that this one file passes through the FileHop server and is not kept. Reason: people wanted converted images in their library."
+        },
+        {
+          "type": "changed",
+          "where": "Texts about uploads",
+          "text": "The hero, privacy text and dashboard card now name this one optional exception to \"nothing is uploaded\", in nine languages. Reason: the old wording was no longer fully true."
+        },
+        {
+          "type": "changed",
+          "where": "Toast after adding files",
+          "text": "It reads \"Files added: 3\" instead of \"1 files added\" in English, German, Portuguese, Spanish and French. Reason: wrong grammar."
+        }
+      ]
+    },
+    {
+      "kind": "tag",
+      "date": "2026-11-11T00:00:00Z",
+      "title": "Dashboard, changelog page and PayHop",
+      "url": "https://github.com/navi-crwn/FileHop/releases/tag/v1.1.0",
+      "id": "v1.1.0",
+      "app": "FileHop",
+      "repo": "FileHop",
+      "version": "1.1.0",
+      "summary": "",
+      "items": [
+        {
+          "type": "added",
+          "where": "Dashboard",
+          "text": "Signed-in people get a dashboard with the same converter workspace without the marketing page, a sidebar with the HOP family and a top bar with the main action, language, theme and account. A guest who opens it is sent through sign-in and comes back to it. Reason: members should not wade through the marketing page."
+        },
+        {
+          "type": "added",
+          "where": "Changelog page",
+          "text": "FileHop has its own changelog page in nine languages, light and dark. Reason: people could not see what changed."
+        },
+        {
+          "type": "added",
+          "where": "Family",
+          "text": "PayHop appears in the family lists, and a sitemap helps search engines find the home page and the changelog. Reason: PayHop joined the family."
+        },
+        {
+          "type": "fixed",
+          "where": "Signed-in account",
+          "text": "FileHop could keep showing an account that the browser was no longer signed in with at HOP ID. After five minutes the next page load asks the hub quietly: the same account keeps the session, another account replaces it, and a signed-out hub ends it. If the hub cannot be reached, the existing session stays trusted. Reason: switching accounts in another tab left FileHop on the old one."
+        },
+        {
+          "type": "changed",
+          "where": "Settings",
+          "text": "The settings button is gone from the top bar; settings stay one tap away in the footer, the hero button and the account menu. Reason: the top bar should hold only the main action, language, theme and account."
+        },
+        {
+          "type": "changed",
+          "where": "File rows",
+          "text": "Every file row has an X button that removes the file before it is processed, stops it while it runs, or drops a finished row without touching a download already made. Reason: the old separate buttons were confusing."
+        },
+        {
+          "type": "changed",
+          "where": "Top bar",
+          "text": "The family app grid was removed from the top bar; the family list stays in the footer. Reason: the family rule for dashboards."
+        },
+        {
+          "type": "changed",
+          "where": "Home page",
+          "text": "The format boxes fill whole rows and no box stands alone. Reason: an uneven layout."
+        }
+      ]
+    },
+    {
+      "kind": "tag",
+      "date": "2026-11-10T00:00:00Z",
+      "title": "Sign in with HOP ID and a calmer look",
       "url": "https://github.com/navi-crwn/FileHop/releases/tag/v1.0.0",
       "id": "v1.0.0",
       "app": "FileHop",
-      "repo": "FileHop"
+      "repo": "FileHop",
+      "version": "1.0.0",
+      "summary": "",
+      "items": [
+        {
+          "type": "added",
+          "where": "Sign-in",
+          "text": "You can sign in with HOP ID; converting still works without an account. Signing out at the hub signs you out of FileHop too. Reason: one account for the whole family."
+        },
+        {
+          "type": "added",
+          "where": "Account control",
+          "text": "The top bar shows a sign-in button or the account menu when sign-in is available, with errors in your language. Reason: people need a way in and out."
+        },
+        {
+          "type": "added",
+          "where": "Family integration",
+          "text": "FileHop talks to the family's administration app and to the hub for account changes, and offers a health check. Reason: the administrators need to see and manage accounts."
+        },
+        {
+          "type": "added",
+          "where": "Footer",
+          "text": "The footer starts with the HOP ID mark and \"Part of Hop Easy Link\". Reason: the family look."
+        },
+        {
+          "type": "added",
+          "where": "Installing",
+          "text": "One-command install, update and uninstall scripts. Reason: easier self-hosting."
+        },
+        {
+          "type": "changed",
+          "where": "Look",
+          "text": "The header and footer show the mark and the app name in the app's own typeface; the formats section is one grid with a small scene in each box; the top bar uses the family language menu; controls follow one standard; surfaces use a flat style as an optional Clean style in settings. Reason: FileHop looked different from the other apps."
+        },
+        {
+          "type": "changed",
+          "where": "Icons",
+          "text": "Install icons for phones and computers match the family mark. Reason: the old icons did not match."
+        },
+        {
+          "type": "changed",
+          "where": "Dialogs",
+          "text": "\"Drop everything\" and \"Clear finished\" ask first, with the shared HOP dialog. Reason: one click could discard work."
+        },
+        {
+          "type": "changed",
+          "where": "Phones",
+          "text": "The top bar is one row on phones. Reason: it wrapped onto two rows."
+        },
+        {
+          "type": "fixed",
+          "where": "Sign-out",
+          "text": "The sign-out link returns you to FileHop. Reason: people ended up on the hub."
+        },
+        {
+          "type": "fixed",
+          "where": "Merging PDFs",
+          "text": "Only the PDFs set to merge are merged, and a group keeps one merge through retries and late joiners. Reason: other PDFs were merged by mistake."
+        },
+        {
+          "type": "fixed",
+          "where": "Older browsers",
+          "text": "Image conversion and PDF to picture failed in browsers without a certain canvas feature (Safari before 16.4); those jobs now run on the page. Reason: the conversion simply failed there."
+        }
+      ]
     },
     {
-      "kind": "commit",
-      "date": "2026-11-10T13:04:22+07:00",
-      "title": "Merge pull request #7: Release 1.0.0",
-      "url": "https://github.com/navi-crwn/FileHop/commit/bef429163d6c52894f4e6be8c2720f99431242eb",
-      "id": "bef42916",
+      "kind": "tag",
+      "date": "2026-11-08T00:00:00Z",
+      "title": "The first converter",
+      "url": "https://github.com/navi-crwn/FileHop/releases/tag/v0.1.0",
+      "id": "v0.1.0",
       "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-10T06:04:22Z",
-      "title": "Release 1.0.0",
-      "url": "https://github.com/navi-crwn/FileHop/pull/7",
-      "id": "#7",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-10T05:53:44Z",
-      "title": "Footer like the other apps, FileHop's own 3D hero mark",
-      "url": "https://github.com/navi-crwn/FileHop/pull/9",
-      "id": "#9",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T12:53:43+07:00",
-      "title": "Merge pull request #9: Footer like the other apps, FileHop's own 3D hero mark",
-      "url": "https://github.com/navi-crwn/FileHop/commit/5c15716b1f74e7749fd314422515e6b0c8366831",
-      "id": "5c15716b",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T06:28:29+01:00",
-      "title": "Show the app name as text in its own typeface next to the mark",
-      "url": "https://github.com/navi-crwn/FileHop/commit/4622ef987ea8673c2f493c3bb0bdf95a2d87c170",
-      "id": "4622ef98",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T06:10:01+01:00",
-      "title": "Family top bar and language menu, bento formats, hop-assets v7 engine",
-      "url": "https://github.com/navi-crwn/FileHop/commit/ebedb505046dbb393a71c1f741ae79fbd9174a33",
-      "id": "ebedb505",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T05:48:57+01:00",
-      "title": "Give FileHop the family footer and its own 3D hero mark",
-      "url": "https://github.com/navi-crwn/FileHop/commit/962e8f5f20b5e6982b67708f53d6cc820ffffbca",
-      "id": "962e8f5f",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-10T04:05:33Z",
-      "title": "Post-release fixes: sign-out return",
-      "url": "https://github.com/navi-crwn/FileHop/pull/8",
-      "id": "#8",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T11:05:32+07:00",
-      "title": "Merge pull request #8: Post-release fixes: sign-out return",
-      "url": "https://github.com/navi-crwn/FileHop/commit/33b8624380b148129c002f5eeab217fcb806268e",
-      "id": "33b86243",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T22:49:08+01:00",
-      "title": "Show \"Part of Hop Easy Link\" as the first footer row",
-      "url": "https://github.com/navi-crwn/FileHop/commit/dc97e870c57a91df0c6576b35e75333db38ce96f",
-      "id": "dc97e870",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T22:35:50+01:00",
-      "title": "Return to the app after signing out through HOP ID",
-      "url": "https://github.com/navi-crwn/FileHop/commit/7506835c7992e79bdf1787553a7262e37f045e57",
-      "id": "7506835c",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T22:12:56+01:00",
-      "title": "Release 1.0.0",
-      "url": "https://github.com/navi-crwn/FileHop/commit/be1448198368730c2b28e14158de39052bfb8b34",
-      "id": "be144819",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-10T03:59:00+07:00",
-      "title": "Merge pull request #6: Merge only the PDFs that were set to Merge",
-      "url": "https://github.com/navi-crwn/FileHop/commit/2f48175abbf745273e2fb5cc0ea25d9e32c77eed",
-      "id": "2f48175a",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-09T20:59:00Z",
-      "title": "Merge only the PDFs that were set to Merge",
-      "url": "https://github.com/navi-crwn/FileHop/pull/6",
-      "id": "#6",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T21:42:00+01:00",
-      "title": "Changelog: control standard, Clean style, confirmation dialogs, one merge per group",
-      "url": "https://github.com/navi-crwn/FileHop/commit/88428bc859418a30a4ed288105eb191e514cd83e",
-      "id": "88428bc8",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T21:11:55+01:00",
-      "title": "Make the flat surface style an optional Clean interface style, chosen in the settings drawer",
-      "url": "https://github.com/navi-crwn/FileHop/commit/21214f8e8c152b7ba44df7495f2c7154b346f311",
-      "id": "21214f8e",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T20:15:54+01:00",
-      "title": "Adopt the flat neutral surface language across the app: solid cards, hairline borders, sentence-case labels, 6 px badges",
-      "url": "https://github.com/navi-crwn/FileHop/commit/aeeb47d5409cae61cb3eed5055eb9e11f51c0db1",
-      "id": "aeeb47d5",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T13:48:31+01:00",
-      "title": "Apply the HOP control standard: one radius, one height per row, buttons as wide as their text",
-      "url": "https://github.com/navi-crwn/FileHop/commit/f2bc27ce0291f5d7a4b2fb2196349c0fd010995c",
-      "id": "f2bc27ce",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T13:36:30+01:00",
-      "title": "Keep one merge per group through retries, late joiners and stops",
-      "url": "https://github.com/navi-crwn/FileHop/commit/f96ac780aa02f420528bb1bc28fc23bb363e62c2",
-      "id": "f96ac780",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-09T04:41:33+01:00",
-      "title": "Ask before \"Drop everything\" and \"Clear finished\" with the family dialog",
-      "url": "https://github.com/navi-crwn/FileHop/commit/eb568b70f82299da519e2e0015391c7606f5b9e7",
-      "id": "eb568b70",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T19:48:33+01:00",
-      "title": "Start the hero accent on its own line in Japanese and Chinese",
-      "url": "https://github.com/navi-crwn/FileHop/commit/21489b7dac65cc4162660643543d04b14aebf2e8",
-      "id": "21489b7d",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T19:41:18+01:00",
-      "title": "Put no space between the hero halves in Japanese and Chinese",
-      "url": "https://github.com/navi-crwn/FileHop/commit/3a8f3af398adb4e8419e73c0aa13e6d700652723",
-      "id": "3a8f3af3",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T19:35:57+01:00",
-      "title": "Link the hub's terms from the footer and give the Privacy link its anchor",
-      "url": "https://github.com/navi-crwn/FileHop/commit/18c056adf14aa94eef8012b72040da8b4dc8da71",
-      "id": "18c056ad",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T19:35:56+01:00",
-      "title": "Close the account menu on Escape, outside tap and scroll; focus the settings drawer",
-      "url": "https://github.com/navi-crwn/FileHop/commit/43b7f98fce7512d69786773440d34fdea87b2bcd",
-      "id": "43b7f98f",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T19:33:59+01:00",
-      "title": "Make the sliders finger-sized and keep the phone header within 64 px",
-      "url": "https://github.com/navi-crwn/FileHop/commit/49e02732c95ae7457ac822efc9f1fce78c5617ca",
-      "id": "49e02732",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T19:33:51+01:00",
-      "title": "Translate the hero title, the target labels and the tab title in every language",
-      "url": "https://github.com/navi-crwn/FileHop/commit/b98be1da83b01175084adae1e6bc7d3d574aed62",
-      "id": "b98be1da",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T19:10:11+01:00",
-      "title": "Merge only the PDFs that were set to Merge",
-      "url": "https://github.com/navi-crwn/FileHop/commit/305dd0fae9c4739eaf783a7cbf6c7838b14d49f6",
-      "id": "305dd0fa",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T17:09:37+07:00",
-      "title": "Merge pull request #5: Family pixel mark from hop-assets v4, PNG app icons, one-row phone top bar",
-      "url": "https://github.com/navi-crwn/FileHop/commit/a13ddbfee4553081f54584935434e3f0f8149bb4",
-      "id": "a13ddbfe",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-08T10:09:37Z",
-      "title": "Family pixel mark from hop-assets v4, PNG app icons, one-row phone top bar",
-      "url": "https://github.com/navi-crwn/FileHop/pull/5",
-      "id": "#5",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-08T10:09:21Z",
-      "title": "Register the app correctly at a new hub; add a Self-hosting section",
-      "url": "https://github.com/navi-crwn/FileHop/pull/4",
-      "id": "#4",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T17:09:20+07:00",
-      "title": "Merge pull request #4: Register the app correctly at a new hub; add a Self-hosting section",
-      "url": "https://github.com/navi-crwn/FileHop/commit/9f8dbdafe0d38197e9ec4b74f925926151b24961",
-      "id": "9f8dbdaf",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T17:09:15+07:00",
-      "title": "Merge pull request #3: Open other HOP apps through the hub launcher from the family list",
-      "url": "https://github.com/navi-crwn/FileHop/commit/49fcc695ff88a592552b6b3f8094dabd214504a1",
-      "id": "49fcc695",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-08T10:09:15Z",
-      "title": "Open other HOP apps through the hub launcher from the family list",
-      "url": "https://github.com/navi-crwn/FileHop/pull/3",
-      "id": "#3",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T10:47:36+01:00",
-      "title": "Use the family pixel mark from hop-assets v4, add PNG app icons, keep the phone top bar on one row",
-      "url": "https://github.com/navi-crwn/FileHop/commit/6a2d96224ee1847905152e8577b48efa38bd54b3",
-      "id": "6a2d9622",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T10:28:37+01:00",
-      "title": "Add a Self-hosting section to every README",
-      "url": "https://github.com/navi-crwn/FileHop/commit/f2b39fca0983187d7c75ed880eb466ed2c426c81",
-      "id": "f2b39fca",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T10:19:26+01:00",
-      "title": "Run the hub's artisan with the hub's PHP and check the registry write",
-      "url": "https://github.com/navi-crwn/FileHop/commit/5dfd417059f503f2045b04d2e19bacbcb8687b8c",
-      "id": "5dfd4170",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T10:15:23+01:00",
-      "title": "Open other HOP apps through the hub launcher from the family list",
-      "url": "https://github.com/navi-crwn/FileHop/commit/2321f2aa58735cf935f0deb25137952fce81d2f2",
-      "id": "2321f2aa",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T10:13:36+01:00",
-      "title": "Register the app at a new hub with the capabilities it needs",
-      "url": "https://github.com/navi-crwn/FileHop/commit/5b05d63ea8d1882c9584f4219a95b49838c30f92",
-      "id": "5b05d63e",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T15:49:54+07:00",
-      "title": "Merge pull request #2: Draw PDF glyphs as paths so pages render text in the worker",
-      "url": "https://github.com/navi-crwn/FileHop/commit/6af52c6f717f0c4b9d9487a7fe8be8155ea19bf6",
-      "id": "6af52c6f",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-08T08:49:54Z",
-      "title": "Draw PDF glyphs as paths so pages render text in the worker",
-      "url": "https://github.com/navi-crwn/FileHop/pull/2",
-      "id": "#2",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T09:44:26+01:00",
-      "title": "Draw PDF glyphs as paths so pages render text in the worker",
-      "url": "https://github.com/navi-crwn/FileHop/commit/445a61c0299ed32c9d8cb36b4c3a8e3903ac443c",
-      "id": "445a61c0",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "pr",
-      "date": "2026-11-08T07:25:55Z",
-      "title": "Anchor #features for the hub's app page",
-      "url": "https://github.com/navi-crwn/FileHop/pull/1",
-      "id": "#1",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T14:25:54+07:00",
-      "title": "Merge pull request #1: Anchor #features for the hub's app page",
-      "url": "https://github.com/navi-crwn/FileHop/commit/30d12a1e896c43530ba3ac5c820af562c303bdb2",
-      "id": "30d12a1e",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T14:20:21+07:00",
-      "title": "Anchor the formats section as #features for the hub's app page",
-      "url": "https://github.com/navi-crwn/FileHop/commit/a972c8b7995658c8a17a65993daec476c86b5e9b",
-      "id": "a972c8b7",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T14:00:54+07:00",
-      "title": "Declare admin_api in /hop/manifest so Imperium polls FileHop",
-      "url": "https://github.com/navi-crwn/FileHop/commit/6aa38f9c753eb652a2f1dfa3751b7a6ea8d142a5",
-      "id": "6aa38f9c",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:54:45+07:00",
-      "title": "README in the other eight languages",
-      "url": "https://github.com/navi-crwn/FileHop/commit/efe4ef419d9779f6a9b26526908a3cf44ad5c00a",
-      "id": "efe4ef41",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:52:23+07:00",
-      "title": "Repository to the HOP family standard",
-      "url": "https://github.com/navi-crwn/FileHop/commit/c2b66d292a800c4b82cfcba770c14acb2a5dc6b0",
-      "id": "c2b66d29",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:52:23+07:00",
-      "title": "List the HOP family in the footer, 44 px touch targets, and say what an account keeps",
-      "url": "https://github.com/navi-crwn/FileHop/commit/3849db6ffa5f5f042412e75409ac7a540450f233",
-      "id": "3849db6f",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:40:56+07:00",
-      "title": "Keep the account menu on screen on phones; let npm run local listen behind a tunnel",
-      "url": "https://github.com/navi-crwn/FileHop/commit/92386c78861ed7f062beecd3acebcf3e5184e8d6",
-      "id": "92386c78",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:38:12+07:00",
-      "title": "Docs: deploy guide, run modes, three-engine results, wiring status",
-      "url": "https://github.com/navi-crwn/FileHop/commit/8cb3da06e9c6e3c5e36d32330ab04ca058caed15",
-      "id": "8cb3da06",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:35:30+07:00",
-      "title": "Regenerate the lockfile so it keeps every platform's native bindings",
-      "url": "https://github.com/navi-crwn/FileHop/commit/e55827ec8879baa505d4ca448c65d6ae15e4043c",
-      "id": "e55827ec",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:34:14+07:00",
-      "title": "Deploy files for file.hel.ink: nginx vhost, systemd unit, env, installer",
-      "url": "https://github.com/navi-crwn/FileHop/commit/f9c00d838df111f57ea29ce52150b31cba88f923",
-      "id": "f9c00d83",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:32:45+07:00",
-      "title": "Go server: serve web/, HOP ID sign-in, /hop/* protocol",
-      "url": "https://github.com/navi-crwn/FileHop/commit/32ec916065234df0692a0fa4d428f7bb0a961167",
-      "id": "32ec9160",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T13:23:19+07:00",
-      "title": "Run canvas work on the page where workers cannot draw",
-      "url": "https://github.com/navi-crwn/FileHop/commit/a703da73b880b664702929dc5c7b2a5ab6e4d352",
-      "id": "a703da73",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T12:50:41+07:00",
-      "title": "Say what the 50-file cap did, and translate the last hardcoded strings",
-      "url": "https://github.com/navi-crwn/FileHop/commit/c5c64d5aac141daddc765d44ef3922519f27e3c5",
-      "id": "c5c64d5a",
-      "app": "FileHop",
-      "repo": "FileHop"
-    },
-    {
-      "kind": "commit",
-      "date": "2026-11-08T12:25:46+07:00",
-      "title": "FileHop: standalone browser converter for images, PDF, data, text and archives",
-      "url": "https://github.com/navi-crwn/FileHop/commit/47e9a437a27f87bcccbdc771a3f1047eeb7f508c",
-      "id": "47e9a437",
-      "app": "FileHop",
-      "repo": "FileHop"
+      "repo": "FileHop",
+      "version": "0.1.0",
+      "summary": "",
+      "items": [
+        {
+          "type": "added",
+          "where": "Converter",
+          "text": "The first FileHop: images, PDF, data, text, archives and hashes converted in the browser tab, in nine languages, with nothing stored on the server. Reason: a private converter that never uploads files."
+        }
+      ]
     }
   ]
 }

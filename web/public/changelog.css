@@ -49,7 +49,7 @@ h1 { margin: 0 0 12px; font-size: clamp(34px, 6vw, 52px); line-height: 1.05; let
 .muted { color: var(--muted); font-size: 13px; }
 
 .log { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); overflow: hidden; }
-.log li { display: grid; grid-template-columns: 92px 104px minmax(0, 1fr) auto; align-items: baseline; gap: 6px 14px; padding: 12px 18px; border-top: 1px solid var(--line); }
+.log > li { display: grid; grid-template-columns: 92px 104px minmax(0, 1fr) auto; align-items: baseline; gap: 6px 14px; padding: 12px 18px; border-top: 1px solid var(--line); }
 .log li:first-child { border-top: 0; }
 .log time { font: 12.5px var(--mono); color: var(--muted); }
 .kind { justify-self: start; padding: 1px 8px; border: 1px solid var(--line-2); border-radius: 6px; font: 600 11.5px var(--sans); color: var(--muted); }
@@ -94,7 +94,7 @@ h1 { margin: 0 0 12px; font-size: clamp(34px, 6vw, 52px); line-height: 1.05; let
   .top { padding: 8px 12px; }
   .brand .hop-name { display: none; }
   .wrap { padding: 36px 16px 28px; }
-  .log li { grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; padding: 12px 14px; }
+  .log > li { grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; padding: 12px 14px; }
   .log time { grid-column: 1; }
   .kind { grid-column: 2; }
   .what { grid-column: 1 / -1; }
@@ -107,3 +107,13 @@ h1 { margin: 0 0 12px; font-size: clamp(34px, 6vw, 52px); line-height: 1.05; let
   .lang ul, .acct-menu { position: fixed; left: 12px; right: 12px; top: 58px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* A release of the plain-language changelog: title, what changed, where, what it means, why. */
+.log > li.rel { display: block; padding: 16px 18px 14px; }
+.rel .relhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.rel h2 { margin: 6px 0 0; font: 600 17px/1.35 var(--sans); overflow-wrap: anywhere; }
+.rel h3 { margin: 14px 0 4px; font: 600 11.5px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.rel .sum { margin: 4px 0 0; color: var(--muted); }
+.rel ul { margin: 0; padding-left: 20px; }
+.rel ul li { margin: 4px 0; overflow-wrap: anywhere; }
+.rel .det { margin: 12px 0 0; font-size: 13.5px; }

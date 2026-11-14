@@ -327,5 +327,8 @@
   "save.err_failed": "Não foi possível salvar no PixelHop. O FileHop não guardou nada.",
   "save.err_unsure": "O PixelHop não respondeu a tempo. O arquivo pode já estar na sua biblioteca do PixelHop: confira lá antes de tentar de novo.",
   "save.err_busy": "O FileHop está ocupado salvando outros arquivos. Tente de novo em instantes.",
-  "send.err_handshake_stalled": "Os dois dispositivos se conectaram, mas não concluíram a verificação mútua. Comece de novo."
+  "send.err_handshake_stalled": "Os dois dispositivos se conectaram, mas não concluíram a verificação mútua. Comece de novo.",
+  "dash.nav": "Painel",
+  "announce.title": "Aviso",
+  "announce.close": "Fechar o aviso"
 }

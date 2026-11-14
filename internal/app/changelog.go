@@ -29,12 +29,45 @@ var changelogSrc string
 
 var changelogTmpl = template.Must(template.New("changelog").Parse(changelogSrc))
 
+// changeItem is one line of a release: what changed (Type), where (Where) and the plain-language Text.
+// encoding/json fills these from "type", "where" and "text" (names match without regard to case).
+type changeItem struct{ Type, Where, Text string }
+
+// changeEntry is one release of the plain-language changelog (scripts/build-changelog.py).
 type changeEntry struct {
 	Kind, Date, Title, URL, ID string
+	Version, Summary           string
+	Items                      []changeItem
 }
 
 type changeHistory struct {
 	Entries []changeEntry
+}
+
+// changeGroup is the items of one type, in the order the page shows them.
+type changeGroup struct {
+	Type, Label string
+	Items       []changeItem
+}
+
+var changeTypes = []string{"added", "changed", "fixed", "security", "removed", "deprecated"}
+
+// groups sorts a release's items by type, keeping the written order inside a type, so the template needs no logic.
+func (e changeEntry) groups(s changeStrings) []changeGroup {
+	labels := map[string]string{"added": s.Added, "changed": s.Changed, "fixed": s.Fixed, "security": s.Security, "removed": s.Removed, "deprecated": s.Deprecated}
+	var out []changeGroup
+	for _, t := range changeTypes {
+		var items []changeItem
+		for _, it := range e.Items {
+			if it.Type == t {
+				items = append(items, it)
+			}
+		}
+		if len(items) > 0 {
+			out = append(out, changeGroup{Type: t, Label: labels[t], Items: items})
+		}
+	}
+	return out
 }
 
 var changes = sync.OnceValue(func() changeHistory {
@@ -48,6 +81,7 @@ var changes = sync.OnceValue(func() changeHistory {
 // changeStrings are the words on the page, in the family's nine languages.
 type changeStrings struct {
 	Title, Lead, Release, PR, Commit, Newer, Older, PageOf, Back, Theme, Language, PartOf string
+	Details, Added, Changed, Fixed, Security, Removed, Deprecated                         string
 }
 
 var changeLocales = []string{"en", "zh-CN", "de", "id", "ja", "pt-BR", "es", "fr", "ru"}
@@ -58,15 +92,15 @@ var changeNames = map[string]string{
 }
 
 var changeText = map[string]changeStrings{
-	"en":    {"Changelog", "Every change to FileHop, newest first, built from the public repository.", "Release", "Pull request", "Commit", "Newer", "Older", "Page %d of %d", "Back to FileHop", "Theme", "Language", "Part of Hop Easy Link"},
-	"zh-CN": {"更新日志", "FileHop 的每一次变更，按时间从新到旧，来自公开仓库。", "发布", "拉取请求", "提交", "较新", "较早", "第 %d / %d 页", "返回 FileHop", "主题", "语言", "Hop Easy Link 的一部分"},
-	"de":    {"Änderungsprotokoll", "Jede Änderung an FileHop, die neueste zuerst, aus dem öffentlichen Repository.", "Release", "Pull Request", "Commit", "Neuer", "Älter", "Seite %d von %d", "Zurück zu FileHop", "Design", "Sprache", "Teil von Hop Easy Link"},
-	"id":    {"Catatan perubahan", "Setiap perubahan pada FileHop, terbaru lebih dulu, dari repositori publik.", "Rilis", "Pull request", "Commit", "Lebih baru", "Lebih lama", "Halaman %d dari %d", "Kembali ke FileHop", "Tema", "Bahasa", "Bagian dari Hop Easy Link"},
-	"ja":    {"変更履歴", "FileHop のすべての変更を、新しい順に公開リポジトリから掲載しています。", "リリース", "プルリクエスト", "コミット", "新しい", "古い", "%d / %d ページ", "FileHop に戻る", "テーマ", "言語", "Hop Easy Link の一部"},
-	"pt-BR": {"Histórico de alterações", "Todas as alterações do FileHop, da mais recente para a mais antiga, a partir do repositório público.", "Versão", "Pull request", "Commit", "Mais recentes", "Mais antigas", "Página %d de %d", "Voltar ao FileHop", "Tema", "Idioma", "Parte do Hop Easy Link"},
-	"es":    {"Registro de cambios", "Todos los cambios de FileHop, del más reciente al más antiguo, desde el repositorio público.", "Versión", "Pull request", "Commit", "Más recientes", "Más antiguos", "Página %d de %d", "Volver a FileHop", "Tema", "Idioma", "Parte de Hop Easy Link"},
-	"fr":    {"Journal des modifications", "Toutes les modifications de FileHop, les plus récentes d’abord, issues du dépôt public.", "Version", "Pull request", "Commit", "Plus récentes", "Plus anciennes", "Page %d sur %d", "Retour à FileHop", "Thème", "Langue", "Fait partie de Hop Easy Link"},
-	"ru":    {"История изменений", "Все изменения FileHop, от новых к старым, из публичного репозитория.", "Релиз", "Pull request", "Коммит", "Новее", "Старее", "Страница %d из %d", "Назад к FileHop", "Тема", "Язык", "Часть Hop Easy Link"},
+	"en":    {"Changelog", "What changed in FileHop, newest first.", "Release", "Pull request", "Commit", "Newer", "Older", "Page %d of %d", "Back to FileHop", "Theme", "Language", "Part of Hop Easy Link", "Technical details", "Added", "Changed", "Fixed", "Security", "Removed", "Deprecated"},
+	"zh-CN": {"更新日志", "FileHop 的更新内容，最新的在前。", "发布", "拉取请求", "提交", "较新", "较早", "第 %d / %d 页", "返回 FileHop", "主题", "语言", "Hop Easy Link 的一部分", "技术详情", "新增", "变更", "修复", "安全", "移除", "已弃用"},
+	"de":    {"Änderungsprotokoll", "Was sich an FileHop geändert hat, die neuesten zuerst.", "Release", "Pull Request", "Commit", "Neuer", "Älter", "Seite %d von %d", "Zurück zu FileHop", "Design", "Sprache", "Teil von Hop Easy Link", "Technische Details", "Neu", "Geändert", "Behoben", "Sicherheit", "Entfernt", "Veraltet"},
+	"id":    {"Catatan perubahan", "Apa yang berubah di FileHop, yang terbaru di atas.", "Rilis", "Pull request", "Commit", "Lebih baru", "Lebih lama", "Halaman %d dari %d", "Kembali ke FileHop", "Tema", "Bahasa", "Bagian dari Hop Easy Link", "Detail teknis", "Ditambahkan", "Diubah", "Diperbaiki", "Keamanan", "Dihapus", "Usang"},
+	"ja":    {"変更履歴", "FileHop で何が変わったか。新しい順です。", "リリース", "プルリクエスト", "コミット", "新しい", "古い", "%d / %d ページ", "FileHop に戻る", "テーマ", "言語", "Hop Easy Link の一部", "技術的な詳細", "追加", "変更", "修正", "セキュリティ", "削除", "非推奨"},
+	"pt-BR": {"Histórico de alterações", "O que mudou no FileHop, do mais recente ao mais antigo.", "Versão", "Pull request", "Commit", "Mais recentes", "Mais antigas", "Página %d de %d", "Voltar ao FileHop", "Tema", "Idioma", "Parte do Hop Easy Link", "Detalhes técnicos", "Adicionado", "Alterado", "Corrigido", "Segurança", "Removido", "Obsoleto"},
+	"es":    {"Registro de cambios", "Qué ha cambiado en FileHop, lo más reciente primero.", "Versión", "Pull request", "Commit", "Más recientes", "Más antiguos", "Página %d de %d", "Volver a FileHop", "Tema", "Idioma", "Parte de Hop Easy Link", "Detalles técnicos", "Añadido", "Cambiado", "Corregido", "Seguridad", "Eliminado", "Obsoleto"},
+	"fr":    {"Journal des modifications", "Ce qui a changé dans FileHop, du plus récent au plus ancien.", "Version", "Pull request", "Commit", "Plus récentes", "Plus anciennes", "Page %d sur %d", "Retour à FileHop", "Thème", "Langue", "Fait partie de Hop Easy Link", "Détails techniques", "Ajouté", "Modifié", "Corrigé", "Sécurité", "Supprimé", "Obsolète"},
+	"ru":    {"История изменений", "Что изменилось в FileHop, сначала новое.", "Релиз", "Pull request", "Коммит", "Новее", "Старее", "Страница %d из %d", "Назад к FileHop", "Тема", "Язык", "Часть Hop Easy Link", "Технические подробности", "Добавлено", "Изменено", "Исправлено", "Безопасность", "Удалено", "Устарело"},
 }
 
 // changeLang picks ?lang=, then the family cookie hop_lang, then the browser's Accept-Language, then English.
@@ -124,6 +158,8 @@ func matchLang(tag string) string {
 
 type changeRow struct {
 	Kind, Date, Title, URL, ID string
+	Version, Summary           string
+	Groups                     []changeGroup
 }
 
 type changeLink struct{ Code, Name, URL string }
@@ -198,7 +234,7 @@ func buildChangePage(r *http.Request) changePage {
 		if len(date) >= 10 {
 			date = date[:10]
 		}
-		p.Rows = append(p.Rows, changeRow{Kind: kinds[e.Kind], Date: date, Title: e.Title, URL: e.URL, ID: e.ID})
+		p.Rows = append(p.Rows, changeRow{Kind: kinds[e.Kind], Date: date, Title: e.Title, URL: e.URL, ID: e.ID, Version: e.Version, Summary: e.Summary, Groups: e.groups(s)})
 	}
 	if page > 1 {
 		p.Previous = changeURL(lang, page-1)

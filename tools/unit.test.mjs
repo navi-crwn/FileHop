@@ -296,7 +296,9 @@ writeFileSync(join(dir, 'pages-stub.mjs'), 'export const looksLikePages = () => 
 writeFileSync(join(dir, 'account-stub.mjs'), 'export const account = { signedIn: false, pixelhop: null };');
 writeFileSync(join(dir, 'pixelhop.mjs'), ts.transpileModule(readFileSync(new URL('../web/src/lib/core/pixelhop.ts', import.meta.url), 'utf8'),
   { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
-for (const name of ['Icon', 'JobCard']) {
+writeFileSync(join(dir, 'announcements.mjs'), ts.transpileModule(readFileSync(new URL('../web/src/lib/announcements.ts', import.meta.url), 'utf8'),
+  { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
+for (const name of ['Icon', 'JobCard', 'Announcement']) {
   const url = new URL(`../web/src/lib/components/${name}.svelte`, import.meta.url);
   const compiled = compile(readFileSync(url, 'utf8'), { filename: `${name}.svelte`, generate: 'server' });
   writeFileSync(join(dir, `${name}.mjs`), compiled.js.code
@@ -307,7 +309,8 @@ for (const name of ['Icon', 'JobCard']) {
     .replace("from '../util/format'", "from './format-stub.mjs'")
     .replace("from '../core/pages'", "from './pages-stub.mjs'")
     .replace("from '../account.svelte'", "from './account-stub.mjs'")
-    .replace("from '../core/pixelhop'", "from './pixelhop.mjs'"));
+    .replace("from '../core/pixelhop'", "from './pixelhop.mjs'")
+    .replace("from '../announcements'", "from './announcements.mjs'"));
 }
 const { default: JobCard } = await import('file://' + join(dir, 'JobCard.mjs').replace(/\\/g, '/'));
 const { account: accountStub } = await import('file://' + join(dir, 'account-stub.mjs').replace(/\\/g, '/'));
@@ -924,4 +927,62 @@ test('theme.js reads hop_theme first, moves the old key into it once, and leaves
   assert.deepEqual(run('', 'dark', 'file.hel.ink').written, ['hop_theme=dark; Path=/; Max-Age=31536000; SameSite=Lax; domain=.hel.ink; Secure']);
   assert.deepEqual(run('hop_theme=system', 'dark'), { theme: undefined, written: [] });
   assert.deepEqual(run('', null), { theme: undefined, written: [] });
+});
+
+
+
+/* The notice card of the dashboard (F-3): a fixed list in the code, empty by default; closing hides it for seven days. */
+const { default: Announcement } = await import('file://' + join(dir, 'Announcement.mjs').replace(/\\/g, '/'));
+const { ANNOUNCEMENTS, announceKey } = await import('file://' + join(dir, 'announcements.mjs').replace(/\\/g, '/'));
+const sample = [{ id: 'maint', text: { en: 'Maintenance on Sunday.', de: 'Wartung am Sonntag.' } }];
+function withStorage(map, fn) {
+  const had = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k) => map[k] ?? null, setItem: (k, v) => { map[k] = v; } } });
+  try { return fn(); } finally { if (had) Object.defineProperty(globalThis, 'localStorage', had); else delete globalThis.localStorage; }
+}
+test('the dashboard has no notice card and no empty space while the list is empty', () => {
+  assert.deepEqual(ANNOUNCEMENTS, []);
+  assert.doesNotMatch(render(Announcement, { props: {} }).body, /announce/);
+  assert.doesNotMatch(render(Announcement, { props: { items: [] } }).body, /announce/);
+});
+test('a notice is drawn with its title, its text in the language and a labelled close button', () => {
+  const body = withStorage({}, () => render(Announcement, { props: { items: sample, locale: 'de' } }).body);
+  assert.match(body, /class="announce"/);
+  assert.match(body, /Wartung am Sonntag\./);
+  assert.match(body, /<h2[^>]*>Announcement<\/h2>/);
+  assert.match(body, /<button[^>]*class="announce-x"[^>]*aria-label="Close announcement"/);
+  // English when there is no text for the language
+  assert.match(withStorage({}, () => render(Announcement, { props: { items: sample, locale: 'ja' } }).body), /Maintenance on Sunday\./);
+});
+test('a closed notice stays away for seven days and then comes back', () => {
+  const day = 864e5;
+  assert.doesNotMatch(withStorage({ [announceKey('maint')]: String(Date.now() - day) }, () => render(Announcement, { props: { items: sample } }).body), /announce/);
+  assert.match(withStorage({ [announceKey('maint')]: String(Date.now() - 8 * day) }, () => render(Announcement, { props: { items: sample } }).body), /class="announce"/);
+  // another notice is not hidden by the first one being closed
+  const two = [...sample, { id: 'next', text: { en: 'Second notice.' } }];
+  assert.match(withStorage({ [announceKey('maint')]: String(Date.now()) }, () => render(Announcement, { props: { items: two } }).body), /Second notice\./);
+});
+test('for a signed-in person the logo, Convert and the main button of /send lead to the dashboard, and the account menu has a Dashboard entry', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  assert.match(src, /const home = \$derived\(dash \|\| \(account\.ready && account\.signedIn\) \? '\/dashboard' : '\/'\)/);
+  assert.match(src, /<a class="shell-brand" href=\{home\}>/);
+  assert.match(src, /<a href=\{home\} aria-current=\{dash \? 'page' : undefined\}>/);
+  assert.match(src, /<a class="tbtn primary" href=\{home\}>/);
+  assert.match(src, /\{#if !dash\}<a href="\/dashboard">\{i18n\.t\('dash\.nav'\)\}<\/a>\{\/if\}/);
+  assert.doesNotMatch(src, /href=\{dash \? '\/dashboard' : '\/'\}/);
+});
+test('"Part of Hop Easy Link" is the last element of the dashboard sidebar, and the first view has it too', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const from = src.indexOf('<aside class="shell-side"');
+  const side = src.slice(from, src.indexOf('</aside>', from));
+  assert.match(side, /<div class="shell-side-foot">[\s\S]*<\/div>\s*<a class="ft-part" href="https:\/\/hel\.ink"/);
+  const fv = readFileSync(new URL('../internal/app/firstview.html.tmpl', import.meta.url), 'utf8');
+  assert.match(fv, /<div class="shell-side-foot">[\s\S]*?<\/div><a class="ft-part" href="https:\/\/hel\.ink"[\s\S]*?<\/aside>/);
+});
+
+test('the sign-in link of the top bar is shortened on a phone so a long word cannot push the bar past the screen', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../web/src/app.css', import.meta.url), 'utf8');
+  assert.ok(src.includes('class="tbtn signin"'));
+  assert.ok(css.includes('.tbtn.signin { max-width: 6.2rem; overflow: hidden; text-overflow: ellipsis;'));
 });

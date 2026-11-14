@@ -14,6 +14,7 @@
   import { download, safeFileName } from './lib/util/format';
   import { confirmAction } from './lib/util/confirm';
   import { zipSync } from 'fflate';
+  import Announcement from './lib/components/Announcement.svelte';
   import { account, loadAccount, initials, takeAuthError, takeRecheckMark, recheckQuietly } from './lib/account.svelte';
 
   /* The other HOP apps, as the family manifest (hel.ink/hop-assets/apps.json) lists them.
@@ -46,6 +47,8 @@
      same chrome as the dashboard, but needs no account, so guests get it too. */
   const sendPage = typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/send';
   let navOpen = $state(false);
+  /* Where the logo, Convert and the main button of /send lead: a signed-in person's dashboard, a visitor's home page. */
+  const home = $derived(dash || (account.ready && account.signedIn) ? '/dashboard' : '/');
 
   let locale = $state(guessLocale());
   let settingsOpen = $state(false);
@@ -525,7 +528,7 @@
 
 {#snippet tools()}
     {#if sendPage}
-      <a class="tbtn primary" href="/"><Icon name="refresh" size={17} /><span class="tlabel">{i18n.t('send.convert')}</span></a>
+      <a class="tbtn primary" href={home}><Icon name="refresh" size={17} /><span class="tlabel">{i18n.t('send.convert')}</span></a>
     {:else}
     <button class="tbtn primary" type="button" onclick={pickFiles}>
       <Icon name="plus" size={17} /><span class="tlabel">{i18n.t('nav.add')}</span>
@@ -569,12 +572,13 @@
         <div class="acct-menu">
           <p class="small muted">{i18n.t('account.signed_in_as')}<br /><strong>{account.email || account.name}</strong></p>
           <button class="acct-item" type="button" onclick={() => { closeAccountMenu(); settingsOpen = true; }}><Icon name="gear" size={15} />{i18n.t('nav.settings')}</button>
+          {#if !dash}<a href="/dashboard">{i18n.t('dash.nav')}</a>{/if}
           {#if account.hubUrl}<a href={account.hubUrl}>{i18n.t('account.hop_id')}</a>{/if}
           <a href={account.logoutUrl || '/auth/sso/logout'}>{i18n.t('account.sign_out')}</a>
         </div>
       </details>
     {:else if account.ready && account.sso}
-      <a class="tbtn" href="/auth/sso?next=%2F">{i18n.t('account.sign_in')}</a>
+      <a class="tbtn signin" href="/auth/sso?next=%2F" title={i18n.t('account.sign_in')}>{i18n.t('account.sign_in')}</a>
     {/if}
 {/snippet}
 
@@ -676,12 +680,12 @@
 {#if dash || sendPage}
 <div class="shell" class:open={navOpen}>
   <aside class="shell-side" id="shell-side" aria-label="FileHop">
-    <a class="shell-brand" href={dash ? '/dashboard' : '/'}>
+    <a class="shell-brand" href={home}>
       <img src="/mark.svg" alt="" width="26" height="26" />
       <span class="hop-name hop-name-filehop">FileHop</span>
     </a>
     <nav class="shell-nav" aria-label="FileHop">
-      <a href={dash ? '/dashboard' : '/'} aria-current={dash ? 'page' : undefined}><Icon name="refresh" size={18} />{i18n.t('dash.convert')}</a>
+      <a href={home} aria-current={dash ? 'page' : undefined}><Icon name="refresh" size={18} />{i18n.t('dash.convert')}</a>
       <a href="/send" aria-current={sendPage ? 'page' : undefined}><Icon name="upload" size={18} />{i18n.t('send.nav')}</a>
       <a href="/changelog"><Icon name="text" size={18} />{i18n.t('footer.changelog')}</a>
     </nav>
@@ -697,6 +701,10 @@
       <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
       <button class="ft-link" type="button" onclick={() => (licensesOpen = true)}>{i18n.t('footer.licenses')}</button>
     </div>
+    <a class="ft-part" href="https://hel.ink" rel="noopener">
+      <img src="/hop-id-mark.png" alt="" width="20" height="20" />
+      <span>{#each i18n.t('footer.part_of').split('{name}') as part, i}{#if i > 0}<b>Hop Easy Link</b>{/if}{part}{/each}</span>
+    </a>
   </aside>
   {#if navOpen}<div class="shell-scrim" onclick={() => (navOpen = false)} role="presentation"></div>{/if}
 
@@ -714,6 +722,7 @@
       {#if sendPage}
         {#await import('./lib/send/Send.svelte') then m}<m.default />{/await}
       {:else}
+      <Announcement locale={i18n.locale} />
       <div class="dash-grid">
         <div class="dash-work">
           {@render dropzone()}

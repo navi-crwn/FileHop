@@ -892,3 +892,20 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 
 .shell-title { margin: 0 0 0 4px; font-size: 15px; font-weight: 700; letter-spacing: 0; }
 @media (max-width: 639px) { .shell-title { display: none; } }
+
+/* "Part of Hop Easy Link" at the foot of the dashboard sidebar, left-aligned with the menu items. */
+.shell-side .ft-part { margin: 6px 0 0; padding: 4px 12px 2px; }
+
+/* The notice card at the top of the dashboard (a fixed list in the code; nothing drawn when it is empty). */
+.announce { display: flex; align-items: flex-start; gap: 12px; max-width: 1180px; margin: 0 auto 16px; padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line-2)); border-radius: var(--hop-card-radius); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); }
+.announce-ic { display: inline-flex; margin-top: 1px; color: var(--accent); }
+.announce-body { flex: 1; min-width: 0; }
+.announce-body h2 { margin: 0 0 2px; font-size: 14px; font-weight: 700; }
+.announce-body p { margin: 0; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.announce-x { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin: -4px -4px 0 0; border: 1px solid var(--line-2); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.announce-x:hover { color: var(--text); background: var(--panel-2); }
+@media (pointer: coarse) { .announce-x { width: 44px; height: 44px; } }
+
+/* On a phone the sign-in word ("Se connecter", "Iniciar sesión") must not push the top bar past the screen. */
+@media (max-width: 640px) { .tbtn.signin { max-width: 6.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; line-height: var(--hop-ctl-h); } }

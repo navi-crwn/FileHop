@@ -16,6 +16,8 @@ jobs:
       - run: npm test
       - run: npm run lint:i18n
       - run: npm run check
+      - name: Changelog is plain and current
+        run: python3 scripts/build-changelog.py --repo FileHop --check && python3 -m unittest scripts/test_build_changelog.py
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with:
