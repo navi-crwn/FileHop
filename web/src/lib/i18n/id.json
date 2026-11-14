@@ -327,5 +327,8 @@
   "save.err_failed": "Gagal menyimpan ke PixelHop. FileHop tidak menyimpan apa pun.",
   "save.err_unsure": "PixelHop tidak menjawab tepat waktu. Berkas ini mungkin sudah ada di perpustakaan PixelHop Anda: periksa di sana sebelum mencoba lagi.",
   "save.err_busy": "FileHop sedang sibuk menyimpan berkas lain. Coba lagi sebentar lagi.",
-  "send.err_handshake_stalled": "Kedua perangkat tersambung tetapi tidak selesai saling memeriksa. Mulai ulang."
+  "send.err_handshake_stalled": "Kedua perangkat tersambung tetapi tidak selesai saling memeriksa. Mulai ulang.",
+  "dash.nav": "Dasbor",
+  "announce.title": "Pengumuman",
+  "announce.close": "Tutup pengumuman"
 }

@@ -327,5 +327,8 @@
   "save.err_failed": "PixelHop に保存できませんでした。FileHop には何も残っていません。",
   "save.err_unsure": "PixelHop から時間内に応答がありませんでした。ファイルはすでに PixelHop のライブラリにあるかもしれません。もう一度試す前に確認してください。",
   "save.err_busy": "FileHop は他のファイルを保存中です。少し待ってからやり直してください。",
-  "send.err_handshake_stalled": "2台は接続しましたが、相互の確認が完了しませんでした。最初からやり直してください。"
+  "send.err_handshake_stalled": "2台は接続しましたが、相互の確認が完了しませんでした。最初からやり直してください。",
+  "dash.nav": "ダッシュボード",
+  "announce.title": "お知らせ",
+  "announce.close": "お知らせを閉じる"
 }
