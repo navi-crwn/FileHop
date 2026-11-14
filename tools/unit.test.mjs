@@ -979,3 +979,10 @@ test('"Part of Hop Easy Link" is the last element of the dashboard sidebar, and 
   const fv = readFileSync(new URL('../internal/app/firstview.html.tmpl', import.meta.url), 'utf8');
   assert.match(fv, /<div class="shell-side-foot">[\s\S]*?<\/div><a class="ft-part" href="https:\/\/hel\.ink"[\s\S]*?<\/aside>/);
 });
+
+test('the sign-in link of the top bar is shortened on a phone so a long word cannot push the bar past the screen', () => {
+  const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../web/src/app.css', import.meta.url), 'utf8');
+  assert.ok(src.includes('class="tbtn signin"'));
+  assert.ok(css.includes('.tbtn.signin { max-width: 6.2rem; overflow: hidden; text-overflow: ellipsis;'));
+});

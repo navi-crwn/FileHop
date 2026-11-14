@@ -906,3 +906,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--a
 .announce-x { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin: -4px -4px 0 0; border: 1px solid var(--line-2); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
 .announce-x:hover { color: var(--text); background: var(--panel-2); }
 @media (pointer: coarse) { .announce-x { width: 44px; height: 44px; } }
+
+/* On a phone the sign-in word ("Se connecter", "Iniciar sesión") must not push the top bar past the screen. */
+@media (max-width: 640px) { .tbtn.signin { max-width: 6.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; line-height: var(--hop-ctl-h); } }

@@ -578,7 +578,7 @@
         </div>
       </details>
     {:else if account.ready && account.sso}
-      <a class="tbtn" href="/auth/sso?next=%2F">{i18n.t('account.sign_in')}</a>
+      <a class="tbtn signin" href="/auth/sso?next=%2F" title={i18n.t('account.sign_in')}>{i18n.t('account.sign_in')}</a>
     {/if}
 {/snippet}
 
