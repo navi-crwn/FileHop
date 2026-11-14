@@ -3,6 +3,7 @@ package app
 import (
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -118,5 +119,53 @@ func TestChangelogLanguageAndPaging(t *testing.T) {
 	}
 	if len(changeText) != 9 || len(changeNames) != 9 {
 		t.Error("the family has nine languages")
+	}
+}
+
+// The page shows releases in plain language: a title, the items grouped by type with their place in bold, and
+// nothing of the git history.
+func TestChangelogShowsPlainReleases(t *testing.T) {
+	h := changes()
+	for _, e := range h.Entries {
+		if e.Title == "" || e.Version == "" || len(e.Items) == 0 {
+			t.Fatalf("a release without a title, a version or items: %+v", e)
+		}
+		for _, it := range e.Items {
+			if it.Where == "" || it.Text == "" {
+				t.Fatalf("an item without a place or a text in %s", e.Version)
+			}
+		}
+	}
+	_, srv := newTestApp(t, false)
+	for _, lang := range []string{"en", "de", "ru"} {
+		_, body := get(t, srv.URL, "/changelog?lang="+lang, "")
+		for _, want := range []string{`class="rel"`, "<h3>", "<b>Dashboard, announcements.</b>"} {
+			if !strings.Contains(body, want) {
+				t.Errorf("?lang=%s: page lacks %q", lang, want)
+			}
+		}
+		for _, bad := range []string{"Merge pull request", "remote-tracking", "feat/", "fix/"} {
+			if strings.Contains(body, bad) {
+				t.Errorf("?lang=%s: page shows %q", lang, bad)
+			}
+		}
+		if regexp.MustCompile(`(?i)\btrain\b|kereta`).MatchString(body) {
+			t.Errorf("?lang=%s: the page has a forbidden word", lang)
+		}
+	}
+	if _, body := get(t, srv.URL, "/changelog?lang=de", ""); !strings.Contains(body, "<h3>Behoben</h3>") && !strings.Contains(body, "<h3>Neu</h3>") {
+		t.Error("the group labels are not translated")
+	}
+}
+
+// Every language has every label the cards need.
+func TestChangelogLabelsExistInNineLanguages(t *testing.T) {
+	for _, l := range changeLocales {
+		s := changeText[l]
+		for name, v := range map[string]string{"Details": s.Details, "Added": s.Added, "Changed": s.Changed, "Fixed": s.Fixed, "Security": s.Security, "Removed": s.Removed, "Deprecated": s.Deprecated, "Lead": s.Lead} {
+			if strings.TrimSpace(v) == "" {
+				t.Errorf("%s: no %s", l, name)
+			}
+		}
 	}
 }
