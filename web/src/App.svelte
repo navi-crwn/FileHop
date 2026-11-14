@@ -722,7 +722,7 @@
       {#if sendPage}
         {#await import('./lib/send/Send.svelte') then m}<m.default />{/await}
       {:else}
-      <Announcement locale={i18n.locale} />
+      <Announcement />
       <div class="dash-grid">
         <div class="dash-work">
           {@render dropzone()}

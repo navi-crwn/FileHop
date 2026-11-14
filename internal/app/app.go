@@ -49,6 +49,7 @@ type App struct {
 	nonces  hop.Nonces
 	started time.Time
 	hubUp   func() bool // is the hub reachable (cached); replaced in tests
+	ann     *annSource  // family announcements from the hub (announce.go)
 	send    sendHub
 	px      pixelGate
 }
@@ -61,6 +62,9 @@ func New(cfg Config, d *db.DB, static fs.FS) (*App, error) {
 	}
 	a := &App{cfg: cfg, db: d, static: static, index: index, pages: buildPages(index), used: usedTickets{m: map[string]int64{}}, started: time.Now()}
 	a.hubUp = newHubProbe(cfg.SSOURL).Up
+	if cfg.SSOEnabled() {
+		a.ann = newAnnSource(cfg.SSOURL)
+	}
 	return a, nil
 }
 

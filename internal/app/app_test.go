@@ -44,6 +44,7 @@ func newTestApp(t *testing.T, sso bool) (*App, *httptest.Server) {
 		t.Fatal(err)
 	}
 	a.hubUp = func() bool { return true }
+	a.ann = nil // tests that need the hub's announcements plug in their own source
 	srv := httptest.NewServer(a.Handler())
 	t.Cleanup(srv.Close)
 	a.cfg.BaseURL = srv.URL
