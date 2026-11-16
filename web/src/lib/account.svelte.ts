@@ -15,6 +15,8 @@ export interface Account {
   name: string;
   email: string;
   hubUrl: string;
+  /** the running release, for the Feedback link (the form asks which version the person used) */
+  version: string;
   logoutUrl: string;
   /** "Save to PixelHop" is available: PixelHop's address and the largest file it takes; null when off */
   pixelhop: { url: string; max: number } | null;
@@ -30,6 +32,7 @@ export const account: Account = $state({
   name: '',
   email: '',
   hubUrl: '',
+  version: '',
   logoutUrl: '',
   pixelhop: null,
   announcements: []
@@ -46,6 +49,7 @@ export async function loadAccount(): Promise<void> {
     account.name = typeof me.name === 'string' ? me.name : '';
     account.email = typeof me.email === 'string' ? me.email : '';
     account.hubUrl = typeof me.hub_url === 'string' ? me.hub_url : '';
+    account.version = typeof me.version === 'string' ? me.version : '';
     account.logoutUrl = typeof me.logout_url === 'string' ? me.logout_url : '';
     account.announcements = account.signedIn ? parseAnnouncements(me.announcements) : [];
     const px = me.pixelhop;

@@ -209,6 +209,7 @@ type changePage struct {
 	Canonical         string         // this page's own address (the bare one for English or no ?lang=)
 	Hreflang          []hreflangLink // the nine alternates and x-default
 	Home              template.URL   // "/" that keeps a per-language address's language
+	Feedback          string         // the Feedback link, "" without a hub address
 }
 
 // changeOrigin is the site address the changelog states, as index.html does for the other pages.
@@ -223,7 +224,7 @@ func changeURL(lang string, page int) string {
 	return "/changelog?" + q.Encode()
 }
 
-func buildChangePage(r *http.Request) changePage {
+func buildChangePage(r *http.Request, cfg Config) changePage {
 	lang := changeLang(r)
 	s := changeText[lang]
 	all := changes().Entries
@@ -234,6 +235,7 @@ func buildChangePage(r *http.Request) changePage {
 	p.T = appStrings(lang)
 	p.PartPre, p.PartPost, _ = strings.Cut(p.T["footer.part_of"], "{name}")
 	p.Family = changeFamily
+	p.Feedback = feedbackURL(cfg.feedbackBase(), "changelog", cfg.Version)
 	p.PageLabel = fmt.Sprintf(s.PageOf, page, pages)
 	explicit := explicitLang(r)
 	p.Canonical = changeOrigin + "/changelog"
@@ -263,7 +265,7 @@ func buildChangePage(r *http.Request) changePage {
 }
 
 func (a *App) changelog(w http.ResponseWriter, r *http.Request) {
-	p := buildChangePage(r)
+	p := buildChangePage(r, a.cfg)
 	h := w.Header()
 	setAppHeaders(h)
 	h.Set("Content-Type", "text/html; charset=utf-8")

@@ -255,7 +255,8 @@ func (a *App) dashboard(w http.ResponseWriter, r *http.Request) {
 // apiMe tells the browser whether someone is signed in. It always answers 200
 // so a guest's console stays clean; sso:false means sign-in is not set up here.
 func (a *App) apiMe(w http.ResponseWriter, r *http.Request) {
-	out := map[string]any{"sso": a.cfg.SSOEnabled(), "signed_in": false}
+	// version is for the Feedback link, which tells the form which release the person was using
+	out := map[string]any{"sso": a.cfg.SSOEnabled(), "signed_in": false, "version": a.cfg.Version}
 	if u, fresh := a.sessionState(r); u != nil && !fresh {
 		// The page may re-check once, quietly, through the hub. With the hub down sessionState
 		// trusts the session instead, so this branch only runs while the hub answers.
