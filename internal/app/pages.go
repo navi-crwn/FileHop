@@ -180,10 +180,16 @@ func renderPage(index []byte, origin string, p publicPage, lang string, dict map
 		b = pageDescRe.ReplaceAllLiteral(b, []byte(`<meta name="description" content="`+d+`">`))
 		b = pageOGDescRe.ReplaceAllLiteral(b, []byte(`<meta property="og:description" content="`+d+`">`))
 	}
-	b = pageOGURLRe.ReplaceAllLiteral(b, []byte(`<meta property="og:url" content="`+canon+`">`))
+	if mode == modeUnindexed {
+		b = pageOGURLRe.ReplaceAllLiteral(b, nil)
+	} else {
+		b = pageOGURLRe.ReplaceAllLiteral(b, []byte(`<meta property="og:url" content="`+canon+`">`))
+	}
 
 	links := `<link rel="canonical" href="` + canon + `">`
-	if mode != modeUnindexed {
+	if mode == modeUnindexed {
+		links = "" // not a page: no canonical, no alternates (it answers 404)
+	} else {
 		links += hreflangHTML(origin, p.Path)
 	}
 	head := pageStyle
@@ -192,7 +198,7 @@ func renderPage(index []byte, origin string, p publicPage, lang string, dict map
 	} else {
 		head = links + "\n" + head
 	}
-	if p.App {
+	if p.App && mode != modeUnindexed {
 		head += "\n" + appData(b, origin)
 	}
 	b = bytes.Replace(b, []byte("</head>"), []byte(head+"\n</head>"), 1)
@@ -259,24 +265,27 @@ func appData(page []byte, origin string) string {
 }
 
 // shell is the HTML of an app route: a public one as built above, in the visitor's language. Any other
-// path gets the home page's first view (the app shows its home there too), marked so it is not indexed.
-func (a *App) shell(name string, r *http.Request, h http.Header) []byte {
+// path gets the home page's first view (the app shows its home there too), marked so it is not indexed,
+// and known=false: the caller answers it 404.
+func (a *App) shell(name string, r *http.Request, h http.Header) (body []byte, known bool) {
 	route := "/" + name
 	if name == "index.html" {
 		route = "/"
 	}
 	key := route
+	known = true
 	if route != "/" && !isPublicPage(route) {
 		h.Set("X-Robots-Tag", "noindex")
 		key = unindexedKey
+		known = false
 	} else if explicitLang(r) {
 		key = "?" + route
 	}
 	if a.pages == nil {
-		return a.index
+		return a.index, known
 	}
 	h.Add("Vary", "Cookie, Accept-Language")
-	return a.pages[pageLang(r)][key]
+	return a.pages[pageLang(r)][key], known
 }
 
 func isPublicPage(route string) bool {

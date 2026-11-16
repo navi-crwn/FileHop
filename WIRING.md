@@ -16,7 +16,7 @@ This app is standalone on purpose. It already has the shape the family needs, so
 | Three engines, `crossOriginIsolated` | Chromium, WebKit (Playwright), Firefox: 22/22 each; real Safari not yet |
 | Hub registry row, `hop-auth` trusted hosts, Imperium entry | to do, in their own repos, after the owner approves |
 | Prefs and stats (`/api/v1/prefs`, `/api/v1/stats`) | not started |
-| "Send to" buttons, `/send` (P2P) | not started; `/send` already gets the app shell |
+| "Send to" buttons, `/send` (P2P) | `/send` is a public page (publicPages in pages.go); any other path without a file answers 404 |
 
 ---
 

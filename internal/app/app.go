@@ -107,9 +107,8 @@ func (a *App) Handler() http.Handler {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not_found"})
 	})
 
-	// Everything else is the browser app. /send is kept for the peer-to-peer
-	// sender that will live in this same app (file.hel.ink/send); like any
-	// other route without an extension it gets the app shell today.
+	// Everything else is the browser app: the pages in publicPages (/ and /send) get the shell, any other
+	// path without a file is a 404 (serveStatic). A new browser route must be added to publicPages.
 	m.HandleFunc("/", a.serveStatic)
 	return secure(m)
 }
@@ -152,7 +151,15 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		} else {
 			h.Set("Content-Type", "text/html; charset=utf-8")
 			h.Set("Cache-Control", "private, no-cache") // in the visitor's language: never from a shared cache
-			w.Write(a.shell(name, r, h))
+			body, known := a.shell(name, r, h)
+			if !known {
+				// Not a page of the app: a real 404, still wearing the shell so the app can show
+				// its own not-found screen (never a 200 for an address that is no page: soft 404).
+				w.WriteHeader(http.StatusNotFound)
+			}
+			if r.Method != http.MethodHead {
+				w.Write(body)
+			}
 			return
 		}
 	}
