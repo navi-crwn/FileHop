@@ -88,6 +88,17 @@ func (a *App) Handler() http.Handler {
 	a.hopRoutes(m)
 
 	m.HandleFunc("GET /changelog", a.changelog)
+	m.HandleFunc("GET /changelog/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/changelog/" {
+			a.serveStatic(w, r) // /changelog/x is no page: the shell, 404
+			return
+		}
+		u := "/changelog"
+		if r.URL.RawQuery != "" {
+			u += "?" + r.URL.RawQuery
+		}
+		http.Redirect(w, r, u, http.StatusMovedPermanently)
+	})
 	m.HandleFunc("GET /sitemap.xml", a.sitemap)
 	m.HandleFunc("GET /dashboard", a.dashboard)
 	m.HandleFunc("GET /dashboard/", func(w http.ResponseWriter, r *http.Request) {

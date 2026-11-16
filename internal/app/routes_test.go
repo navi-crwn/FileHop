@@ -74,7 +74,7 @@ func TestUnknownRoutesAre404(t *testing.T) {
 	srv := builtApp(t)
 	paths := []string{
 		"/zz-no-such-page-seo-audit", "/features", "/about", "/pricing", "/send/extra", "/send/x/y",
-		"/changelog/", "/changelog/x", "/Send", "/SEND", "/index", "/a/b/c",
+		"/changelog/x", "/Send", "/SEND", "/index", "/a/b/c",
 	}
 	for _, p := range paths {
 		for _, q := range append([]string{""}, langQueries()...) {
@@ -136,5 +136,22 @@ func TestChangelogDescriptionIsAProperSentence(t *testing.T) {
 				t.Errorf("%s: /changelog lacks %s%s", l, tag, d)
 			}
 		}
+	}
+}
+
+// A trailing slash on a real page goes to the address without it (301, query kept); /send/ keeps the shell.
+func TestTrailingSlashOfRealPagesRedirects(t *testing.T) {
+	srv := builtApp(t)
+	for path, want := range map[string]string{
+		"/changelog/": "/changelog", "/changelog/?lang=de": "/changelog?lang=de", "/changelog/?page=2": "/changelog?page=2",
+		"/dashboard/": "/dashboard",
+	} {
+		res, _ := fetchWith(t, srv.URL, path, nil)
+		if res.StatusCode != http.StatusMovedPermanently || res.Header.Get("Location") != want {
+			t.Errorf("%s: %d to %q, want 301 to %q", path, res.StatusCode, res.Header.Get("Location"), want)
+		}
+	}
+	if res, _ := fetchWith(t, srv.URL, "/changelog/x", nil); res.StatusCode != 404 || res.Header.Get("X-Robots-Tag") != "noindex" {
+		t.Errorf("/changelog/x: %d %q", res.StatusCode, res.Header.Get("X-Robots-Tag"))
 	}
 }
