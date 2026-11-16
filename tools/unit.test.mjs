@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 
 /* The sources are TypeScript for the browser. `ts.transpileModule` strips the
    types without bundling, which is all these pure modules need: their only
@@ -1044,18 +1045,21 @@ const footItems = (html) => {
   const start = html.indexOf('<nav class="shell-side-foot"');
   const nav = html.slice(start, html.indexOf('</nav>', start))
     .replace(/\{\{href "([^"]*)"\}\}/g, '$1').replace(/\{withLang\('([^']*)'\)\}/g, '$1')
-    .replace(/\{\{t "([^"]*)"\}\}/g, '$1').replace(/\{i18n\.t\('([^']*)'\)\}/g, '$1');
+    .replace(/\{\{t "([^"]*)"\}\}/g, '$1').replace(/\{i18n\.t\('([^']*)'\)\}/g, '$1')
+    // the Feedback item is the one conditional item: drawn only with a hub address, the same address in both copies
+    .replace(/\{\{if \.Feedback\}\}|\{\{end\}\}|\{#if feedback\}|\{\/if\}/g, '').replace(/\{\{\.Feedback\}\}|\{feedback\}/g, 'FEEDBACK');
   return [...nav.matchAll(/<li><a href="?([^"\s>]*)"?[^>]*>([^<]*)<\/a><\/li>/g)].map((m) => [m[1], m[2]]);
 };
 const FOOT = [
   ['https://hel.ink/help', 'footer.help'],
+  ['FEEDBACK', 'footer.feedback'],
   ['https://hel.ink/terms', 'footer.terms'],
   ['/#privacy', 'footer.privacy'],
   ['/changelog', 'footer.changelog'],
   ['https://github.com/navi-crwn/FileHop', 'GitHub'],
   ['https://hel.ink/announcements', 'announce.title']
 ];
-test('the sidebar foot lists Help, Terms, Privacy, Changelog, GitHub, Announcement in that order, in the app and in the first view', () => {
+test('the sidebar foot lists Help, Feedback, Terms, Privacy, Changelog, GitHub, Announcement in that order, in the app and in the first view', () => {
   const src = readFileSync(new URL('../web/src/App.svelte', import.meta.url), 'utf8');
   const from = src.indexOf('<aside class="shell-side"');
   const side = src.slice(from, src.indexOf('</aside>', from));
@@ -1063,6 +1067,9 @@ test('the sidebar foot lists Help, Terms, Privacy, Changelog, GitHub, Announceme
   const fvSide = fv.slice(fv.indexOf('{{define "send"}}'));
   assert.deepEqual(footItems(side), FOOT);
   assert.deepEqual(footItems(fvSide), FOOT);
+  // Feedback opens in a new tab, so work in the app is not lost, and exists only where a hub address does
+  assert.match(side, /\{#if feedback\}<li><a href=\{feedback\} target="_blank" rel="noopener">/);
+  assert.match(fvSide, /\{\{if \.Feedback\}\}<li><a href="\{\{\.Feedback\}\}" target="_blank" rel="noopener">/);
   // nothing else in the foot: Source and Licenses live in the public footer
   assert.doesNotMatch(side, /shell-side-foot[\s\S]*ft-link[\s\S]*<\/aside>/);
   assert.doesNotMatch(fvSide, /shell-side-foot[\s\S]*ft-link[\s\S]*<\/aside>/);
@@ -1079,7 +1086,7 @@ test('"Part of Hop Easy Link" comes right after the foot, as the last element of
 test('every language has the new Help word and the announcement label', () => {
   for (const f of readdirSync(new URL('../web/src/lib/i18n/', import.meta.url)).filter((n) => n.endsWith('.json'))) {
     const d = JSON.parse(readFileSync(new URL(`../web/src/lib/i18n/${f}`, import.meta.url), 'utf8'));
-    for (const k of ['footer.help', 'announce.title']) assert.ok(typeof d[k] === 'string' && d[k].trim(), `${f} lacks ${k}`);
+    for (const k of ['footer.help', 'footer.feedback', 'privacy.feedback', 'privacy.feedback_link', 'announce.title']) assert.ok(typeof d[k] === 'string' && d[k].trim(), `${f} lacks ${k}`);
   }
 });
 
@@ -1088,4 +1095,31 @@ test('the sign-in link of the top bar is shortened on a phone so a long word can
   const css = readFileSync(new URL('../web/src/app.css', import.meta.url), 'utf8');
   assert.ok(src.includes('class="tbtn signin"'));
   assert.ok(css.includes('.tbtn.signin { max-width: 6.2rem; overflow: hidden; text-overflow: ellipsis;'));
+});
+
+/* The Feedback link (F-1 of the family checklist): {hub}/feedback?app=filehop&from=<screen>&v=<version>; the screen name is
+   fixed per route, never the address, so no send code, id, query or fragment can reach the hub. */
+const fbSrc = ts.transpileModule(readFileSync(new URL('../web/src/lib/feedback.ts', import.meta.url), 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 }
+}).outputText;
+writeFileSync(join(dir, 'feedback.mjs'), fbSrc);
+const fb = await import(pathToFileURL(join(dir, 'feedback.mjs')).href);
+test('the Feedback link names the app, a fixed screen and the version, and is empty without a hub address', () => {
+  assert.equal(fb.feedbackUrl('https://hel.ink/', '/', '1.4.0'), 'https://hel.ink/feedback?app=filehop&from=home&v=1.4.0');
+  assert.equal(fb.feedbackUrl('https://hub.example.org', '/dashboard', 'dev'), 'https://hub.example.org/feedback?app=filehop&from=dashboard&v=dev');
+  assert.equal(fb.feedbackUrl('https://hel.ink', '/changelog', ''), 'https://hel.ink/feedback?app=filehop&from=changelog');
+  assert.equal(fb.feedbackUrl('', '/', '1.4.0'), '');
+  assert.equal(fb.feedbackUrl('javascript:alert(1)', '/', '1.4.0'), '');
+  assert.equal(fb.feedbackUrl('not a url', '/', '1.4.0'), '');
+});
+test('the screen name is never the address: a send code, an id, a query or a fragment does not reach the link', () => {
+  for (const path of ['/send?code=123456', '/send#123456', '/send/123456', '/dashboard?x=1#y', '/f/9f8e7d6c', '/nothing/at/all']) {
+    const url = fb.feedbackUrl('https://hel.ink', path, '1.4.0');
+    assert.ok(!/123456|9f8e7d6c|x=1|nothing/.test(url), url);
+    assert.match(url, /from=(send|dashboard|other)&/);
+  }
+  assert.equal(fb.screenName('/send/'), 'send');
+  assert.equal(fb.screenName('/nothing/at/all'), 'other');
+  const odd = fb.feedbackUrl('https://hel.ink', '/', '1.0 beta<script>');
+  assert.match(odd, /&v=1\.0betascript$/);
 });

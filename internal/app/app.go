@@ -61,7 +61,7 @@ func New(cfg Config, d *db.DB, static fs.FS) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	a := &App{cfg: cfg, db: d, static: static, index: index, pages: buildPages(index), used: usedTickets{m: map[string]int64{}}, started: time.Now()}
+	a := &App{cfg: cfg, db: d, static: static, index: index, pages: buildPages(index, cfg.feedbackBase(), cfg.Version), used: usedTickets{m: map[string]int64{}}, started: time.Now()}
 	if m := pageOriginRe.FindSubmatch(index); m != nil {
 		a.origin = string(m[1])
 	}

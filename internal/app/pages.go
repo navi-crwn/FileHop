@@ -145,7 +145,7 @@ const unindexedKey = "!"
 
 // buildPages is the shell as each public route is served, per language (lang -> key -> page). The
 // site's address is the one index.html already states; without it the shell is served as it is.
-func buildPages(index []byte) map[string]map[string][]byte {
+func buildPages(index []byte, hub, version string) map[string]map[string][]byte {
 	m := pageOriginRe.FindSubmatch(index)
 	if m == nil {
 		return nil
@@ -155,20 +155,25 @@ func buildPages(index []byte) map[string]map[string][]byte {
 		dict := appStrings(lang)
 		out[lang] = map[string][]byte{}
 		for _, p := range publicPages {
-			out[lang][p.Path] = renderPage(index, string(m[1]), p, lang, dict, modeBare)
-			out[lang]["?"+p.Path] = renderPage(index, string(m[1]), p, lang, dict, modeExplicit)
+			out[lang][p.Path] = renderPage(index, string(m[1]), p, lang, dict, modeBare, hub, version)
+			out[lang]["?"+p.Path] = renderPage(index, string(m[1]), p, lang, dict, modeExplicit, hub, version)
 		}
-		out[lang][unindexedKey] = renderPage(index, string(m[1]), publicPages[0], lang, dict, modeUnindexed)
+		out[lang][unindexedKey] = renderPage(index, string(m[1]), publicPages[0], lang, dict, modeUnindexed, hub, version)
 	}
 	return out
 }
 
-func renderPage(index []byte, origin string, p publicPage, lang string, dict map[string]string, mode int) []byte {
+func renderPage(index []byte, origin string, p publicPage, lang string, dict map[string]string, mode int, hub, version string) []byte {
 	text := func(key string) string { return html.EscapeString(strings.TrimSpace(dict[key])) }
 	url := origin + p.Path
 	canon := url
 	if mode == modeExplicit {
 		canon = langAddress(origin, p.Path, lang)
+	}
+	// the screen name the Feedback link carries: the page's own, or "other" for a route the server does not know
+	screen := p.View
+	if mode == modeUnindexed {
+		screen = "other"
 	}
 	b := pageLangRe.ReplaceAllLiteral(index, []byte(`<html lang="`+lang+`">`))
 	if t := text(p.Title); t != "" {
@@ -202,15 +207,27 @@ func renderPage(index []byte, origin string, p publicPage, lang string, dict map
 		head += "\n" + appData(b, origin)
 	}
 	b = bytes.Replace(b, []byte("</head>"), []byte(head+"\n</head>"), 1)
-	return bytes.Replace(b, []byte(pageMount), []byte(`<div id="root">`+firstView(p.View, lang, dict, langQuery(lang, mode == modeExplicit))+`</div>`), 1)
+	return bytes.Replace(b, []byte(pageMount), []byte(`<div id="root">`+firstView(p.View, lang, dict, langQuery(lang, mode == modeExplicit), hub, feedbackURL(hub, screen, version))+`</div>`), 1)
+}
+
+// firstViewData is what firstview.html.tmpl reads.
+type firstViewData struct {
+	LangCode string
+	Break    bool // Japanese and Chinese start the accent phrase on its own line, as App.svelte does
+	Family   []familyApp
+	Feedback string // the Feedback link, "" without a hub address
+	Hub      string // the hub address, "" without one: the Privacy sentence and its link
+	NotePre  string // the Privacy sentence around its link (privacy.feedback)
+	NotePost string
 }
 
 // firstView renders one view of firstview.html.tmpl in one language.
 // q is the query an internal link carries ("?lang=de" on a per-language address, else nothing).
-func firstView(view, lang string, dict map[string]string, q string) string {
+func firstView(view, lang string, dict map[string]string, q, hub, feedback string) string {
 	t := func(k string) string { return dict[k] }
 	partPre, partPost, _ := strings.Cut(t("footer.part_of"), "{name}")
 	hintPre, hintPost, _ := strings.Cut(t("drop.hint"), "{kbd}")
+	notePre, notePost, _ := strings.Cut(t("privacy.feedback"), "{link}")
 	tm := template.Must(firstViewTmpl.Clone()).Funcs(template.FuncMap{
 		"t": t,
 		"href": func(p string) template.URL {
@@ -227,11 +244,7 @@ func firstView(view, lang string, dict map[string]string, q string) string {
 		},
 	})
 	var s strings.Builder
-	err := tm.ExecuteTemplate(&s, view, struct {
-		LangCode string
-		Break    bool // Japanese and Chinese start the accent phrase on its own line, as App.svelte does
-		Family   []familyApp
-	}{strings.ToUpper(strings.SplitN(lang, "-", 2)[0]), heroBreakRe.MatchString(t("hero.h1_pre")), changeFamily})
+	err := tm.ExecuteTemplate(&s, view, firstViewData{strings.ToUpper(strings.SplitN(lang, "-", 2)[0]), heroBreakRe.MatchString(t("hero.h1_pre")), changeFamily, feedback, hub, notePre, notePost})
 	if err != nil {
 		panic(err) // the template is part of the binary: a broken one fails the tests, never a request
 	}

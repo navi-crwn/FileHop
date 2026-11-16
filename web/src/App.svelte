@@ -15,6 +15,7 @@
   import { confirmAction } from './lib/util/confirm';
   import { zipSync } from 'fflate';
   import Announcement from './lib/components/Announcement.svelte';
+  import { feedbackUrl, hubBase } from './lib/feedback';
   import { account, loadAccount, initials, takeAuthError, takeRecheckMark, recheckQuietly } from './lib/account.svelte';
 
   /* The other HOP apps, as the family manifest (hel.ink/hop-assets/apps.json) lists them.
@@ -47,6 +48,11 @@
      same chrome as the dashboard, but needs no account, so guests get it too. */
   const sendPage = typeof location !== 'undefined' && location.pathname.replace(/\/+$/, '') === '/send';
   let navOpen = $state(false);
+  /* The Feedback link opens the HOP ID form in a new tab. With no hub address (a stand-alone install) it is empty and
+     nothing is drawn: no link in the footers, no sentence under Privacy. The screen name is fixed per route (feedback.ts). */
+  const feedback = $derived(feedbackUrl(account.hubUrl, typeof location !== 'undefined' ? location.pathname : '/', account.version));
+  const feedbackHub = $derived(hubBase(account.hubUrl));
+  const feedbackNote = $derived(i18n.t('privacy.feedback').split('{link}'));
   /* Where the logo, Convert and the main button of /send lead: a signed-in person's dashboard, a visitor's home page. */
   const home = $derived(dash || (account.ready && account.signedIn) ? '/dashboard' : '/');
 
@@ -721,6 +727,7 @@
     <nav class="shell-side-foot" aria-label={i18n.t('footer.support')}>
       <ul>
         <li><a href="https://hel.ink/help" rel="noopener">{i18n.t('footer.help')}</a></li>
+        {#if feedback}<li><a href={feedback} target="_blank" rel="noopener">{i18n.t('footer.feedback')}</a></li>{/if}
         <li><a href="https://hel.ink/terms" rel="noopener">{i18n.t('footer.terms')}</a></li>
         <li><a href="/#privacy">{i18n.t('footer.privacy')}</a></li>
         <li><a href={withLang('/changelog')}>{i18n.t('footer.changelog')}</a></li>
@@ -887,6 +894,7 @@
         <div class="privacy-card">
           <h2>{i18n.t('privacy.title')}</h2>
           <p>{i18n.t('privacy.body')}</p>
+          {#if feedbackHub}<p id="feedbackNote">{feedbackNote[0]}<a href="{feedbackHub}/privacy" rel="noopener">{i18n.t('privacy.feedback_link')}</a>{feedbackNote[1] ?? ''}</p>{/if}
           <span class="counter"><Icon name="net" size={14} />{i18n.t('privacy.network', { n: networkCount })}</span>
           <p class="small faint" style="margin-top:10px">{i18n.t('privacy.network_note')}</p>
           <button class="tbtn danger-outline" type="button" style="margin-top:14px" onclick={(e) => clearAll(e.currentTarget)}>
@@ -911,6 +919,7 @@
               <a href={withLang('/send')}>{i18n.t('send.footer_link')}</a>
               <a href={withLang('/changelog')}>{i18n.t('footer.changelog')}</a>
               <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{i18n.t('footer.source')}</a>
+              {#if feedback}<a href={feedback} target="_blank" rel="noopener">{i18n.t('footer.feedback')}</a>{/if}
               <button class="ft-link" type="button" data-settings onclick={() => (settingsOpen = true)}>{i18n.t('nav.settings')}</button>
             </nav>
           </div>

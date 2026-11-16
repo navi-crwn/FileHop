@@ -101,6 +101,9 @@
       <nav aria-label="{{index .T "footer.support"}}">
         <a href="/changelog" aria-current="page">{{index .T "footer.changelog"}}</a>
         <a href="https://github.com/navi-crwn/FileHop" rel="noopener">{{index .T "footer.source"}}</a>
+        {{- if .Feedback}}
+        <a href="{{.Feedback}}" target="_blank" rel="noopener">{{index .T "footer.feedback"}}</a>
+        {{- end}}
       </nav>
     </div>
     <div class="ft-col">

@@ -1,9 +1,42 @@
 {
   "schema": 2,
   "sources": {
-    "FileHop": "1.3.1"
+    "FileHop": "1.4.0"
   },
   "entries": [
+    {
+      "kind": "tag",
+      "date": "2026-11-16T00:00:00Z",
+      "title": "A Feedback link to tell us about problems and ideas",
+      "url": "https://github.com/navi-crwn/FileHop/releases/tag/v1.4.0",
+      "id": "v1.4.0",
+      "app": "FileHop",
+      "repo": "FileHop",
+      "version": "1.4.0",
+      "summary": "",
+      "items": [
+        {
+          "type": "added",
+          "where": "Dashboard and Send, sidebar",
+          "text": "The foot of the sidebar now has a Feedback link right under Help. It opens the HOP ID feedback form in a new tab, so whatever you were converting stays where it is. FileHop tells the form only which page you came from and which version you use, never a file, a send code or anything you typed. Reason: until now there was no way to report a problem or suggest an idea from inside FileHop without writing an e-mail."
+        },
+        {
+          "type": "added",
+          "where": "Home page and Changelog, footer",
+          "text": "The same Feedback link now sits in the footer, next to Changelog and Source, for people who are not signed in. Reason: a visitor who finds a problem should be able to report it too."
+        },
+        {
+          "type": "added",
+          "where": "Home page, Privacy",
+          "text": "One sentence under \"What this page sends\" explains that the Feedback link opens a form on the HOP ID site and that FileHop itself receives nothing from it; the privacy policy of HOP ID says what the form keeps and for how long. The promise above it, that a conversion sends nothing, is unchanged, and the network counter does not move when you open the link. Reason: the form is not part of FileHop, and the page should say so plainly."
+        },
+        {
+          "type": "added",
+          "where": "All nine languages",
+          "text": "The new link and the Privacy sentence are translated into all nine languages. Where a FileHop installation is not connected to a HOP ID site, the link and the sentence do not appear at all. Reason: there is no form to open without one."
+        }
+      ]
+    },
     {
       "kind": "tag",
       "date": "2026-11-16T00:00:00Z",

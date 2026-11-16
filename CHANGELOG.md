@@ -4,6 +4,15 @@ What changed in FileHop, written for the people who use it. The format follows [
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-16 - A Feedback link to tell us about problems and ideas
+
+### Added
+
+- **Dashboard and Send, sidebar.** The foot of the sidebar now has a Feedback link right under Help. It opens the HOP ID feedback form in a new tab, so whatever you were converting stays where it is. FileHop tells the form only which page you came from and which version you use, never a file, a send code or anything you typed. Reason: until now there was no way to report a problem or suggest an idea from inside FileHop without writing an e-mail.
+- **Home page and Changelog, footer.** The same Feedback link now sits in the footer, next to Changelog and Source, for people who are not signed in. Reason: a visitor who finds a problem should be able to report it too.
+- **Home page, Privacy.** One sentence under "What this page sends" explains that the Feedback link opens a form on the HOP ID site and that FileHop itself receives nothing from it; the privacy policy of HOP ID says what the form keeps and for how long. The promise above it, that a conversion sends nothing, is unchanged, and the network counter does not move when you open the link. Reason: the form is not part of FileHop, and the page should say so plainly.
+- **All nine languages.** The new link and the Privacy sentence are translated into all nine languages. Where a FileHop installation is not connected to a HOP ID site, the link and the sentence do not appear at all. Reason: there is no form to open without one.
+
 ## [1.3.1] - 2026-11-16 - Real "page not found" answers, a clearer changelog description, steadier home page
 
 ### Fixed

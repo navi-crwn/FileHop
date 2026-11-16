@@ -163,11 +163,8 @@ func TestFirstViewUsesTheAppsOwnWords(t *testing.T) {
 				}
 				return d[k]
 			}})
-			if err := tm.ExecuteTemplate(io.Discard, p.View, struct {
-				LangCode string
-				Break    bool
-				Family   []familyApp
-			}{"EN", false, changeFamily}); err != nil {
+			// with a hub address, so the Feedback words are looked up too
+			if err := tm.ExecuteTemplate(io.Discard, p.View, firstViewData{"EN", false, changeFamily, "https://hub.example/feedback", "https://hub.example", "", ""}); err != nil {
 				t.Fatal(err)
 			}
 			for k := range missing {
