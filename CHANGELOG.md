@@ -4,6 +4,8 @@ What changed in FileHop, written for the people who use it. The format follows [
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-11-16 - Real "page not found" answers, a clearer changelog description, steadier home page
+
 ### Fixed
 
 - **Addresses that are not pages.** An address that does not exist on the site, such as /features or a mistyped link, now answers "page not found" instead of showing the home page as if it were there. You still see the FileHop screen, and it stays out of search results. Reason: search engines treated every made-up address as a real page, which cluttered the site's listing in Google.
