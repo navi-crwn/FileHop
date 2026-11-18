@@ -104,7 +104,7 @@
   "settings.engine_pdf": "pdf.js {pv} para ler, pdf-lib {lv} para escrever",
   "settings.engine_hash": "hash-wasm, em blocos de 8 MB",
   "settings.engine_zip": "fflate, nesta aba",
-  "settings.engine_image": "os decodificadores do navegador, no canvas",
+  "settings.engine_image": "os decodificadores do navegador, no canvas; libheif (HEIC) e libjxl (JPEG XL) em WebAssembly, carregados só quando um arquivo precisa deles",
   "settings.no_wasm": "Nada para baixar: esses motores vêm com a página.",
   "settings.prefs_saved": "Os ajustes ficam só neste navegador.",
   "settings.ui_style": "Estilo da interface",
@@ -138,7 +138,7 @@
   "how.s3_p": "Os resultados ficam na memória até você pegá-los. Removeu um cartão, os bytes dele sumiram.",
   "formats.title": "O que entra, o que sai",
   "formats.images": "Imagens",
-  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG entram → WebP, AVIF, JPEG, PNG, PDF saem. Dá para reduzir, e os metadados somem porque nunca chegam ao codificador.",
+  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL e RAW de câmera (a prévia embutida) entram → WebP, AVIF, JPEG, PNG, JPEG XL, GIF, PDF saem. Dá para reduzir, e os metadados somem porque nunca chegam ao codificador.",
   "formats.pdf": "PDF",
   "formats.pdf_v": "Juntar, dividir, girar, escolher páginas, renderizar páginas em PNG ou JPEG, ler as informações do documento.",
   "formats.data": "Dados",
@@ -338,5 +338,10 @@
   "send.err_handshake_stalled": "Os dois dispositivos se conectaram, mas não concluíram a verificação mútua. Comece de novo.",
   "dash.nav": "Painel",
   "announce.title": "Aviso",
-  "announce.close": "Fechar o aviso"
+  "announce.close": "Fechar o aviso",
+  "err.raw_no_preview": "Este arquivo RAW de câmera não tem uma imagem de prévia que o FileHop consiga ler. Exporte um JPEG pelo software da sua câmera.",
+  "hint.image_gif": "Um quadro, até 256 cores. De um arquivo animado fica só a primeira imagem.",
+  "hint.image_pdf": "Uma página, com a imagem ajustada ao A4.",
+  "note.raw_preview": "prévia guardada no arquivo RAW",
+  "licenses.lgpl": "O libheif, que lê HEIC, é LGPL-3.0. É um arquivo separado ao lado da página, sem alterações, então pode ser substituído. O HEIC só é lido, nunca escrito."
 }

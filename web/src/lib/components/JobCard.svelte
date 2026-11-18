@@ -163,6 +163,10 @@
         <span class="dot"></span>
         <span>{job.result.note}</span>
       {/if}
+      {#if job.det.mime === 'image/x-raw'}
+        <span class="dot"></span>
+        <span>{i18n.t('note.raw_preview')}</span>
+      {/if}
     </div>
 
     {#if mergeNames.length > 1 && job.status !== 'done'}
@@ -187,6 +191,10 @@
           {/if}
         {/each}
       </div>
+
+      {#if def?.hintKey}
+        <p class="muted small target-hint">{i18n.t(def.hintKey)}</p>
+      {/if}
 
       {#if def?.options?.length}
         <div class="opts">
@@ -317,6 +325,7 @@
   .ok-text { color: var(--green); }
   .px-link { color: inherit; text-decoration: underline; }
   .card .side :global(svg) { flex: none; }
+  .target-hint { margin: 6px 0 0; max-width: 52ch; }
   .merge-list {
     margin: 2px 0 0;
     font-size: 12px;

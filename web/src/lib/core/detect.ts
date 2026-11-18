@@ -1,4 +1,5 @@
 import type { Category, Detection } from './types';
+import { RAW_EXT } from './raw';
 
 /* Type detection from magic bytes. The file name is only a hint: a JPEG named
    .txt must still be read as a JPEG, and a PNG with a .jpg name is flagged. */
@@ -23,6 +24,7 @@ const SIGS: Sig[] = [
   { mime: 'image/tiff', ext: 'tiff', category: 'image', label: 'TIFF', head: '4d4d002a' },
   { mime: 'image/x-icon', ext: 'ico', category: 'image', label: 'ICO', head: '00000100' },
   { mime: 'image/jxl', ext: 'jxl', category: 'image', label: 'JPEG XL', head: '0000000c4a584c200d0a870a' },
+  { mime: 'image/jxl', ext: 'jxl', category: 'image', label: 'JPEG XL', head: 'ff0a' },
   { mime: 'image/avif', ext: 'avif', category: 'image', label: 'AVIF', head: '????????6674797061766966', off: 0 },
   { mime: 'image/heic', ext: 'heic', category: 'image', label: 'HEIC', head: '????????6674797068656963' },
   { mime: 'image/heic', ext: 'heic', category: 'image', label: 'HEIC', head: '????????667479706d696631' },
@@ -178,10 +180,25 @@ function det(mime: string, ext: string, category: Category, label: string, nameM
   return { mime, ext, category, label, mismatch: !nameMatches, confidence: 'high' };
 }
 
+/** A camera RAW is a TIFF (or, for CR3 and RAF, its own container) that only the name tells apart
+    from an ordinary TIFF. The bytes must still look like one, so a text file named .nef is not a RAW. */
+function detectRaw(b: Uint8Array, hexed: string, ext: string): Detection | null {
+  if (!RAW_EXT.has(ext)) return null;
+  const tiff = hexed.startsWith('49492a00') || hexed.startsWith('4d4d002a') ||
+    hexed.startsWith('49494f52') || hexed.startsWith('49495352') || hexed.startsWith('49495500');
+  const cr3 = ext === 'cr3' && b.length > 12 && String.fromCharCode(...b.subarray(4, 8)) === 'ftyp';
+  const raf = ext === 'raf' && b.length > 8 && String.fromCharCode(...b.subarray(0, 8)) === 'FUJIFILM';
+  if (!(tiff || cr3 || raf)) return null;
+  return { mime: 'image/x-raw', ext, category: 'image', label: `RAW (${ext.toUpperCase()})`, mismatch: false, confidence: 'high' };
+}
+
 export async function detectFile(file: File): Promise<Detection> {
   const slice = new Uint8Array(await file.slice(0, 4096).arrayBuffer());
   const hexed = hex(slice, 4096);
   const nameExt = extOfName(file.name);
+
+  const raw = detectRaw(slice, hexed, nameExt);
+  if (raw) return raw;
 
   for (const sig of SIGS) {
     if (!sig.head) continue;

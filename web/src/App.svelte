@@ -995,9 +995,13 @@
         <li><b>marked</b> 18 — MIT</li>
         <li><b>papaparse</b> 5 — MIT</li>
         <li><b>yaml</b> 2 — ISC</li>
+        <li><b>libheif</b> (libheif-js 1.23) — LGPL-3.0, reads HEIC</li>
+        <li><b>libjxl</b> (jSquash 1.3) — BSD-3-Clause and Apache-2.0, JPEG XL</li>
+        <li><b>gifenc</b> 1.0 — MIT</li>
         <li><b>Inter, Instrument Serif, JetBrains Mono</b> — SIL OFL 1.1</li>
       </ul>
       <p class="small faint" style="margin-top:12px">{i18n.t('licenses.no_agpl')}</p>
+      <p class="small faint">{i18n.t('licenses.lgpl')}</p>
     </div>
   </div>
 {/if}

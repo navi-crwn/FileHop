@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/navi-crwn/FileHop/main/install.sh |
 
 | Категория | На входе | На выходе |
 |---|---|---|
-| Изображения | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG | WebP, AVIF\*, JPEG, PNG, PDF |
+| Изображения | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL, RAW† | WebP, AVIF\*, JPEG, PNG, JPEG XL, GIF, PDF |
 | PDF | PDF | объединение, разделение (ZIP), поворот, выбор страниц, страницы → PNG/JPEG (ZIP), сведения о документе (JSON) |
 | Данные | CSV, TSV, JSON, YAML | CSV, TSV, JSON, YAML |
 | Текст | Markdown, HTML, обычный текст | HTML, Markdown, обычный текст |
@@ -45,6 +45,8 @@ curl -fsSL https://raw.githubusercontent.com/navi-crwn/FileHop/main/install.sh |
 | Что угодно | любой файл | SHA-256, BLAKE3, MD5 |
 
 \* Вывод в AVIF предлагается, только если собственный кодировщик браузера умеет его записывать. Если не умеет, Canvas молча возвращает PNG, поэтому FileHop проверяет результат и скрывает этот формат, а не отдаёт вам файл с неверной подписью.
+
+† RAW камеры (CR2, CR3, NEF, ARW, DNG, ORF, RW2, RAF, PEF, SRW) конвертируется из JPEG-превью, которое камера сохранила в файле, а не проявляется из данных сенсора. HEIC и JPEG XL читают движки WebAssembly (libheif, libjxl), которые загружаются только когда такой файл брошен на страницу; HEIC только читается. GIF на выходе — один кадр, до 256 цветов.
 
 **Пока нет:** DOCX и LaTeX (нужен pandoc, GPL), RAR и 7z, видео и аудио. Приложение честно пишет об этом в разделе форматов, а не делает вид, что всё умеет.
 
@@ -100,7 +102,7 @@ web/src/App.svelte (queue UI)
    └── Queue (web/src/lib/store/queue.svelte.ts)   $state array of $state jobs
          └── Pool (web/src/lib/core/pool.ts)       one Worker per slot, sized by the machine
                └── convert.worker.ts              runJob() → engines
-                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib
+                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib, plus libheif / libjxl / UTIF (WebAssembly, on demand) and gifenc
                      ├── run/pdf.ts                pdf.js (read) + pdf-lib (write)
                      ├── run/data.ts               papaparse / yaml, one table model
                      ├── run/text.ts               marked, and a DOM-free HTML → Markdown rule set
@@ -123,7 +125,7 @@ internal/hop         HOP App Protocol v1, the same as NoteHop's
 
 ## Безопасность, лицензия и история
 
-Об уязвимостях сообщайте конфиденциально: [SECURITY.md](SECURITY.md). FileHop распространяется по лицензии MIT ([LICENSE](LICENSE)). Используемые библиотеки: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · шрифты SIL OFL 1.1. Движков под GPL или AGPL нет. Что и когда менялось: [CHANGELOG.md](CHANGELOG.md).
+Об уязвимостях сообщайте конфиденциально: [SECURITY.md](SECURITY.md). FileHop распространяется по лицензии MIT ([LICENSE](LICENSE)). Используемые библиотеки: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · `libheif` LGPL-3.0 · `libjxl` BSD-3-Clause (через jSquash, Apache-2.0) · `utif2` MIT · `gifenc` MIT · Svelte MIT · шрифты SIL OFL 1.1. Движков под GPL или AGPL нет; libheif (LGPL) лежит отдельным неизменённым файлом, его можно заменить. Что и когда менялось: [CHANGELOG.md](CHANGELOG.md).
 
 ## Собственный хостинг
 

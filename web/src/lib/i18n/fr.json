@@ -104,7 +104,7 @@
   "settings.engine_pdf": "pdf.js {pv} pour lire, pdf-lib {lv} pour écrire",
   "settings.engine_hash": "hash-wasm, par blocs de 8 Mo",
   "settings.engine_zip": "fflate, dans cet onglet",
-  "settings.engine_image": "les décodeurs du navigateur, sur canvas",
+  "settings.engine_image": "les décodeurs du navigateur, sur canvas ; libheif (HEIC) et libjxl (JPEG XL) en WebAssembly, chargés seulement quand un fichier en a besoin",
   "settings.no_wasm": "Rien à télécharger : ces moteurs arrivent avec la page.",
   "settings.prefs_saved": "Les réglages ne sont stockés que dans ce navigateur.",
   "settings.ui_style": "Style de l'interface",
@@ -138,7 +138,7 @@
   "how.s3_p": "Les résultats restent en mémoire jusqu'à ce que vous les preniez. Retirez une carte et ses octets disparaissent.",
   "formats.title": "Ce qui entre, ce qui sort",
   "formats.images": "Images",
-  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG entrent → WebP, AVIF, JPEG, PNG, PDF sortent. Réduction possible, et les métadonnées disparaissent car elles n'atteignent jamais l'encodeur.",
+  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL et RAW d'appareil photo (son aperçu intégré) entrent → WebP, AVIF, JPEG, PNG, JPEG XL, GIF, PDF sortent. Réduction possible, et les métadonnées disparaissent car elles n'atteignent jamais l'encodeur.",
   "formats.pdf": "PDF",
   "formats.pdf_v": "Fusionner, découper, pivoter, choisir des pages, rendre les pages en PNG ou JPEG, lire les informations du document.",
   "formats.data": "Données",
@@ -338,5 +338,10 @@
   "send.err_handshake_stalled": "Les deux appareils se sont connectés mais n’ont pas terminé la vérification mutuelle. Recommencez.",
   "dash.nav": "Tableau de bord",
   "announce.title": "Annonce",
-  "announce.close": "Fermer l'annonce"
+  "announce.close": "Fermer l'annonce",
+  "err.raw_no_preview": "Ce fichier RAW d'appareil photo ne contient aucun aperçu que FileHop puisse lire. Exportez plutôt un JPEG depuis le logiciel de votre appareil.",
+  "hint.image_gif": "Une image, jusqu'à 256 couleurs. D'un fichier animé, seule la première image est conservée.",
+  "hint.image_pdf": "Une page, l'image ajustée à l'A4.",
+  "note.raw_preview": "aperçu stocké dans le fichier RAW",
+  "licenses.lgpl": "libheif, qui lit le HEIC, est sous licence LGPL-3.0. C'est un fichier distinct à côté de la page, non modifié, donc remplaçable. Le HEIC est seulement lu, jamais écrit."
 }

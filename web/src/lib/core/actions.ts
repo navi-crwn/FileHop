@@ -19,6 +19,8 @@ export const ACTIONS: ActionDef[] = [
   { id: 'image:avif', ext: 'avif', label: 'AVIF', options: [QUALITY], feature: 'avif' },
   { id: 'image:jpeg', ext: 'jpg', label: 'JPEG', options: [QUALITY] },
   { id: 'image:png', ext: 'png', label: 'PNG' },
+  { id: 'image:jxl', ext: 'jxl', label: 'JPEG XL', options: [QUALITY] },
+  { id: 'image:gif', ext: 'gif', label: 'GIF', hintKey: 'hint.image_gif' },
   { id: 'image:pdf', ext: 'pdf', label: 'PDF', hintKey: 'hint.image_pdf' },
   // pdf
   { id: 'pdf:merge', ext: 'pdf', label: 'Merge', labelKey: 'action.pdf_merge', batch: true },
@@ -53,7 +55,7 @@ export function actionDef(id: ActionId): ActionDef | undefined {
   return BY_ID.get(id);
 }
 
-const IMAGE_TARGETS: ActionId[] = ['image:webp', 'image:avif', 'image:jpeg', 'image:png', 'image:pdf'];
+const IMAGE_TARGETS: ActionId[] = ['image:webp', 'image:avif', 'image:jpeg', 'image:png', 'image:jxl', 'image:gif', 'image:pdf'];
 const DATA_TARGETS: ActionId[] = ['data:json', 'data:csv', 'data:tsv', 'data:yaml'];
 const TEXT_TARGETS: ActionId[] = ['text:md', 'text:html', 'text:txt'];
 const HASH_TARGETS: ActionId[] = ['hash:sha256', 'hash:blake3', 'hash:md5'];
@@ -79,6 +81,8 @@ export function targetsFor(cat: Category, ext: string): ActionId[] {
     ids.filter(id => {
       if (id === 'image:avif') return AVIF_ENCODABLE;
       if (id === 'image:png' && ext === 'png') return false;
+      if (id === 'image:gif' && ext === 'gif') return false;
+      if (id === 'image:jxl' && ext === 'jxl') return false;
       return true;
     });
   switch (cat) {

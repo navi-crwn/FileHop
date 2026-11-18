@@ -13,7 +13,7 @@ export interface Detection {
 }
 
 export type ActionId =
-  | 'image:png' | 'image:jpeg' | 'image:webp' | 'image:avif' | 'image:pdf'
+  | 'image:png' | 'image:jpeg' | 'image:webp' | 'image:avif' | 'image:jxl' | 'image:gif' | 'image:pdf'
   | 'pdf:merge' | 'pdf:split' | 'pdf:rotate' | 'pdf:extract' | 'pdf:meta' | 'pdf:png' | 'pdf:jpeg'
   | 'data:json' | 'data:csv' | 'data:tsv' | 'data:yaml'
   | 'archive:zip' | 'archive:gz' | 'archive:list'

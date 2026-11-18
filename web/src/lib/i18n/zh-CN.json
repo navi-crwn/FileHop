@@ -104,7 +104,7 @@
   "settings.engine_pdf": "pdf.js {pv} 读取，pdf-lib {lv} 写入",
   "settings.engine_hash": "hash-wasm，按 8 MB 分块流式处理",
   "settings.engine_zip": "fflate，在本标签页内",
-  "settings.engine_image": "浏览器自带的解码器，走 canvas",
+  "settings.engine_image": "浏览器自带的解码器，走 canvas；libheif（HEIC）和 libjxl（JPEG XL）用 WebAssembly，仅在文件需要时才加载",
   "settings.no_wasm": "无需下载：这些引擎随页面一起送达。",
   "settings.prefs_saved": "设置只保存在这个浏览器里。",
   "settings.ui_style": "界面风格",
@@ -138,7 +138,7 @@
   "how.s3_p": "结果留在内存里，直到你取走。删除一张卡片，那些字节就消失了。",
   "formats.title": "什么进，什么出",
   "formats.images": "图片",
-  "formats.images_v": "PNG、JPEG、WebP、AVIF、GIF、BMP、TIFF、ICO、SVG 进 → WebP、AVIF、JPEG、PNG、PDF 出。可缩放，元数据会自动消失，因为它根本到不了编码器。",
+  "formats.images_v": "PNG、JPEG、WebP、AVIF、GIF、BMP、TIFF、ICO、SVG、HEIC、JPEG XL、相机 RAW（取其内置预览）进 → WebP、AVIF、JPEG、PNG、JPEG XL、GIF、PDF 出。可缩放，元数据会自动消失，因为它根本到不了编码器。",
   "formats.pdf": "PDF",
   "formats.pdf_v": "合并、拆分、旋转、选页、把页面渲染成 PNG 或 JPEG、读取文档信息。",
   "formats.data": "数据",
@@ -338,5 +338,10 @@
   "send.err_handshake_stalled": "两台设备已连接，但没有完成互相核对。请重新开始。",
   "dash.nav": "仪表盘",
   "announce.title": "公告",
-  "announce.close": "关闭公告"
+  "announce.close": "关闭公告",
+  "err.raw_no_preview": "这个相机 RAW 文件里没有 FileHop 能读取的预览图。请用相机软件导出 JPEG。",
+  "hint.image_gif": "单帧，最多 256 色。动画文件只保留第一张图。",
+  "hint.image_pdf": "一页，图片适配 A4。",
+  "note.raw_preview": "RAW 文件内的预览图",
+  "licenses.lgpl": "读取 HEIC 的 libheif 采用 LGPL-3.0。它是页面旁边独立且未修改的文件，因此可以替换。HEIC 只读取，从不写入。"
 }

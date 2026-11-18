@@ -104,7 +104,7 @@
   "settings.engine_pdf": "読み取りは pdf.js {pv}、書き出しは pdf-lib {lv}",
   "settings.engine_hash": "hash-wasm、8 MB ずつストリーム処理",
   "settings.engine_zip": "fflate、このタブ内で",
-  "settings.engine_image": "ブラウザ自身のデコーダを canvas で",
+  "settings.engine_image": "ブラウザ自身のデコーダを canvas で。libheif（HEIC）と libjxl（JPEG XL）は WebAssembly で、必要なファイルのときだけ読み込みます",
   "settings.no_wasm": "ダウンロードはありません。これらのエンジンはページに同梱されています。",
   "settings.prefs_saved": "設定はこのブラウザにだけ保存されます。",
   "settings.ui_style": "インターフェースのスタイル",
@@ -138,7 +138,7 @@
   "how.s3_p": "結果は取り出すまでメモリに残ります。カードを消せば、そのバイトも消えます。",
   "formats.title": "何が入り、何が出るか",
   "formats.images": "画像",
-  "formats.images_v": "PNG、JPEG、WebP、AVIF、GIF、BMP、TIFF、ICO、SVG が入り → WebP、AVIF、JPEG、PNG、PDF が出ます。縮小もでき、メタデータはエンコーダに届かないので消えます。",
+  "formats.images_v": "PNG、JPEG、WebP、AVIF、GIF、BMP、TIFF、ICO、SVG、HEIC、JPEG XL、カメラ RAW（内蔵プレビュー）が入り → WebP、AVIF、JPEG、PNG、JPEG XL、GIF、PDF が出ます。縮小もでき、メタデータはエンコーダに届かないので消えます。",
   "formats.pdf": "PDF",
   "formats.pdf_v": "結合、分割、回転、ページ選択、ページを PNG や JPEG に書き出し、文書情報の読み取り。",
   "formats.data": "データ",
@@ -338,5 +338,10 @@
   "send.err_handshake_stalled": "2台は接続しましたが、相互の確認が完了しませんでした。最初からやり直してください。",
   "dash.nav": "ダッシュボード",
   "announce.title": "お知らせ",
-  "announce.close": "お知らせを閉じる"
+  "announce.close": "お知らせを閉じる",
+  "err.raw_no_preview": "このカメラ RAW ファイルには、FileHop が読めるプレビュー画像がありません。カメラのソフトから JPEG を書き出してください。",
+  "hint.image_gif": "1 コマ、最大 256 色です。アニメーションのファイルは最初の 1 枚だけが残ります。",
+  "hint.image_pdf": "1 ページで、画像は A4 に合わせます。",
+  "note.raw_preview": "RAW ファイル内のプレビュー",
+  "licenses.lgpl": "HEIC を読む libheif は LGPL-3.0 です。ページの隣に置かれた別ファイルで、改変しておらず、差し替えられます。HEIC は読み取り専用で、書き出しはしません。"
 }

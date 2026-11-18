@@ -7,7 +7,7 @@ npm test             # unit checks: detection, targets, page ranges, CSV typing,
 npm run lint:i18n    # 9 locales: same keys, same {placeholders}, no Arabic
 npm run check        # svelte-check
 go test ./...        # server: headers, routes, sign-in, tickets, account events, /hop/* signatures
-npm run fixtures     # testdata/: real PNG, JPEG, 3-page PDF, CSV, JSON, YAML, MD, ZIP and hostile files
+npm run fixtures     # testdata/: real PNG, JPEG, HEIC, JPEG XL, 3-page PDF, CSV, JSON, YAML, MD, ZIP, hand-written TIFF, a synthetic camera RAW and hostile files
 npm run matrix -- http://localhost:8095   # 22 conversions in Chromium, WebKit and Firefox
 ```
 
@@ -46,5 +46,7 @@ Two things this round found and fixed, worth recording because they are easy to 
 - **HTML → Markdown died with `document is not defined`.** The converter runs in a worker, where there is no DOM, and `DOMParser`/turndown both need one. Conversion now uses a small tag-level rule set in `run/text.ts`, which also means one fewer dependency and a smaller worker chunk.
 
 **Three engines, 2026-11-08** (`tools/browser-matrix.mjs`, production build behind the Go server): Chromium 158, WebKit 27.2 (Playwright's WebKit on Windows, not Apple Safari) and the official Firefox 159 build each passed all 22 cases (one or more files per category, merge, hostile files, hash): `crossOriginIsolated === true`, zero external requests, no console errors, no CSP violations. WebKit without `OffscreenCanvas` failed every raster conversion before this round; those jobs now run on the page.
+
+**Image formats added 2026-11-18** (HEIC, JPEG XL, RAW preview, GIF out, TIFF in) were run in Chromium only, through the production-header server: every conversion produced the right file signature, no Content Security Policy violation was reported, and the decoded pixels of HEIC, JPEG XL, RAW and TIFF matched the source. The HEIC and JPEG XL files are real (libheif and libjxl wrote them); the RAW file is synthetic (a TIFF header plus real JPEGs), so **no real camera RAW file has been tried**. WebKit and Firefox have not run these cases yet (`tools/browser-matrix.mjs` has them).
 
 **Not tested:** Safari on macOS/iOS (no Apple machine), iOS and Android layouts on real devices, screen readers, a 200-file batch, and files above ~100 MB. Treat those as open items, not as done. AVIF output is untested as a success path: the browser used here cannot encode AVIF, so the only AVIF behaviour proven is that the target is hidden and the engine refuses rather than mislabelling a PNG.

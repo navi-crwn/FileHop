@@ -37,7 +37,7 @@ Dari hasil clone: `./install.sh`. Perbarui dengan `./update.sh` dan hapus dengan
 
 | Kategori | Masuk | Keluar |
 |---|---|---|
-| Gambar | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG | WebP, AVIF\*, JPEG, PNG, PDF |
+| Gambar | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL, RAW† | WebP, AVIF\*, JPEG, PNG, JPEG XL, GIF, PDF |
 | PDF | PDF | digabung, dipecah (ZIP), diputar, pilih halaman, halaman → PNG/JPEG (ZIP), info dokumen (JSON) |
 | Data | CSV, TSV, JSON, YAML | CSV, TSV, JSON, YAML |
 | Teks | Markdown, HTML, teks biasa | HTML, Markdown, teks biasa |
@@ -45,6 +45,8 @@ Dari hasil clone: `./install.sh`. Perbarui dengan `./update.sh` dan hapus dengan
 | Apa saja | berkas apa pun | SHA-256, BLAKE3, MD5 |
 
 \* Keluaran AVIF hanya ditawarkan jika encoder bawaan browser bisa menulisnya. Canvas diam-diam mengembalikan PNG kalau tidak bisa, jadi FileHop memeriksa hasilnya dan menyembunyikan format tujuan itu daripada memberimu berkas dengan label yang salah.
+
+† RAW kamera (CR2, CR3, NEF, ARW, DNG, ORF, RW2, RAF, PEF, SRW) dikonversi dari pratinjau JPEG yang disimpan kamera di dalam berkas, bukan "dikembangkan" dari data sensor. HEIC dan JPEG XL dibaca mesin WebAssembly (libheif, libjxl) yang baru dimuat saat berkas seperti itu dijatuhkan; HEIC hanya dibaca, tidak pernah ditulis. Keluaran GIF hanya satu bingkai, maksimal 256 warna.
 
 **Belum tersedia:** DOCX dan LaTeX (butuh pandoc, GPL), RAR dan 7z, video dan audio. Aplikasinya menyebutkan hal ini terus terang di bagian format, bukan pura-pura bisa.
 
@@ -100,7 +102,7 @@ web/src/App.svelte (queue UI)
    └── Queue (web/src/lib/store/queue.svelte.ts)   $state array of $state jobs
          └── Pool (web/src/lib/core/pool.ts)       one Worker per slot, sized by the machine
                └── convert.worker.ts              runJob() → engines
-                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib
+                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib, plus libheif / libjxl / UTIF (WebAssembly, on demand) and gifenc
                      ├── run/pdf.ts                pdf.js (read) + pdf-lib (write)
                      ├── run/data.ts               papaparse / yaml, one table model
                      ├── run/text.ts               marked, and a DOM-free HTML → Markdown rule set
@@ -123,7 +125,7 @@ Tipografi: Inter untuk teks, Instrument Serif miring untuk frasa aksen, JetBrain
 
 ## Keamanan, lisensi, dan riwayat
 
-Laporkan kerentanan secara pribadi: [SECURITY.md](SECURITY.md). FileHop berlisensi MIT ([LICENSE](LICENSE)). Pustaka yang dipakai: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · font SIL OFL 1.1. Tidak ada mesin GPL atau AGPL di dalamnya. Apa yang berubah dan kapan: [CHANGELOG.md](CHANGELOG.md).
+Laporkan kerentanan secara pribadi: [SECURITY.md](SECURITY.md). FileHop berlisensi MIT ([LICENSE](LICENSE)). Pustaka yang dipakai: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · `libheif` LGPL-3.0 · `libjxl` BSD-3-Clause (lewat jSquash, Apache-2.0) · `utif2` MIT · `gifenc` MIT · Svelte MIT · font SIL OFL 1.1. Tidak ada mesin GPL atau AGPL di dalamnya; libheif (LGPL) dikirim sebagai file tersendiri yang tidak diubah, sehingga bisa diganti. Apa yang berubah dan kapan: [CHANGELOG.md](CHANGELOG.md).
 
 ## Hosting sendiri
 

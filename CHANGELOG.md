@@ -4,6 +4,19 @@ What changed in FileHop, written for the people who use it. The format follows [
 
 ## [Unreleased]
 
+### Added
+
+- **Images, iPhone photos (HEIC).** A HEIC or HEIF photo can now be converted to JPEG, PNG, WebP and the other image formats in Chrome, Edge and Firefox, not only in Safari. FileHop only reads HEIC, it never writes it. The small reader program is downloaded the first time you drop such a photo and is then kept by the browser. Reason: photos from an iPhone were the most common file people could not convert.
+- **Images, JPEG XL.** JPEG XL files can be opened and converted, and any image can be saved as JPEG XL with the quality slider. Reason: JPEG XL gives smaller files than JPEG at the same quality, but most browsers cannot read it.
+- **Images, camera RAW.** RAW files from cameras (CR2, CR3, NEF, ARW, DNG, ORF, RW2, RAF, PEF, SRW) can be converted to JPEG, PNG, WebP and the rest. FileHop takes the JPEG preview that the camera stored inside the file and turns it the right way up. It does not develop the sensor data, and the card says "preview stored in the RAW file" so the result is not mistaken for a full development. Some cameras store a preview smaller than the photo (Sony about 1616 pixels wide). Reason: it is the quick way to get a usable picture out of a RAW file without special software.
+- **Images, GIF.** Any image can now be saved as GIF: one picture, up to 256 colours. An animated GIF that is converted keeps only its first picture, and the card says so under the format buttons. Reason: GIF was offered as input only.
+- **Cards, notes under the format buttons.** Choosing GIF or PDF for an image now shows one short line saying what to expect (one frame and 256 colours; one A4 page). The line for PDF existed in the code but had no text and was never shown. All nine languages are covered.
+- **Licenses and Engine settings.** The list of libraries now includes libheif (LGPL-3.0), libjxl, UTIF and gifenc, with a sentence saying libheif is a separate unchanged file that can be replaced.
+
+### Fixed
+
+- **Images, TIFF.** TIFF files could not be opened in Chrome, Edge and Firefox even though the formats section said they could: the card showed "the browser could not decode this file". FileHop now reads TIFF itself (uncompressed and LZW were tried). Reason: Safari is the only browser that opens TIFF, so everyone else was promised something that did not work.
+
 ## [1.4.0] - 2026-11-16 - A Feedback link to tell us about problems and ideas
 
 ### Added

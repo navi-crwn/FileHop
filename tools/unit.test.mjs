@@ -25,17 +25,19 @@ function transpile(rel) {
   return js
     .replace(/from '\.\/features'/g, "from './features.mjs'")
     .replace(/from '\.\/types'/g, "from './types.mjs'")
-    .replace(/from '\.\/detect'/g, "from './detect.mjs'");
+    .replace(/from '\.\/detect'/g, "from './detect.mjs'")
+    .replace(/from '\.\/raw'/g, "from './raw.mjs'");
 }
 
 writeFileSync(join(dir, 'types.mjs'), 'export {};');
-for (const rel of ['features.ts', 'detect.ts', 'actions.ts', 'pages.ts', 'zip.ts']) {
+for (const rel of ['features.ts', 'raw.ts', 'detect.ts', 'actions.ts', 'pages.ts', 'zip.ts']) {
   writeFileSync(join(dir, rel.replace('.ts', '.mjs')), transpile(rel));
 }
 
 const detect = await import('file://' + join(dir, 'detect.mjs').replace(/\\/g, '/'));
 const actions = await import('file://' + join(dir, 'actions.mjs').replace(/\\/g, '/'));
 const pages = await import('file://' + join(dir, 'pages.mjs').replace(/\\/g, '/'));
+const raw = await import('file://' + join(dir, 'raw.mjs').replace(/\\/g, '/'));
 const zip = await import('file://' + join(dir, 'zip.mjs').replace(/\\/g, '/'));
 
 const PNG_1PX = Uint8Array.from(
@@ -133,6 +135,60 @@ test('the vendored 3D engine and FileHop tile are byte-identical to hop-assets v
   assert.equal(sri('../web/public/hop-home/home/filehop-dark.webp'), 'sha384-sQehmbNpKfXLEGZzV7HP5pGrrBefreVGKLT68qTKsyqhvFd6cYRq0YyG8fj8bMbS');
   assert.equal(sri('../web/public/hop-brand/fonts/brand/payhop-name.woff2'), 'sha384-qswotKGL1icifcrY2eYGAf8kZrPnKlmAnCIvGw0oDHYBFZYiqfiWim3QMGtg4WBV');
   assert.ok(readFileSync(new URL('../web/public/hop-brand/hop-brand.css', import.meta.url), 'utf8').includes('.hop-name-payhop'), 'the PayHop name class is in hop-brand.css');
+});
+
+test('a camera RAW is told apart from a TIFF by its name, and only when the bytes fit', async () => {
+  const tiff = new Uint8Array([0x49, 0x49, 0x2a, 0x00, 8, 0, 0, 0, 0, 0]);
+  const nef = await detect.detectFile(new File([tiff], 'DSC_0001.NEF'));
+  assert.equal(nef.mime, 'image/x-raw');
+  assert.equal(nef.category, 'image');
+  assert.equal(nef.label, 'RAW (NEF)');
+  assert.equal(nef.mismatch, false);
+  assert.equal((await detect.detectFile(new File([tiff], 'scan.tiff'))).mime, 'image/tiff');
+  const text = await detect.detectFile(new File([new TextEncoder().encode('hello')], 'fake.nef'));
+  assert.notEqual(text.mime, 'image/x-raw', 'a text file named .nef is not a RAW');
+});
+
+test('JPEG XL is recognised in both of its wrappers', async () => {
+  const codestream = await detect.detectFile(new File([new Uint8Array([0xff, 0x0a, 0, 0, 0, 0])], 'a.jxl'));
+  assert.equal(codestream.mime, 'image/jxl');
+  const boxed = await detect.detectFile(new File([Uint8Array.from([0, 0, 0, 0x0c, 0x4a, 0x58, 0x4c, 0x20, 0x0d, 0x0a, 0x87, 0x0a])], 'a.jxl'));
+  assert.equal(boxed.mime, 'image/jxl');
+});
+
+test('the embedded-preview finder picks the largest decodable JPEG and skips lossless data', () => {
+  const jpeg = (w, h, sof = 0xc0) => Uint8Array.from([
+    0xff, 0xd8, 0xff, sof, 0x00, 0x0b, 0x08, h >> 8, h & 255, w >> 8, w & 255, 0x01, 0x01, 0x11, 0x00,
+    0xff, 0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3f, 0x00, 0x12, 0x34, 0xff, 0xd9
+  ]);
+  const small = jpeg(16, 12);
+  const lossless = jpeg(4000, 3000, 0xc3);
+  const big = jpeg(640, 480);
+  const file = Uint8Array.from([...new Uint8Array(32), ...small, ...new Uint8Array(5), ...lossless, ...big, ...new Uint8Array(9)]);
+  const found = raw.findEmbeddedJpegs(file);
+  assert.deepEqual(found.map(f => [f.width, f.height]), [[640, 480], [16, 12]]);
+  assert.equal(found[0].offset, 32 + small.length + 5 + lossless.length);
+  assert.equal(found[0].length, big.length);
+  assert.deepEqual(raw.findEmbeddedJpegs(new Uint8Array(64)), []);
+  // a preview that ends exactly at the last byte of the file (a plain .jpg is one) is found too
+  assert.equal(raw.findEmbeddedJpegs(big).length, 1);
+});
+
+test('RAW orientation is read from the TIFF header, little or big endian', () => {
+  const le = Uint8Array.from([0x49, 0x49, 0x2a, 0, 8, 0, 0, 0, 1, 0, 0x12, 0x01, 3, 0, 1, 0, 0, 0, 6, 0, 0, 0, 0, 0]);
+  assert.equal(raw.tiffOrientation(le, 0), 6);
+  const be = Uint8Array.from([0x4d, 0x4d, 0, 0x2a, 0, 0, 0, 8, 0, 1, 0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, 8, 0, 0, 0, 0, 0, 0]);
+  assert.equal(raw.tiffOrientation(be, 0), 8);
+  assert.equal(raw.tiffOrientation(new Uint8Array(4), 0), 0);
+  assert.deepEqual(raw.orientationMatrix(6, 300, 200), { m: [0, 1, -1, 0, 200, 0], swap: true });
+  assert.equal(raw.orientationMatrix(1, 3, 2).swap, false);
+});
+
+test('the new image targets are offered, and never the format the file already is', () => {
+  const png = actions.targetsFor('image', 'png');
+  assert.ok(png.includes('image:jxl') && png.includes('image:gif'));
+  assert.ok(!actions.targetsFor('image', 'gif').includes('image:gif'));
+  assert.ok(!actions.targetsFor('image', 'jxl').includes('image:jxl'));
 });
 
 test('every category has at least one target', () => {

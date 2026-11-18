@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/navi-crwn/FileHop/main/install.sh |
 
 | 種類 | 入力 | 出力 |
 |---|---|---|
-| 画像 | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG | WebP, AVIF\*, JPEG, PNG, PDF |
+| 画像 | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL, RAW† | WebP, AVIF\*, JPEG, PNG, JPEG XL, GIF, PDF |
 | PDF | PDF | 結合、分割（ZIP）、回転、ページ選択、ページ → PNG/JPEG（ZIP）、文書情報（JSON） |
 | データ | CSV, TSV, JSON, YAML | CSV, TSV, JSON, YAML |
 | テキスト | Markdown, HTML, プレーンテキスト | HTML, Markdown, プレーンテキスト |
@@ -45,6 +45,8 @@ curl -fsSL https://raw.githubusercontent.com/navi-crwn/FileHop/main/install.sh |
 | なんでも | あらゆるファイル | SHA-256, BLAKE3, MD5 |
 
 \* AVIF 出力は、ブラウザ自身のエンコーダーが書き出せる場合にだけ表示されます。Canvas は書き出せないとき黙って PNG を返すので、FileHop は結果を確認し、形式を偽ったファイルを渡すかわりにその出力先を隠します。
+
+† カメラ RAW（CR2、CR3、NEF、ARW、DNG、ORF、RW2、RAF、PEF、SRW）は、センサーデータから現像するのではなく、カメラがファイル内に保存した JPEG プレビューから変換します。HEIC と JPEG XL は WebAssembly のエンジン（libheif、libjxl）で読み、そのファイルを置いたときにだけ読み込みます。HEIC は読み取り専用です。GIF の出力は 1 コマ、最大 256 色です。
 
 **まだ対応していないもの：** DOCX と LaTeX（pandoc が必要、GPL）、RAR と 7z、動画と音声。アプリの形式一覧でもそのとおりに書いていて、対応しているふりはしません。
 
@@ -100,7 +102,7 @@ web/src/App.svelte (queue UI)
    └── Queue (web/src/lib/store/queue.svelte.ts)   $state array of $state jobs
          └── Pool (web/src/lib/core/pool.ts)       one Worker per slot, sized by the machine
                └── convert.worker.ts              runJob() → engines
-                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib
+                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib, plus libheif / libjxl / UTIF (WebAssembly, on demand) and gifenc
                      ├── run/pdf.ts                pdf.js (read) + pdf-lib (write)
                      ├── run/data.ts               papaparse / yaml, one table model
                      ├── run/text.ts               marked, and a DOM-free HTML → Markdown rule set
@@ -123,7 +125,7 @@ internal/hop         HOP App Protocol v1, the same as NoteHop's
 
 ## セキュリティ、ライセンス、履歴
 
-脆弱性は非公開で報告してください：[SECURITY.md](SECURITY.md)。FileHop は MIT ライセンスです（[LICENSE](LICENSE)）。使用ライブラリ：`pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · フォント SIL OFL 1.1。GPL や AGPL のエンジンは含まれていません。いつ何が変わったか：[CHANGELOG.md](CHANGELOG.md)。
+脆弱性は非公開で報告してください：[SECURITY.md](SECURITY.md)。FileHop は MIT ライセンスです（[LICENSE](LICENSE)）。使用ライブラリ：`pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · `libheif` LGPL-3.0 · `libjxl` BSD-3-Clause（jSquash 経由、Apache-2.0）· `utif2` MIT · `gifenc` MIT · Svelte MIT · フォント SIL OFL 1.1。GPL や AGPL のエンジンは含まれていません。libheif（LGPL）は改変しない別ファイルとして同梱され、差し替えられます。いつ何が変わったか：[CHANGELOG.md](CHANGELOG.md)。
 
 ## セルフホスティング
 
