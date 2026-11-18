@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/navi-crwn/FileHop/main/install.sh |
 
 | 类别 | 输入 | 输出 |
 |---|---|---|
-| 图片 | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG | WebP, AVIF\*, JPEG, PNG, PDF |
+| 图片 | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL, RAW† | WebP, AVIF\*, JPEG, PNG, JPEG XL, GIF, PDF |
 | PDF | PDF | 合并、拆分（ZIP）、旋转、选取页面、页面 → PNG/JPEG（ZIP）、文档信息（JSON） |
 | 数据 | CSV, TSV, JSON, YAML | CSV, TSV, JSON, YAML |
 | 文本 | Markdown, HTML, 纯文本 | HTML, Markdown, 纯文本 |
@@ -45,6 +45,8 @@ curl -fsSL https://raw.githubusercontent.com/navi-crwn/FileHop/main/install.sh |
 | 任何文件 | 任意文件 | SHA-256, BLAKE3, MD5 |
 
 \* 只有当浏览器自带的编码器能写出 AVIF 时，才会提供 AVIF 输出。Canvas 写不出来时会悄悄返回一张 PNG，所以 FileHop 会检查结果，宁可隐藏这个目标格式，也不会给你一个标错格式的文件。
+
+† 相机 RAW（CR2、CR3、NEF、ARW、DNG、ORF、RW2、RAF、PEF、SRW）是从相机存入文件的 JPEG 预览转换而来，并非用传感器数据冲洗。HEIC 与 JPEG XL 由 WebAssembly 引擎（libheif、libjxl）读取，只在放入这类文件时才加载；HEIC 只读取。GIF 输出只保留一帧，最多 256 色。
 
 **暂时还不支持：** DOCX 和 LaTeX（需要 pandoc，GPL 许可）、RAR 和 7z、视频和音频。应用会在格式说明里直接写明，不会假装支持。
 
@@ -100,7 +102,7 @@ web/src/App.svelte (queue UI)
    └── Queue (web/src/lib/store/queue.svelte.ts)   $state array of $state jobs
          └── Pool (web/src/lib/core/pool.ts)       one Worker per slot, sized by the machine
                └── convert.worker.ts              runJob() → engines
-                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib
+                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib, plus libheif / libjxl / UTIF (WebAssembly, on demand) and gifenc
                      ├── run/pdf.ts                pdf.js (read) + pdf-lib (write)
                      ├── run/data.ts               papaparse / yaml, one table model
                      ├── run/text.ts               marked, and a DOM-free HTML → Markdown rule set
@@ -123,7 +125,7 @@ internal/hop         HOP App Protocol v1, the same as NoteHop's
 
 ## 安全、许可证与历史
 
-请私下报告安全漏洞：[SECURITY.md](SECURITY.md)。FileHop 采用 MIT 许可证（[LICENSE](LICENSE)）。所用的库：`pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · 字体 SIL OFL 1.1。不包含任何 GPL 或 AGPL 引擎。什么时候改了什么：[CHANGELOG.md](CHANGELOG.md)。
+请私下报告安全漏洞：[SECURITY.md](SECURITY.md)。FileHop 采用 MIT 许可证（[LICENSE](LICENSE)）。所用的库：`pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · `libheif` LGPL-3.0 · `libjxl` BSD-3-Clause（经由 jSquash，Apache-2.0）· `utif2` MIT · `gifenc` MIT · Svelte MIT · 字体 SIL OFL 1.1。不包含任何 GPL 或 AGPL 引擎；libheif（LGPL）作为独立且未修改的文件随附，可以替换。什么时候改了什么：[CHANGELOG.md](CHANGELOG.md)。
 
 ## 自行托管
 

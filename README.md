@@ -37,7 +37,7 @@ From a clone: `./install.sh`. Update with `./update.sh` and remove with `./unins
 
 | Category | In | Out |
 |---|---|---|
-| Images | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG | WebP, AVIF\*, JPEG, PNG, PDF |
+| Images | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL, RAW† | WebP, AVIF\*, JPEG, PNG, JPEG XL, GIF, PDF |
 | PDF | PDF | merged, split (ZIP), rotated, page selection, pages → PNG/JPEG (ZIP), document info (JSON) |
 | Data | CSV, TSV, JSON, YAML | CSV, TSV, JSON, YAML |
 | Text | Markdown, HTML, plain text | HTML, Markdown, plain text |
@@ -45,6 +45,8 @@ From a clone: `./install.sh`. Update with `./update.sh` and remove with `./unins
 | Anything | any file | SHA-256, BLAKE3, MD5 |
 
 \* AVIF output is offered only where the browser's own encoder can write it. Canvas silently returns a PNG when it cannot, so FileHop checks the result and hides the target instead of handing you a mislabelled file.
+
+† Camera RAW (CR2, CR3, NEF, ARW, DNG, ORF, RW2, RAF, PEF, SRW) is converted from the JPEG preview the camera stored in the file, not developed from the sensor data. HEIC and JPEG XL are decoded by WebAssembly engines (libheif, libjxl) that load only when such a file is dropped; HEIC is only ever read. GIF output keeps one frame, up to 256 colours.
 
 **Not here yet:** DOCX and LaTeX (needs pandoc, GPL), RAR and 7z, video and audio. The app says so in its formats section rather than pretending.
 
@@ -101,7 +103,7 @@ web/src/App.svelte (queue UI)
    └── Queue (web/src/lib/store/queue.svelte.ts)   $state array of $state jobs
          └── Pool (web/src/lib/core/pool.ts)       one Worker per slot, sized by the machine
                └── convert.worker.ts              runJob() → engines
-                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib
+                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib, plus libheif / libjxl / UTIF (WebAssembly, on demand) and gifenc
                      ├── run/pdf.ts                pdf.js (read) + pdf-lib (write)
                      ├── run/data.ts               papaparse / yaml, one table model
                      ├── run/text.ts               marked, and a DOM-free HTML → Markdown rule set
@@ -125,7 +127,7 @@ Type: Inter for text, Instrument Serif italic for the accent phrase, JetBrains M
 
 ## Security, license and history
 
-Report vulnerabilities privately: [SECURITY.md](SECURITY.md). FileHop is MIT-licensed ([LICENSE](LICENSE)). Its libraries: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · fonts SIL OFL 1.1. No GPL or AGPL engine is included. What changed and when: [CHANGELOG.md](CHANGELOG.md).
+Report vulnerabilities privately: [SECURITY.md](SECURITY.md). FileHop is MIT-licensed ([LICENSE](LICENSE)). Its libraries: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · `libheif` LGPL-3.0 · `libjxl` BSD-3-Clause (via jSquash, Apache-2.0) · `utif2` MIT · `gifenc` MIT · Svelte MIT · fonts SIL OFL 1.1. No GPL or AGPL engine is included; libheif (LGPL) ships as its own unchanged file so it can be replaced. What changed and when: [CHANGELOG.md](CHANGELOG.md).
 
 ## Self-hosting
 

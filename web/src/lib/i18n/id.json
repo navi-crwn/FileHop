@@ -104,7 +104,7 @@
   "settings.engine_pdf": "pdf.js {pv} untuk membaca, pdf-lib {lv} untuk menulis",
   "settings.engine_hash": "hash-wasm, dialirkan per 8 MB",
   "settings.engine_zip": "fflate, di tab ini",
-  "settings.engine_image": "dekoder bawaan browser, di atas canvas",
+  "settings.engine_image": "dekoder bawaan browser di atas canvas; libheif (HEIC) dan libjxl (JPEG XL) di WebAssembly, baru dimuat saat file membutuhkannya",
   "settings.no_wasm": "Tidak ada yang perlu diunduh: mesin ini ikut di halaman.",
   "settings.prefs_saved": "Pengaturan hanya disimpan di browser ini.",
   "settings.ui_style": "Gaya antarmuka",
@@ -138,7 +138,7 @@
   "how.s3_p": "Hasil tetap di memori sampai Anda mengambilnya. Buang satu kartu, byte-nya hilang.",
   "formats.title": "Apa yang masuk, apa yang keluar",
   "formats.images": "Gambar",
-  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG masuk → WebP, AVIF, JPEG, PNG, PDF keluar. Bisa diperkecil, dan metadata otomatis hilang karena tidak pernah sampai ke encoder.",
+  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL, dan RAW kamera (pratinjau bawaannya) masuk → WebP, AVIF, JPEG, PNG, JPEG XL, GIF, PDF keluar. Bisa diperkecil, dan metadata otomatis hilang karena tidak pernah sampai ke encoder.",
   "formats.pdf": "PDF",
   "formats.pdf_v": "Gabung, pisah, putar, pilih halaman, render halaman ke PNG atau JPEG, baca info dokumen.",
   "formats.data": "Data",
@@ -338,5 +338,10 @@
   "send.err_handshake_stalled": "Kedua perangkat tersambung tetapi tidak selesai saling memeriksa. Mulai ulang.",
   "dash.nav": "Dasbor",
   "announce.title": "Pengumuman",
-  "announce.close": "Tutup pengumuman"
+  "announce.close": "Tutup pengumuman",
+  "err.raw_no_preview": "Berkas RAW kamera ini tidak punya gambar pratinjau yang bisa dibaca FileHop. Ekspor JPEG dari aplikasi kamera Anda.",
+  "hint.image_gif": "Satu bingkai, maksimal 256 warna. File animasi hanya diambil gambar pertamanya.",
+  "hint.image_pdf": "Satu halaman, gambar disesuaikan ke A4.",
+  "note.raw_preview": "pratinjau yang tersimpan di berkas RAW",
+  "licenses.lgpl": "libheif, pembaca HEIC, berlisensi LGPL-3.0. Ia berupa file terpisah di samping halaman, tidak diubah, sehingga bisa diganti. HEIC hanya dibaca, tidak pernah ditulis."
 }

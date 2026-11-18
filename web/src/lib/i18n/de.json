@@ -104,7 +104,7 @@
   "settings.engine_pdf": "pdf.js {pv} zum Lesen, pdf-lib {lv} zum Schreiben",
   "settings.engine_hash": "hash-wasm, in 8-MB-Blöcken gestreamt",
   "settings.engine_zip": "fflate, in diesem Tab",
-  "settings.engine_image": "die Decoder des Browsers, auf Canvas",
+  "settings.engine_image": "die Decoder des Browsers auf Canvas; libheif (HEIC) und libjxl (JPEG XL) in WebAssembly, erst geladen, wenn eine Datei sie braucht",
   "settings.no_wasm": "Nichts herunterzuladen: diese Engines kommen mit der Seite.",
   "settings.prefs_saved": "Einstellungen liegen nur in diesem Browser.",
   "settings.ui_style": "Oberflächenstil",
@@ -138,7 +138,7 @@
   "how.s3_p": "Ergebnisse bleiben im Speicher, bis du sie holst. Entfernst du eine Karte, sind ihre Bytes weg.",
   "formats.title": "Was hineingeht, was herauskommt",
   "formats.images": "Bilder",
-  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG hinein → WebP, AVIF, JPEG, PNG, PDF hinaus. Verkleinern möglich, Metadaten fallen weg, weil sie den Encoder nie erreichen.",
+  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL und Kamera-RAW (seine eingebaute Vorschau) hinein → WebP, AVIF, JPEG, PNG, JPEG XL, GIF, PDF hinaus. Verkleinern möglich, Metadaten fallen weg, weil sie den Encoder nie erreichen.",
   "formats.pdf": "PDF",
   "formats.pdf_v": "Zusammenführen, teilen, drehen, Seiten wählen, Seiten als PNG oder JPEG rendern, Dokumentinfo lesen.",
   "formats.data": "Daten",
@@ -338,5 +338,10 @@
   "send.err_handshake_stalled": "Die beiden Geräte haben sich verbunden, die gegenseitige Prüfung aber nicht abgeschlossen. Beginne neu.",
   "dash.nav": "Dashboard",
   "announce.title": "Ankündigung",
-  "announce.close": "Ankündigung schließen"
+  "announce.close": "Ankündigung schließen",
+  "err.raw_no_preview": "Diese Kamera-RAW-Datei enthält kein Vorschaubild, das FileHop lesen kann. Exportiere stattdessen ein JPEG aus deiner Kamerasoftware.",
+  "hint.image_gif": "Ein Bild, bis zu 256 Farben. Von einer animierten Datei bleibt nur das erste Bild.",
+  "hint.image_pdf": "Eine Seite, das Bild auf A4 eingepasst.",
+  "note.raw_preview": "Vorschau aus der RAW-Datei",
+  "licenses.lgpl": "libheif, das HEIC liest, steht unter LGPL-3.0. Es ist eine eigene, unveränderte Datei neben der Seite und lässt sich daher austauschen. HEIC wird nur gelesen, nie geschrieben."
 }

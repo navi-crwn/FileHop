@@ -37,7 +37,7 @@ Aus einem Klon: `./install.sh`. Aktualisieren mit `./update.sh`, entfernen mit `
 
 | Kategorie | Eingabe | Ausgabe |
 |---|---|---|
-| Bilder | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG | WebP, AVIF\*, JPEG, PNG, PDF |
+| Bilder | PNG, JPEG, WebP, AVIF\*, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL, RAW† | WebP, AVIF\*, JPEG, PNG, JPEG XL, GIF, PDF |
 | PDF | PDF | zusammengeführt, geteilt (ZIP), gedreht, Seitenauswahl, Seiten → PNG/JPEG (ZIP), Dokumentinfo (JSON) |
 | Daten | CSV, TSV, JSON, YAML | CSV, TSV, JSON, YAML |
 | Text | Markdown, HTML, reiner Text | HTML, Markdown, reiner Text |
@@ -45,6 +45,8 @@ Aus einem Klon: `./install.sh`. Aktualisieren mit `./update.sh`, entfernen mit `
 | Alles | jede Datei | SHA-256, BLAKE3, MD5 |
 
 \* AVIF wird nur angeboten, wenn der eigene Encoder des Browsers es schreiben kann. Canvas liefert stillschweigend ein PNG, wenn es das nicht kann. Deshalb prüft FileHop das Ergebnis und blendet das Zielformat lieber aus, statt dir eine falsch beschriftete Datei zu geben.
+
+† Kamera-RAW (CR2, CR3, NEF, ARW, DNG, ORF, RW2, RAF, PEF, SRW) wird aus der JPEG-Vorschau umgewandelt, die die Kamera in der Datei abgelegt hat, nicht aus den Sensordaten entwickelt. HEIC und JPEG XL liest FileHop mit WebAssembly-Engines (libheif, libjxl), die erst geladen werden, wenn eine solche Datei abgelegt wird; HEIC wird nur gelesen. Die GIF-Ausgabe behält ein Bild mit bis zu 256 Farben.
 
 **Noch nicht dabei:** DOCX und LaTeX (braucht pandoc, GPL), RAR und 7z, Video und Audio. Die App sagt das in ihrem Formate-Bereich offen, statt so zu tun, als ob.
 
@@ -100,7 +102,7 @@ web/src/App.svelte (queue UI)
    └── Queue (web/src/lib/store/queue.svelte.ts)   $state array of $state jobs
          └── Pool (web/src/lib/core/pool.ts)       one Worker per slot, sized by the machine
                └── convert.worker.ts              runJob() → engines
-                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib
+                     ├── run/image.ts              canvas + createImageBitmap + pdf-lib, plus libheif / libjxl / UTIF (WebAssembly, on demand) and gifenc
                      ├── run/pdf.ts                pdf.js (read) + pdf-lib (write)
                      ├── run/data.ts               papaparse / yaml, one table model
                      ├── run/text.ts               marked, and a DOM-free HTML → Markdown rule set
@@ -123,7 +125,7 @@ Schrift: Inter für Text, Instrument Serif kursiv für die Akzentphrase, JetBrai
 
 ## Sicherheit, Lizenz und Verlauf
 
-Sicherheitslücken bitte vertraulich melden: [SECURITY.md](SECURITY.md). FileHop steht unter der MIT-Lizenz ([LICENSE](LICENSE)). Die verwendeten Bibliotheken: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · Svelte MIT · Schriften SIL OFL 1.1. Keine GPL- oder AGPL-Engine ist enthalten. Was sich wann geändert hat: [CHANGELOG.md](CHANGELOG.md).
+Sicherheitslücken bitte vertraulich melden: [SECURITY.md](SECURITY.md). FileHop steht unter der MIT-Lizenz ([LICENSE](LICENSE)). Die verwendeten Bibliotheken: `pdfjs-dist` Apache-2.0 · `pdf-lib` MIT · `fflate` MIT · `hash-wasm` MIT · `marked` MIT · `papaparse` MIT · `yaml` ISC · `libheif` LGPL-3.0 · `libjxl` BSD-3-Clause (über jSquash, Apache-2.0) · `utif2` MIT · `gifenc` MIT · Svelte MIT · Schriften SIL OFL 1.1. Keine GPL- oder AGPL-Engine ist enthalten; libheif (LGPL) liegt als eigene, unveränderte Datei bei und lässt sich austauschen. Was sich wann geändert hat: [CHANGELOG.md](CHANGELOG.md).
 
 ## Selbst hosten
 

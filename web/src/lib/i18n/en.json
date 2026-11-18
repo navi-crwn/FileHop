@@ -104,7 +104,7 @@
   "settings.engine_pdf": "pdf.js {pv} to read, pdf-lib {lv} to write",
   "settings.engine_hash": "hash-wasm, streamed in 8 MB chunks",
   "settings.engine_zip": "fflate, in this tab",
-  "settings.engine_image": "the browser's own decoders, on canvas",
+  "settings.engine_image": "the browser's own decoders on canvas; libheif (HEIC) and libjxl (JPEG XL) in WebAssembly, loaded only when a file needs them",
   "settings.no_wasm": "Nothing to download: these engines ship with the page.",
   "settings.prefs_saved": "Settings are stored in this browser only.",
   "settings.ui_style": "Interface style",
@@ -138,7 +138,7 @@
   "how.s3_p": "Results stay in memory until you take them. Remove a card and its bytes are gone.",
   "formats.title": "What goes in, what comes out",
   "formats.images": "Images",
-  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG in → WebP, AVIF, JPEG, PNG, PDF out. Resize, and metadata is stripped because it never reaches the encoder.",
+  "formats.images_v": "PNG, JPEG, WebP, AVIF, GIF, BMP, TIFF, ICO, SVG, HEIC, JPEG XL and camera RAW (its built-in preview) in → WebP, AVIF, JPEG, PNG, JPEG XL, GIF, PDF out. Resize, and metadata is stripped because it never reaches the encoder.",
   "formats.pdf": "PDF",
   "formats.pdf_v": "Merge, split, rotate, pick pages, render pages to PNG or JPEG, read the document info.",
   "formats.data": "Data",
@@ -338,5 +338,10 @@
   "send.err_handshake_stalled": "The two devices connected but did not finish checking each other. Start again.",
   "dash.nav": "Dashboard",
   "announce.title": "Announcement",
-  "announce.close": "Close announcement"
+  "announce.close": "Close announcement",
+  "err.raw_no_preview": "This camera RAW file has no preview picture FileHop can read. Export a JPEG from your camera software instead.",
+  "hint.image_gif": "One frame, up to 256 colours. An animated file keeps only its first picture.",
+  "hint.image_pdf": "One page, the picture fitted to A4.",
+  "note.raw_preview": "preview stored in the RAW file",
+  "licenses.lgpl": "libheif, which reads HEIC, is LGPL-3.0. It is a separate file next to the page, unchanged, so it can be replaced. HEIC is only read, never written."
 }

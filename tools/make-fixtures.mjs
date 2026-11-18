@@ -1,6 +1,6 @@
 // Build small real test files: a PNG, a JPEG, a PDF with 3 pages, CSV, JSON, YAML, MD, and a ZIP.
 // Run with: node tools/make-fixtures.mjs
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { deflateSync, crc32 } from 'node:zlib';
 import { zipSync } from 'fflate';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -85,5 +85,67 @@ writeFileSync(`${dir}/bundle.zip`, zipSync({
   'notes/b.txt': new TextEncoder().encode('beta\n'),
   'data.csv': new TextEncoder().encode('x,y\n1,2\n')
 }));
+
+/* --- HEIC: a real 320x220 file written by libheif (via pillow-heif) from the sample JPEG --- */
+copyFileSync('tools/fixtures-sample.heic', `${dir}/sample.heic`);
+
+/* --- JPEG XL: encoded here with libjxl, a 240x160 gradient --- */
+{
+  // the encoder's own loader fetches its .wasm over HTTP; in Node hand it the bytes instead
+  const { default: factory } = await import('@jsquash/jxl/codec/enc/jxl_enc.js');
+  const { defaultOptions } = await import('@jsquash/jxl/meta.js');
+  const wasmBinary = readFileSync('node_modules/@jsquash/jxl/codec/enc/jxl_enc.wasm');
+  const jxl = await factory({ noInitialRun: true, wasmBinary });
+  const w = 240, h = 160;
+  const rgba = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4;
+    rgba[i] = Math.round((x / w) * 245); rgba[i + 1] = Math.round((y / h) * 180);
+    rgba[i + 2] = 90 + Math.round(((x + y) / (w + h)) * 120); rgba[i + 3] = 255;
+  }
+  const out = jxl.encode(rgba, w, h, { ...defaultOptions, quality: 80 });
+  writeFileSync(`${dir}/sample.jxl`, Buffer.from(out.buffer, out.byteOffset, out.byteLength));
+}
+
+/* --- Camera RAW, synthetic: a little-endian TIFF header whose IFD0 says
+   "Orientation = 6" (rotate 90° clockwise), then a thumbnail JPEG, a block that
+   starts like a JPEG but is lossless (SOF3, as real CR2/DNG sensor data is) and
+   the full-size JPEG preview. Real camera files are not committed; this one
+   exercises the same preview search without any. --- */
+{
+  const preview = readFileSync(`${dir}/sample.jpg`);
+  const thumb = Buffer.from('C:/Program Files/Git/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP/CAAsIAAEAAQEBEQD/xAAUAAEAAAAAAAAAAAAAAAAAAAAJ/9oACAEBAAA/ANLPIP/Z', 'base64'); // a 129-byte JPEG standing in for the camera's thumbnail
+  const head = Buffer.alloc(8 + 2 + 12 + 4);
+  head.write('II', 0, 'ascii'); head.writeUInt16LE(42, 2); head.writeUInt32LE(8, 4);
+  head.writeUInt16LE(1, 8);                       // one IFD entry
+  head.writeUInt16LE(0x0112, 10); head.writeUInt16LE(3, 12); head.writeUInt32LE(1, 14);
+  head.writeUInt16LE(6, 18);                      // Orientation = 6
+  head.writeUInt32LE(0, 22);                      // no next IFD
+  const lossless = Buffer.from([0xff, 0xd8, 0xff, 0xc3, 0x00, 0x0b, 0x08, 0x10, 0x00, 0x10, 0x00, 0x01, 0x01, 0x11, 0x00, 0xff, 0xd9]);
+  writeFileSync(`${dir}/sample.nef`, Buffer.concat([head, thumb, lossless, preview]));
+}
+
+/* --- TIFF: 32x16 RGB, uncompressed, little endian, written by hand (Chrome and Firefox cannot open TIFF themselves) --- */
+{
+  const w = 32, h = 16, entries = 9, pix = w * h * 3;
+  const ifdAt = 8, dataAt = ifdAt + 2 + entries * 12 + 4;   // pixel data follows the IFD
+  const bpsAt = dataAt + pix;                               // BitsPerSample: 3 shorts
+  const buf = Buffer.alloc(bpsAt + 6);
+  buf.write('II', 0, 'ascii'); buf.writeUInt16LE(42, 2); buf.writeUInt32LE(ifdAt, 4);
+  buf.writeUInt16LE(entries, ifdAt);
+  const tags = [[256, 3, 1, w], [257, 3, 1, h], [258, 3, 3, bpsAt], [259, 3, 1, 1], [262, 3, 1, 2],
+    [273, 4, 1, dataAt], [277, 3, 1, 3], [278, 3, 1, h], [279, 4, 1, pix]];
+  tags.forEach(([tag, type, count, value], i) => {
+    const o = ifdAt + 2 + i * 12;
+    buf.writeUInt16LE(tag, o); buf.writeUInt16LE(type, o + 2); buf.writeUInt32LE(count, o + 4);
+    if (type === 3 && count === 1) buf.writeUInt16LE(value, o + 8); else buf.writeUInt32LE(value, o + 8);
+  });
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const o = dataAt + (y * w + x) * 3;
+    buf[o] = Math.round((x / (w - 1)) * 255); buf[o + 1] = Math.round((y / (h - 1)) * 255); buf[o + 2] = 128;
+  }
+  buf.writeUInt16LE(8, bpsAt); buf.writeUInt16LE(8, bpsAt + 2); buf.writeUInt16LE(8, bpsAt + 4);
+  writeFileSync(`${dir}/sample.tiff`, buf);
+}
 
 console.log('fixtures written to', dir);

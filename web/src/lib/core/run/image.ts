@@ -1,9 +1,11 @@
 import { PDFDocument } from 'pdf-lib';
-import type { JobResult } from '../types';
+import type { Detection, JobResult } from '../types';
 import { baseName } from '../detect';
 import { throwIfAborted, type RunCtx } from '../run';
 import { AVIF_ENCODABLE } from '../features';
 import { decodeSvg, makeCanvas, context2d, encodeCanvas } from '../canvas';
+import { decodeHeic, decodeJxl, decodeTiff, encodeJxl, encodeGif, type Pixels } from '../engines';
+import { findEmbeddedJpegs, jpegOrientation, tiffOrientation, orientationMatrix } from '../raw';
 
 /* Image work runs on canvas and createImageBitmap: the browser's own decoders,
    which is why JPEG/PNG/WebP/GIF/BMP and (where shipped) AVIF/JXL/HEIC all open
@@ -16,17 +18,62 @@ interface Decoded {
   height: number;
 }
 
-async function decode(file: File): Promise<Decoded> {
+async function decode(file: File, det: Detection): Promise<Decoded> {
   // SVG has no bitmap decoder; it goes through <img>, in the page (see canvas.ts).
   if (file.type === 'image/svg+xml' || /\.svg$/i.test(file.name)) {
     return decodeSvg(file);
   }
+  if (det.mime === 'image/x-raw') return decodeRaw(file);
   try {
     const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
     return { bitmap, width: bitmap.width, height: bitmap.height };
   } catch (e) {
+    // The browser's own decoder said no. HEIC (Chrome, Firefox, Edge) and JPEG XL
+    // (everything but Safari) are read by a WebAssembly decoder instead.
+    if (det.mime === 'image/heic') return fromPixels(await decodeHeic(new Uint8Array(await file.arrayBuffer())));
+    if (det.mime === 'image/jxl') return fromPixels(await decodeJxl(new Uint8Array(await file.arrayBuffer())));
+    if (det.mime === 'image/tiff') return fromPixels(await decodeTiff(new Uint8Array(await file.arrayBuffer())));
     throw new Error(`cannot_decode:${(e as Error).message}`);
   }
+}
+
+async function fromPixels(px: Pixels): Promise<Decoded> {
+  const bitmap = await createImageBitmap(new ImageData(px.data as Uint8ClampedArray<ArrayBuffer>, px.width, px.height));
+  return upright(bitmap, px.orientation ?? 1);
+}
+
+/** A camera RAW: the JPEG preview the camera stored, turned upright with the orientation it recorded. */
+async function decodeRaw(file: File): Promise<Decoded> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const spans = findEmbeddedJpegs(bytes);
+  if (spans.length === 0) throw new Error('raw_no_preview');
+  const rawOrientation = tiffOrientation(bytes, 0);
+  for (const sp of spans) {
+    const jpeg = bytes.subarray(sp.offset, sp.offset + sp.length);
+    try {
+      const bitmap = await createImageBitmap(new Blob([jpeg], { type: 'image/jpeg' }), { imageOrientation: 'none' });
+      // the preview's own orientation wins; most cameras leave it out and put it on the RAW instead
+      const o = jpegOrientation(jpeg) || rawOrientation || 1;
+      return upright(bitmap, o);
+    } catch {
+      /* this stream is not a picture a browser reads; try the next largest */
+    }
+  }
+  throw new Error('raw_no_preview');
+}
+
+function upright(bitmap: ImageBitmap, o: number): Decoded {
+  if (o === 1) return { bitmap, width: bitmap.width, height: bitmap.height };
+  const { m, swap } = orientationMatrix(o, bitmap.width, bitmap.height);
+  const w = swap ? bitmap.height : bitmap.width;
+  const h = swap ? bitmap.width : bitmap.height;
+  const canvas = makeCanvas(w, h);
+  const ctx = context2d(canvas);
+  ctx.transform(...m);
+  ctx.drawImage(bitmap, 0, 0);
+  bitmap.close?.();
+  const out = (canvas as OffscreenCanvas).transferToImageBitmap();
+  return { bitmap: out, width: w, height: h };
 }
 
 /** Downscale to a maximum width, keeping the aspect ratio. */
@@ -70,11 +117,13 @@ const MIME: Record<string, string> = {
   jpeg: 'image/jpeg',
   jpg: 'image/jpeg',
   png: 'image/png',
-  avif: 'image/avif'
+  avif: 'image/avif',
+  gif: 'image/gif',
+  jxl: 'image/jxl'
 };
 
 export async function runImage(ctx: RunCtx): Promise<JobResult> {
-  const { file, action, opts, onProgress, signal } = ctx;
+  const { file, action, opts, onProgress, signal, det } = ctx;
   const target = action.slice('image:'.length);
   onProgress(0.05, 'decode');
 
@@ -87,7 +136,7 @@ export async function runImage(ctx: RunCtx): Promise<JobResult> {
     throw new Error('avif_not_supported');
   }
 
-  const { bitmap } = await decode(file);
+  const { bitmap } = await decode(file, det);
   throwIfAborted(signal);
   onProgress(0.35, 'resize');
 
@@ -99,8 +148,17 @@ export async function runImage(ctx: RunCtx): Promise<JobResult> {
   onProgress(0.65, 'encode');
 
   const quality = typeof opts.quality === 'number' ? opts.quality : 82;
-  const blob = await encodeCanvas(canvas, mime, target === 'png' ? 100 : quality);
-  if (blob.type !== mime) throw new Error(`encoder_missing:${mime}`);
+  let blob: Blob;
+  if (target === 'gif' || target === 'jxl') {
+    // These two have no canvas encoder: read the pixels back and hand them to a WebAssembly one.
+    const img = context2d(canvas).getImageData(0, 0, w, h);
+    const px: Pixels = { data: img.data, width: w, height: h };
+    const bytes = target === 'gif' ? await encodeGif(px) : await encodeJxl(px, quality);
+    blob = new Blob([bytes as unknown as BlobPart], { type: mime });
+  } else {
+    blob = await encodeCanvas(canvas, mime, target === 'png' ? 100 : quality);
+    if (blob.type !== mime) throw new Error(`encoder_missing:${mime}`);
+  }
   bitmap.close?.();
 
   return {
@@ -113,8 +171,8 @@ export async function runImage(ctx: RunCtx): Promise<JobResult> {
 }
 
 async function imageToPdf(ctx: RunCtx): Promise<JobResult> {
-  const { file, onProgress, signal } = ctx;
-  const { bitmap } = await decode(file);
+  const { file, onProgress, signal, det } = ctx;
+  const { bitmap } = await decode(file, det);
   throwIfAborted(signal);
   onProgress(0.4, 'encode');
 
